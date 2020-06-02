@@ -1,0 +1,21 @@
+--- monero/src/cryptonote_basic/cryptonote_format_utils.h	2019-12-20 13:52:25.272151155 +0000
++++ monero-offshore/src/cryptonote_basic/cryptonote_format_utils.h	2019-11-27 08:35:55.896825671 +0000
+@@ -78,8 +78,10 @@ namespace cryptonote
+   bool add_tx_pub_key_to_extra(std::vector<uint8_t>& tx_extra, const crypto::public_key& tx_pub_key);
+   std::vector<crypto::public_key> get_additional_tx_pub_keys_from_extra(const std::vector<uint8_t>& tx_extra);
+   std::vector<crypto::public_key> get_additional_tx_pub_keys_from_extra(const transaction_prefix& tx);
++  bool get_offshore_from_tx_extra(const std::vector<uint8_t>& tx_extra, cryptonote::tx_extra_offshore& offshore);
+   bool add_additional_tx_pub_keys_to_extra(std::vector<uint8_t>& tx_extra, const std::vector<crypto::public_key>& additional_pub_keys);
+   bool add_extra_nonce_to_tx_extra(std::vector<uint8_t>& tx_extra, const blobdata& extra_nonce);
++  bool add_offshore_to_tx_extra(std::vector<uint8_t>& tx_extra, cryptonote::tx_extra_offshore& extra_offshore);
+   bool remove_field_from_tx_extra(std::vector<uint8_t>& tx_extra, const std::type_info &type);
+   void set_payment_id_to_tx_extra_nonce(blobdata& extra_nonce, const crypto::hash& payment_id);
+   void set_encrypted_payment_id_to_tx_extra_nonce(blobdata& extra_nonce, const crypto::hash8& payment_id);
+@@ -140,6 +142,7 @@ namespace cryptonote
+   unsigned int get_default_decimal_point();
+   std::string get_unit(unsigned int decimal_point = -1);
+   std::string print_money(uint64_t amount, unsigned int decimal_point = -1);
++  std::string print_offshore_money(uint64_t amount, unsigned int decimal_point = -1);
+   //---------------------------------------------------------------
+   template<class t_object>
+   bool t_serializable_object_from_blob(t_object& to, const blobdata& b_blob)

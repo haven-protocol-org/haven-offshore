@@ -1,0 +1,17 @@
+--- monero/src/crypto/hash.h	2019-12-20 13:52:25.268151102 +0000
++++ monero-offshore/src/crypto/hash.h	2019-11-27 08:35:55.828824960 +0000
+@@ -71,14 +71,6 @@ namespace crypto {
+     return h;
+   }
+ 
+-  inline void cn_slow_hash(const void *data, std::size_t length, hash &hash, int variant = 0, uint64_t height = 0) {
+-    cn_slow_hash(data, length, reinterpret_cast<char *>(&hash), variant, 0/*prehashed*/, height);
+-  }
+-
+-  inline void cn_slow_hash_prehashed(const void *data, std::size_t length, hash &hash, int variant = 0, uint64_t height = 0) {
+-    cn_slow_hash(data, length, reinterpret_cast<char *>(&hash), variant, 1/*prehashed*/, height);
+-  }
+-
+   inline void tree_hash(const hash *hashes, std::size_t count, hash &root_hash) {
+     tree_hash(reinterpret_cast<const char (*)[HASH_SIZE]>(hashes), count, reinterpret_cast<char *>(&root_hash));
+   }

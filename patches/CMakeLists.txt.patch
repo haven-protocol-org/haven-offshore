@@ -1,0 +1,36 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 6a22478e..46825254 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -199,6 +199,10 @@ if(NOT MANUAL_SUBMODULES)
+   endif()
+ endif()
+ 
++# HERE BE DRAGONS!!!
++cmake_policy(SET CMP0074 NEW)
++# LAND AHOY!!!
++
+ set(CMAKE_C_FLAGS_RELEASE "-DNDEBUG ${OPT_FLAGS_RELEASE}")
+ set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG ${OPT_FLAGS_RELEASE}")
+ 
+@@ -657,7 +661,8 @@ else()
+   add_cxx_flag_if_supported(-Wformat-security CXX_SECURITY_FLAGS)
+ 
+   # -fstack-protector
+-  if (NOT WIN32)
++#  if (NOT WIN32)
++  if (NOT OPENBSD AND NOT (WIN32 AND (CMAKE_C_COMPILER_ID STREQUAL "GNU" AND CMAKE_C_COMPILER_VERSION VERSION_LESS 9.1)))
+     add_c_flag_if_supported(-fstack-protector C_SECURITY_FLAGS)
+     add_cxx_flag_if_supported(-fstack-protector CXX_SECURITY_FLAGS)
+     add_c_flag_if_supported(-fstack-protector-strong C_SECURITY_FLAGS)
+@@ -883,7 +888,9 @@ if(STATIC)
+     set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
+     set(Boost_NO_BOOST_CMAKE ON)
+   endif()
+-
++  # HERE BE DRAGONS!!!
++  set(Boost_NO_BOOST_CMAKE ON)
++  # LAND AHOY!!!
+   set(Boost_USE_STATIC_LIBS ON)
+   set(Boost_USE_STATIC_RUNTIME ON)
+ endif()

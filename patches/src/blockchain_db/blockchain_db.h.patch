@@ -1,0 +1,18 @@
+diff --git a/src/blockchain_db/blockchain_db.h b/src/blockchain_db/blockchain_db.h
+index b6b8c6c3..866a3f83 100644
+--- a/src/blockchain_db/blockchain_db.h
++++ b/src/blockchain_db/blockchain_db.h
+@@ -1116,6 +1116,13 @@ public:
+    */
+   virtual uint64_t height() const = 0;
+ 
++  /**
++   * @brief fetch the circulating supply tally values from the blockchain
++   *
++   * @return the current circulating supply tally values
++   */
++  virtual std::vector<std::pair<std::string, int64_t>> get_circulating_supply() const = 0;
++  
+ 
+   /**
+    * <!--

@@ -1,0 +1,9 @@
+--- monero/src/daemon/CMakeLists.txt	2019-12-20 13:52:25.288151367 +0000
++++ monero-offshore/src/daemon/CMakeLists.txt	2019-11-27 08:35:55.992826676 +0000
+@@ -94,5 +94,5 @@ target_link_libraries(daemon
+     ${Blocks})
+ set_property(TARGET daemon
+   PROPERTY
+-    OUTPUT_NAME "monerod")
++    OUTPUT_NAME "havend")
+ install(TARGETS daemon DESTINATION bin)

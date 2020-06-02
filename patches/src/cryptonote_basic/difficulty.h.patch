@@ -1,0 +1,8 @@
+--- monero/src/cryptonote_basic/difficulty.h	2019-12-20 13:52:25.276151208 +0000
++++ monero-offshore/src/cryptonote_basic/difficulty.h	2019-11-27 08:35:55.904825755 +0000
+@@ -61,4 +61,5 @@ namespace cryptonote
+     difficulty_type next_difficulty(std::vector<std::uint64_t> timestamps, std::vector<difficulty_type> cumulative_difficulties, size_t target_seconds);
+ 
+     std::string hex(difficulty_type v);
++    difficulty_type next_difficulty_v2(std::vector<std::uint64_t> timestamps, std::vector<difficulty_type> cumulative_difficulties, size_t target_seconds);
+ }

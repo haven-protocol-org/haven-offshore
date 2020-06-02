@@ -1,0 +1,18 @@
+--- monero/src/rpc/message_data_structs.h	2019-12-20 13:52:25.296151474 +0000
++++ monero-offshore/src/rpc/message_data_structs.h	2019-11-27 08:35:55.804824710 +0000
+@@ -33,6 +33,7 @@
+ #include "cryptonote_basic/difficulty.h"
+ #include "ringct/rctSigs.h"
+ #include "rpc/rpc_handler.h"
++#include "offshore/pricing_record.h"
+ 
+ #include <unordered_map>
+ #include <vector>
+@@ -163,6 +164,7 @@ namespace rpc
+     uint64_t timestamp;
+     crypto::hash  prev_id;
+     uint32_t nonce;
++    offshore::pricing_record pricing_record;
+     uint64_t height;
+     uint64_t depth;
+     crypto::hash hash;

@@ -1,0 +1,10 @@
+--- monero/src/cryptonote_core/CMakeLists.txt	2019-12-20 13:52:25.276151208 +0000
++++ monero-offshore/src/cryptonote_core/CMakeLists.txt	2019-11-27 08:35:56.012826884 +0000
+@@ -58,6 +58,7 @@ target_link_libraries(cryptonote_core
+     multisig
+     ringct
+     device
++    offshore
+     ${Boost_DATE_TIME_LIBRARY}
+     ${Boost_PROGRAM_OPTIONS_LIBRARY}
+     ${Boost_SERIALIZATION_LIBRARY}

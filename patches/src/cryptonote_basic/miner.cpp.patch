@@ -1,0 +1,27 @@
+--- monero/src/cryptonote_basic/miner.cpp	2019-12-20 13:52:25.276151208 +0000
++++ monero-offshore/src/cryptonote_basic/miner.cpp	2019-11-27 08:35:55.876825462 +0000
+@@ -81,8 +81,6 @@ using namespace epee;
+ #include "miner.h"
+ 
+ 
+-extern "C" void slow_hash_allocate_state();
+-extern "C" void slow_hash_free_state();
+ namespace cryptonote
+ {
+ 
+@@ -523,7 +521,6 @@ namespace cryptonote
+     difficulty_type local_diff = 0;
+     uint32_t local_template_ver = 0;
+     block b;
+-    slow_hash_allocate_state();
+     ++m_threads_active;
+     while(!m_stop)
+     {
+@@ -588,7 +585,6 @@ namespace cryptonote
+       ++m_hashes;
+       ++m_total_hashes;
+     }
+-    slow_hash_free_state();
+     MGINFO("Miner thread stopped ["<< th_local_index << "]");
+     --m_threads_active;
+     return true;

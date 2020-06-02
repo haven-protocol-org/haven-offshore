@@ -1,0 +1,10 @@
+--- monero/src/CMakeLists.txt	2019-12-20 13:52:25.260150996 +0000
++++ monero-offshore/src/CMakeLists.txt	2019-11-27 08:35:55.872825421 +0000
+@@ -108,6 +108,7 @@ add_subdirectory(crypto)
+ add_subdirectory(ringct)
+ add_subdirectory(checkpoints)
+ add_subdirectory(cryptonote_basic)
++add_subdirectory(offshore)
+ add_subdirectory(cryptonote_core)
+ add_subdirectory(lmdb)
+ add_subdirectory(multisig)

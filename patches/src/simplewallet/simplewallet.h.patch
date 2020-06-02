@@ -1,0 +1,34 @@
+--- monero/src/simplewallet/simplewallet.h	2019-12-20 13:52:25.304151580 +0000
++++ monero-offshore/src/simplewallet/simplewallet.h	2019-11-27 08:35:55.976826508 +0000
+@@ -156,7 +156,7 @@ namespace cryptonote
+     bool show_incoming_transfers(const std::vector<std::string> &args);
+     bool show_payments(const std::vector<std::string> &args);
+     bool show_blockchain_height(const std::vector<std::string> &args);
+-    bool transfer_main(int transfer_type, const std::vector<std::string> &args, bool called_by_mms);
++    bool transfer_main(int transfer_type, const std::vector<std::string> &args, bool called_by_mms, bool bOffshoreTx = false);
+     bool transfer(const std::vector<std::string> &args);
+     bool locked_transfer(const std::vector<std::string> &args);
+     bool locked_sweep_all(const std::vector<std::string> &args);
+@@ -247,6 +247,10 @@ namespace cryptonote
+     bool welcome(const std::vector<std::string>& args);
+     bool version(const std::vector<std::string>& args);
+ 
++    bool onshore(const std::vector<std::string> &args);
++    bool offshore(const std::vector<std::string> &args);
++    bool offshore_transfer(const std::vector<std::string> &args);
++
+     bool cold_sign_tx(const std::vector<tools::wallet2::pending_tx>& ptx_vector, tools::wallet2::signed_tx_set &exported_txs, std::vector<cryptonote::address_parse_info> &dsts_info, std::function<bool(const tools::wallet2::signed_tx_set &)> accept_func);
+     uint64_t get_daemon_blockchain_height(std::string& err);
+     bool try_connect_to_daemon(bool silent = false, uint32_t* version = nullptr);
+@@ -310,9 +314,9 @@ namespace cryptonote
+ 
+     //----------------- i_wallet2_callback ---------------------
+     virtual void on_new_block(uint64_t height, const cryptonote::block& block);
+-    virtual void on_money_received(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& tx, uint64_t amount, const cryptonote::subaddress_index& subaddr_index, uint64_t unlock_time);
++    virtual void on_money_received(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& tx, uint64_t amount, const cryptonote::subaddress_index& subaddr_index, uint64_t unlock_time, bool offshore=false);
+     virtual void on_unconfirmed_money_received(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& tx, uint64_t amount, const cryptonote::subaddress_index& subaddr_index);
+-    virtual void on_money_spent(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& in_tx, uint64_t amount, const cryptonote::transaction& spend_tx, const cryptonote::subaddress_index& subaddr_index);
++    virtual void on_money_spent(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& in_tx, uint64_t amount, const cryptonote::transaction& spend_tx, const cryptonote::subaddress_index& subaddr_index, bool offshore=false);
+     virtual void on_skip_transaction(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& tx);
+     virtual boost::optional<epee::wipeable_string> on_get_password(const char *reason);
+     virtual void on_device_button_request(uint64_t code);

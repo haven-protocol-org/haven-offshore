@@ -1,0 +1,41 @@
+--- monero/src/cryptonote_basic/tx_extra.h	2019-12-20 13:52:25.276151208 +0000
++++ monero-offshore/src/cryptonote_basic/tx_extra.h	2019-11-27 08:35:55.884825546 +0000
+@@ -41,6 +41,8 @@
+ #define TX_EXTRA_TAG_ADDITIONAL_PUBKEYS     0x04
+ #define TX_EXTRA_MYSTERIOUS_MINERGATE_TAG   0xDE
+ 
++#define TX_EXTRA_TAG_OFFSHORE               0x17
++
+ #define TX_EXTRA_NONCE_PAYMENT_ID           0x00
+ #define TX_EXTRA_NONCE_ENCRYPTED_PAYMENT_ID 0x01
+ 
+@@ -179,11 +181,23 @@ namespace cryptonote
+     END_SERIALIZE()
+   };
+ 
++  struct tx_extra_offshore
++  {
++    // First char = source asset type
++    // Second char = dest asset type
++    // ...
++    std::string data;
++
++    BEGIN_SERIALIZE()
++      FIELD(data)
++    END_SERIALIZE()
++  };
++  
+   // tx_extra_field format, except tx_extra_padding and tx_extra_pub_key:
+   //   varint tag;
+   //   varint size;
+   //   varint data[];
+-  typedef boost::variant<tx_extra_padding, tx_extra_pub_key, tx_extra_nonce, tx_extra_merge_mining_tag, tx_extra_additional_pub_keys, tx_extra_mysterious_minergate> tx_extra_field;
++  typedef boost::variant<tx_extra_padding, tx_extra_pub_key, tx_extra_nonce, tx_extra_merge_mining_tag, tx_extra_additional_pub_keys, tx_extra_mysterious_minergate, tx_extra_offshore> tx_extra_field;
+ }
+ 
+ VARIANT_TAG(binary_archive, cryptonote::tx_extra_padding, TX_EXTRA_TAG_PADDING);
+@@ -192,3 +206,4 @@ VARIANT_TAG(binary_archive, cryptonote::
+ VARIANT_TAG(binary_archive, cryptonote::tx_extra_merge_mining_tag, TX_EXTRA_MERGE_MINING_TAG);
+ VARIANT_TAG(binary_archive, cryptonote::tx_extra_additional_pub_keys, TX_EXTRA_TAG_ADDITIONAL_PUBKEYS);
+ VARIANT_TAG(binary_archive, cryptonote::tx_extra_mysterious_minergate, TX_EXTRA_MYSTERIOUS_MINERGATE_TAG);
++VARIANT_TAG(binary_archive, cryptonote::tx_extra_offshore, TX_EXTRA_TAG_OFFSHORE);

@@ -1,0 +1,20 @@
+--- monero/src/cryptonote_protocol/cryptonote_protocol_handler.inl	2019-12-20 13:52:25.288151367 +0000
++++ monero-offshore/src/cryptonote_protocol/cryptonote_protocol_handler.inl	2019-11-27 08:35:55.840825086 +0000
+@@ -2068,7 +2068,7 @@ skip:
+     if(m_synchronized.compare_exchange_strong(val_expected, true))
+     {
+       MGINFO_YELLOW(ENDL << "**********************************************************************" << ENDL
+-        << "You are now synchronized with the network. You may now start monero-wallet-cli." << ENDL
++        << "You are now synchronized with the network. You may now start haven-wallet-cli." << ENDL
+         << ENDL
+         << "Use the \"help\" command to see the list of available commands." << ENDL
+         << "**********************************************************************");
+@@ -2398,7 +2398,7 @@ skip:
+       MINFO("Target height decreasing from " << previous_target << " to " << target);
+       m_core.set_target_blockchain_height(target);
+       if (target == 0 && context.m_state > cryptonote_connection_context::state_before_handshake && !m_stopping)
+-        MCWARNING("global", "monerod is now disconnected from the network");
++        MCWARNING("global", "havend is now disconnected from the network");
+     }
+ 
+     m_block_queue.flush_spans(context.m_connection_id, false);
