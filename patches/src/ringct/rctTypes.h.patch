@@ -73,27 +73,26 @@
              {
                ar.begin_object();
                if (!typename Archive<W>::is_saving())
-@@ -312,26 +336,43 @@ namespace rct {
+@@ -312,26 +336,42 @@ namespace rct {
                ar.delimit_array();
            }
            ar.end_array();
 -          return ar.stream().good();
 -        }
 +
-+	  if (type == RCTTypeCLSAG) {
-+	    ar.tag("outPk_usd");
-+	    ar.begin_array();
-+	    PREPARE_CUSTOM_VECTOR_SERIALIZATION(outputs, outPk_usd);
-+	    if (outPk_usd.size() != outputs)
-+	      return false;
-+	    for (size_t i = 0; i < outputs; ++i)
-+	    {
-+	      FIELDS(outPk_usd[i].mask)
-+	      if (outputs - i > 1)
-+		ar.delimit_array();
-+	    }
-+	    ar.end_array();
++	  ar.tag("outPk_usd");
++	  ar.begin_array();
++	  PREPARE_CUSTOM_VECTOR_SERIALIZATION(outputs, outPk_usd);
++	  if (outPk_usd.size() != outputs)
++	    return false;
++	  for (size_t i = 0; i < outputs; ++i)
++	  {
++	    FIELDS(outPk_usd[i].mask)
++	    if (outputs - i > 1)
++	      ar.delimit_array();
 +	  }
++	  ar.end_array();
++ 
 +	  return ar.stream().good();
 +	}
      };
