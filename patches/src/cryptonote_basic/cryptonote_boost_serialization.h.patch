@@ -157,7 +157,7 @@ index 79ce610a9..b0b257f52 100644
        a & x.p.pseudoOuts;
    }
  
-@@ -375,7 +432,34 @@ namespace boost
+@@ -375,7 +432,35 @@ namespace boost
      }
    }
  
@@ -188,6 +188,7 @@ index 79ce610a9..b0b257f52 100644
  
 +
 +BOOST_CLASS_VERSION(rct::rctSigPrunable, 1)
++BOOST_CLASS_VERSION(rct::rctSigBase, 1)
 +BOOST_CLASS_VERSION(rct::rctSig, 1)
 +BOOST_CLASS_VERSION(rct::multisig_out, 1)
 +
