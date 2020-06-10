@@ -23,10 +23,10 @@ jobs:
     - name: build Haven
       run: ./build-haven.sh release -j3
     - name: Upload artifact
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: haven-linux
-        path: monero/build/release/bin/*
+        path: monero/build/release/bin/
   build-macos:
     runs-on: macos-10.15
     steps:
@@ -35,8 +35,13 @@ jobs:
         submodules: recursive
     - name: update brew and install dependencies
       run: brew update && brew install boost@1.69 hidapi zmq libpgm miniupnpc ldns expat libunwind-headers protobuf
-    - name: build
+    - name: build Haven
       run: ./build-haven.sh release -j3
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: haven-linux
+        path: monero/build/release/bin/
   build-windows:
     runs-on: windows-latest
     steps:
@@ -57,7 +62,7 @@ jobs:
     - name: build Haven for windows x64
       run: msys2do ./build-haven.sh release-static-win64 -j2
     - name: Upload artifact
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: haven-windows-x64
-        path: monero/build/release/bin/*
+        path: monero/build/release/bin/
