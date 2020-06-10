@@ -1,0 +1,63 @@
+name: continuous-integration/gh-actions/cli
+
+on: [push, pull_request]
+
+jobs:
+  build-ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        submodules: recursive
+    - name: remove bundled boost
+      run: sudo rm -rf /usr/local/share/boost
+    - name: set apt conf
+      run: |
+        echo "Acquire::Retries \"3\";" | sudo tee -a /etc/apt/apt.conf.d/80-custom
+        echo "Acquire::http::Timeout \"120\";" | sudo tee -a /etc/apt/apt.conf.d/80-custom
+        echo "Acquire::ftp::Timeout \"120\";" | sudo tee -a /etc/apt/apt.conf.d/80-custom
+    - name: update apt
+      run: sudo apt update
+    - name: install monero dependencies
+      run: sudo apt -y install build-essential cmake libboost-all-dev miniupnpc libunbound-dev graphviz doxygen libunwind8-dev pkg-config libssl-dev libzmq3-dev libsodium-dev libhidapi-dev libnorm-dev libusb-1.0-0-dev libpgm-dev libprotobuf-dev protobuf-compiler patch
+    - name: build Haven
+      run: ./build-haven.sh release -j3
+    - name: Upload artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: haven-linux
+        path: monero/build/release/bin/*
+  build-macos:
+    runs-on: macos-10.15
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        submodules: recursive
+    - name: update brew and install dependencies
+      run: brew update && brew install boost@1.69 hidapi zmq libpgm miniupnpc ldns expat libunwind-headers protobuf
+    - name: build
+      run: ./build-haven.sh release -j3
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        submodules: recursive
+    - uses: eine/setup-msys2@v0
+      with:
+        update: true
+    - name: install monero dependencies
+      run: msys2do pacman -S --noconfirm mingw-w64-x86_64-toolchain make mingw-w64-x86_64-cmake mingw-w64-x86_64-openssl mingw-w64-x86_64-zeromq mingw-w64-x86_64-libsodium mingw-w64-x86_64-hidapi mingw-w64-x86_64-protobuf-c mingw-w64-x86_64-libusb git patch
+    - name: install boost 1.69 & icu 62
+      run: |
+        msys2do wget http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-boost-1.69.0-2-any.pkg.tar.xz
+        msys2do wget http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-icu-62.1-1-any.pkg.tar.xz
+        msys2do pacman -U --noconfirm mingw-w64-x86_64-icu-62.1-1-any.pkg.tar.xz
+        msys2do pacman -U --noconfirm mingw-w64-x86_64-boost-1.69.0-2-any.pkg.tar.xz
+    - name: build Haven for windows x64
+      run: msys2do ./build-haven.sh release-static-win64 -j2
+    - name: Upload artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: haven-windows-x64
+        path: monero/build/release/bin/*
