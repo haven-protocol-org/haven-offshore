@@ -36,7 +36,7 @@ jobs:
     - name: update brew and install dependencies
       run: |
         brew update && brew install boost hidapi zmq libpgm miniupnpc ldns expat libunwind-headers protobuf
-        wget https://raw.githubusercontent.com/zeromq/cppzmq/v4.3.0/zmq.hpp /usr/local/include/
+        wget https://raw.githubusercontent.com/zeromq/cppzmq/v4.3.0/zmq.hpp -O /usr/local/include/zmq.hpp
     - name: build Haven
       run: ./build-haven.sh release -j3
     - name: Upload artifact
