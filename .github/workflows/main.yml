@@ -3,7 +3,7 @@ name: continuous-integration/gh-actions/cli
 on: [push, pull_request]
 
 jobs:
-  build-ubuntu:
+  build-linux:
     env:
       ZMQ_VERSION: v4.3.1
       CPPZMQ_VERSION: v4.3.0
@@ -21,11 +21,11 @@ jobs:
         echo "Acquire::Retries \"3\";" | sudo tee -a /etc/apt/apt.conf.d/80-custom
         echo "Acquire::http::Timeout \"120\";" | sudo tee -a /etc/apt/apt.conf.d/80-custom
         echo "Acquire::ftp::Timeout \"120\";" | sudo tee -a /etc/apt/apt.conf.d/80-custom
-    - name: update apt & install Haven dependencies
+    - name: Install Haven dependencies
       run: |
         sudo apt update
         sudo apt-get --no-install-recommends --yes install build-essential cmake pkg-config libboost-all-dev libssl-dev libunbound-dev libsodium-dev liblzma-dev libreadline6-dev libldns-dev libexpat1-dev doxygen graphviz libpgm-dev libudev-dev
-    - name: install libzmq
+    - name: Install libzmq
       run: |
         git clone https://github.com/zeromq/libzmq.git -b ${ZMQ_VERSION}
         cd libzmq
@@ -34,7 +34,7 @@ jobs:
         make -j3
         sudo make install
         sudo ldconfig
-    - name: install cppzmq
+    - name: Install cppzmq
       run: |
         git clone https://github.com/zeromq/cppzmq.git -b ${CPPZMQ_VERSION}
         cd cppzmq
@@ -52,7 +52,7 @@ jobs:
     - uses: actions/checkout@v1
       with:
         submodules: recursive
-    - name: update brew and install dependencies
+    - name: Install dependencies
       run: |
         brew update && brew install boost hidapi zmq libpgm miniupnpc ldns expat libunwind-headers protobuf pkgconfig
         wget https://raw.githubusercontent.com/zeromq/cppzmq/v4.3.0/zmq.hpp -O /usr/local/include/zmq.hpp
@@ -72,15 +72,14 @@ jobs:
     - uses: eine/setup-msys2@v0
       with:
         update: true
-    - name: install monero dependencies
-      run: msys2do pacman -S --noconfirm mingw-w64-x86_64-toolchain make mingw-w64-x86_64-cmake mingw-w64-x86_64-openssl mingw-w64-x86_64-zeromq mingw-w64-x86_64-libsodium mingw-w64-x86_64-hidapi mingw-w64-x86_64-protobuf-c mingw-w64-x86_64-libusb git patch
+    - name: Install Haven dependencies
+      run: msys2do pacman -S --noconfirm mingw-w64-x86_64-toolchain make mingw-w64-x86_64-cmake mingw-w64-x86_64-openssl mingw-w64-x86_64-zeromq mingw-w64-x86_64-libsodium mingw-w64-x86_64-hidapi mingw-w64-x86_64-libusb git patch
     - name: install boost 1.69 & icu 62
       run: |
         msys2do wget http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-boost-1.69.0-2-any.pkg.tar.xz
         msys2do wget http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-icu-62.1-1-any.pkg.tar.xz
-        msys2do pacman -U --noconfirm mingw-w64-x86_64-icu-62.1-1-any.pkg.tar.xz
-        msys2do pacman -U --noconfirm mingw-w64-x86_64-boost-1.69.0-2-any.pkg.tar.xz
-    - name: build Haven for windows x64
+        msys2do pacman -U --noconfirm *.tar.xz
+    - name: build Haven
       run: msys2do ./build-haven.sh release-static-win64 -j2
     - name: Upload artifact
       uses: actions/upload-artifact@v2
