@@ -1115,7 +1115,7 @@ index 8f3f30da1..2cc916956 100644
 +      payment_details payment;
 +      payment.m_tx_hash      = txid;
 +      payment.m_fee          = fee;
-+      payment.m_amount       = onshore ? get_xhv_amount(i.second, tx.pricing_record_height) : i.second;
++      payment.m_amount       = i.second;
 +      payment.m_block_height = height;
 +      payment.m_unlock_time  = tx.unlock_time;
 +      payment.m_timestamp    = ts;
