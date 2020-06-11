@@ -3,8 +3,13 @@ name: continuous-integration/gh-actions/cli
 on: [push, pull_request]
 
 jobs:
-  build-ubuntu:
-    runs-on: ubuntu-latest
+  build-linux-glibc-2-29:
+    env:
+      ZMQ_VERSION: v4.3.1
+      CPPZMQ_VERSION: v4.3.0
+      CFLAGS: -fPIC
+      CXXFLAGS: -fPIC
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v1
       with:
@@ -16,29 +21,92 @@ jobs:
         echo "Acquire::Retries \"3\";" | sudo tee -a /etc/apt/apt.conf.d/80-custom
         echo "Acquire::http::Timeout \"120\";" | sudo tee -a /etc/apt/apt.conf.d/80-custom
         echo "Acquire::ftp::Timeout \"120\";" | sudo tee -a /etc/apt/apt.conf.d/80-custom
-    - name: update apt
-      run: sudo apt update
-    - name: install monero dependencies
-      run: sudo apt -y install build-essential cmake libboost-all-dev miniupnpc libunbound-dev graphviz doxygen libunwind8-dev pkg-config libssl-dev libzmq3-dev libsodium-dev libhidapi-dev libnorm-dev libusb-1.0-0-dev libpgm-dev libprotobuf-dev protobuf-compiler patch
+    - name: Install Haven dependencies
+      run: |
+        sudo apt update
+        sudo apt-get --no-install-recommends --yes install build-essential cmake pkg-config libboost-all-dev libssl-dev libunbound-dev libsodium-dev liblzma-dev libreadline6-dev libldns-dev libexpat1-dev doxygen graphviz libpgm-dev libudev-dev
+    - name: Install libzmq
+      run: |
+        git clone https://github.com/zeromq/libzmq.git -b ${ZMQ_VERSION}
+        cd libzmq
+        ./autogen.sh
+        ./configure --enable-static --disable-shared
+        make -j3
+        sudo make install
+        sudo ldconfig
+    - name: Install cppzmq
+      run: |
+        git clone https://github.com/zeromq/cppzmq.git -b ${CPPZMQ_VERSION}
+        cd cppzmq
+        sudo mv *.hpp /usr/local/include
     - name: build Haven
-      run: ./build-haven.sh release -j3
+      run: |
+        ./build-haven.sh release-static -j3
+        chmod +x monero/build/release/bin/*
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
-        name: Haven-Linux-x64
+        name: Haven-Linux-x64 (glibc 2.29)
+        path: monero/build/release/bin/
+  build-linux-glibc-2-27:
+    env:
+      ZMQ_VERSION: v4.3.1
+      CPPZMQ_VERSION: v4.3.0
+      CFLAGS: -fPIC
+      CXXFLAGS: -fPIC
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        submodules: recursive
+    - name: remove bundled boost
+      run: sudo rm -rf /usr/local/share/boost
+    - name: set apt conf
+      run: |
+        echo "Acquire::Retries \"3\";" | sudo tee -a /etc/apt/apt.conf.d/80-custom
+        echo "Acquire::http::Timeout \"120\";" | sudo tee -a /etc/apt/apt.conf.d/80-custom
+        echo "Acquire::ftp::Timeout \"120\";" | sudo tee -a /etc/apt/apt.conf.d/80-custom
+    - name: Install Haven dependencies
+      run: |
+        sudo apt update
+        sudo apt-get --no-install-recommends --yes install build-essential cmake pkg-config libboost-all-dev libssl-dev libunbound-dev libsodium-dev liblzma-dev libreadline6-dev libldns-dev libexpat1-dev doxygen graphviz libpgm-dev libudev-dev
+    - name: Install libzmq
+      run: |
+        git clone https://github.com/zeromq/libzmq.git -b ${ZMQ_VERSION}
+        cd libzmq
+        ./autogen.sh
+        ./configure --enable-static --disable-shared
+        make -j3
+        sudo make install
+        sudo ldconfig
+    - name: Install cppzmq
+      run: |
+        git clone https://github.com/zeromq/cppzmq.git -b ${CPPZMQ_VERSION}
+        cd cppzmq
+        sudo mv *.hpp /usr/local/include
+    - name: build Haven
+      run: |
+        ./build-haven.sh release-static -j3
+        chmod +x monero/build/release/bin/*
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: Haven-Linux-x64 (glibc 2.27)
         path: monero/build/release/bin/
   build-macos:
+    env:
+      CMAKE_OSX_DEPLOYMENT_TARGET: 10.13
     runs-on: macos-10.15
     steps:
     - uses: actions/checkout@v1
       with:
         submodules: recursive
-    - name: update brew and install dependencies
+    - name: Install dependencies
       run: |
-        brew update && brew install boost hidapi zmq libpgm miniupnpc ldns expat libunwind-headers protobuf
+        brew update && brew install boost hidapi zmq libpgm miniupnpc ldns expat libunwind-headers protobuf pkgconfig
         wget https://raw.githubusercontent.com/zeromq/cppzmq/v4.3.0/zmq.hpp -O /usr/local/include/zmq.hpp
     - name: build Haven
-      run: ./build-haven.sh release -j3
+      run: ./build-haven.sh release-static -j3
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
@@ -53,15 +121,14 @@ jobs:
     - uses: eine/setup-msys2@v0
       with:
         update: true
-    - name: install monero dependencies
-      run: msys2do pacman -S --noconfirm mingw-w64-x86_64-toolchain make mingw-w64-x86_64-cmake mingw-w64-x86_64-openssl mingw-w64-x86_64-zeromq mingw-w64-x86_64-libsodium mingw-w64-x86_64-hidapi mingw-w64-x86_64-protobuf-c mingw-w64-x86_64-libusb git patch
+    - name: Install Haven dependencies
+      run: msys2do pacman -S --noconfirm mingw-w64-x86_64-toolchain make mingw-w64-x86_64-cmake mingw-w64-x86_64-openssl mingw-w64-x86_64-zeromq mingw-w64-x86_64-libsodium mingw-w64-x86_64-hidapi mingw-w64-x86_64-libusb git patch
     - name: install boost 1.69 & icu 62
       run: |
         msys2do wget http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-boost-1.69.0-2-any.pkg.tar.xz
         msys2do wget http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-icu-62.1-1-any.pkg.tar.xz
-        msys2do pacman -U --noconfirm mingw-w64-x86_64-icu-62.1-1-any.pkg.tar.xz
-        msys2do pacman -U --noconfirm mingw-w64-x86_64-boost-1.69.0-2-any.pkg.tar.xz
-    - name: build Haven for windows x64
+        msys2do pacman -U --noconfirm *.tar.xz
+    - name: build Haven
       run: msys2do ./build-haven.sh release-static-win64 -j2
     - name: Upload artifact
       uses: actions/upload-artifact@v2
