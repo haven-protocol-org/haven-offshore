@@ -1005,7 +1005,7 @@ index 8f3f30da1..2cc916956 100644
 +	  }
 +
 +      } else {
-+	process_offshore_outgoing(txid, tx, height, ts, tx_money_spent_in_ins, self_received, *subaddr_account, subaddr_indices, offshore, offshore_to_offshore, onshore);
++	process_offshore_outgoing(txid, tx, height, ts, tx_money_spent_in_ins, self_received_offshore, *subaddr_account, subaddr_indices, offshore, offshore_to_offshore, onshore);
 +      }
 +
 +    } else {
