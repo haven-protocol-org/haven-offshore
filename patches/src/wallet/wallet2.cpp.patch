@@ -2437,7 +2437,7 @@ index 8f3f30da1..2cc916956 100644
 -    LOG_PRINT_L2("transfer: adding " << print_money(dt.amount) << ", for a total of " << print_money (needed_money));
 -    THROW_WALLET_EXCEPTION_IF(needed_money < dt.amount, error::tx_sum_overflow, dsts, 0, m_nettype);
 +
-+    if (offshore || onshore || offshore_to_offshore) {
++    if (offshore || onshore ) {
 +      // Only permit input amounts to 4 decimal places, to avoid precision / truncation errors
 +      THROW_WALLET_EXCEPTION_IF(dt.amount % 100000000, error::wallet_internal_error, "Offshore TX amounts permit at most 4 decimal places");
 +    }
