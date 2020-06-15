@@ -1242,7 +1242,7 @@
          mask = ecdh_info.mask;
          key amount = ecdh_info.amount;
          key C = rv.outPk[i].mask;
-@@ -1178,16 +1878,19 @@ namespace rct {
+@@ -1178,16 +1878,16 @@ namespace rct {
      }
  
      xmr_amount decodeRctSimple(const rctSig & rv, const key & sk, unsigned int i, key &mask, hw::device &hwdev) {
@@ -1258,10 +1258,7 @@
          mask = ecdh_info.mask;
          key amount = ecdh_info.amount;
 -        key C = rv.outPk[i].mask;
-+	// HERE BE DRAGONS!!!
-+	// NEAC: hacky way to detect if this is an offshore TX - look at the contents of the mask
-+        key C = (sc_check(rv.outPk[i].mask.bytes) == 0) ? rv.outPk_usd[i].mask : rv.outPk[i].mask;
-+	// LAND AHOY!!!
++        key C = (equalKeys(scalarmultH(d2h(0)),rv.outPk[i].mask)) ? rv.outPk_usd[i].mask : rv.outPk[i].mask;
          DP("C");
          DP(C);
          key Ctmp;
