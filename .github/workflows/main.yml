@@ -96,6 +96,8 @@ jobs:
   build-macos:
     env:
       CMAKE_OSX_DEPLOYMENT_TARGET: 10.13
+      OSX_MIN_VERSION: 10.13
+      DEVELOPER_DIR: /Applications/Xcode_10.3.app/Contents/Developer
     runs-on: macos-10.15
     steps:
     - uses: actions/checkout@v1
@@ -112,7 +114,7 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
-        name: Haven-MacOS
+        name: Haven-MacOS-10.14-and-later
         path: monero/build/release/bin/
   build-windows:
     runs-on: windows-latest
