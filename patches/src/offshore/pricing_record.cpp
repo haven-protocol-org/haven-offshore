@@ -31,6 +31,15 @@
 
 #include <cstring>
 
+#include <openssl/bio.h>
+#include <openssl/crypto.h>
+#include <openssl/ecdsa.h>
+#include <openssl/err.h>
+#include <openssl/evp.h>
+#include <openssl/pem.h>
+#include <openssl/rsa.h>
+#include <openssl/ssl.h>
+
 #include "serialization/keyvalue_serialization.h"
 #include "storages/portable_storage.h"
 
@@ -124,7 +133,10 @@ namespace offshore
       unused1 = in.unused1;
       unused2 = in.unused2;
       unused3 = in.unused3;
-      std::memcpy(signature, in.signature.data(), in.signature.size());
+      for (unsigned int i = 0; i < in.signature.length(); i += 2) {
+	std::string byteString = in.signature.substr(i, 2);
+	signature[i>>1] = (char) strtol(byteString.c_str(), NULL, 16);
+      }
       return true;
     }
     // HERE BE DRAGONS!!!
@@ -135,7 +147,13 @@ namespace offshore
 
   bool pricing_record::store(epee::serialization::portable_storage& dest, epee::serialization::section* hparent) const
   {
-    const pr_serialized out{xAG,xAU,xAUD,xBTC,xCAD,xCHF,xCNY,xEUR,xGBP,xJPY,xNOK,xNZD,xUSD,unused1,unused2,unused3,signature};
+    std::string sig_hex;
+    for (unsigned int i=0; i<64; i++) {
+      std::stringstream ss;
+      ss << std::hex << std::setw(2) << std::setfill('0') << (0xff & signature[i]);
+      sig_hex += ss.str();
+    }
+    const pr_serialized out{xAG,xAU,xAUD,xBTC,xCAD,xCHF,xCNY,xEUR,xGBP,xJPY,xNOK,xNZD,xUSD,unused1,unused2,unused3,sig_hex};
     return out.store(dest, hparent);
   }
 
@@ -203,4 +221,112 @@ namespace offshore
 	    !::memcmp(signature, other.signature, sizeof(signature)));
   }
 
+
+  bool pricing_record::verifySignature() const noexcept
+  {
+    // Convert our internal 64-byte binary representation into 128-byte hex string
+    std::string sig_hex;
+    for (unsigned int i=0; i<64; i++) {
+      std::stringstream ss;
+      ss << std::hex << std::setw(2) << std::setfill('0') << (0xff & signature[i]);
+      sig_hex += ss.str();
+    }
+    
+    // Rebuild the OpenSSL format of the signature from the r+s values
+    std::string sig_rebuilt = "30";
+    std::string r_rebuilt = (signature[0] == 0) ? sig_hex.substr(2, 62) : sig_hex.substr(0,64);
+    if (signature[(signature[0] == 0) ? 1 : 0] & 0x80)
+      r_rebuilt = "00" + r_rebuilt;
+    std::string s_rebuilt = (signature[(signature[32] == 0) ? 33 : 32] == 0) ? sig_hex.substr(66, 62) : sig_hex.substr(64,64);
+    if (signature[(signature[32] == 0) ? 33 : 32] & 0x80)
+      s_rebuilt = "00" + s_rebuilt;
+    size_t sig_length = (r_rebuilt.length() + s_rebuilt.length() + 8) >> 1;
+    std::stringstream ss;
+    ss << std::hex << sig_length;
+    sig_rebuilt += std::string(2-ss.str().length(), '0') + ss.str();
+    ss.clear();
+    sig_rebuilt += "02";
+    size_t r_length = r_rebuilt.length() >> 1;
+    std::stringstream ss2;
+    ss2 << std::hex << r_length;
+    sig_rebuilt += std::string(2-ss2.str().length(), '0') + ss2.str();
+    ss2.clear();
+    sig_rebuilt += r_rebuilt;
+    sig_rebuilt += "02";
+    size_t s_length = s_rebuilt.length() >> 1;
+    std::stringstream ss3;
+    ss3 << std::hex << s_length;
+    sig_rebuilt += std::string(2-ss3.str().length(), '0') + ss3.str();
+    ss3.clear();
+    sig_rebuilt += s_rebuilt;
+
+    // Build the JSON string, so that we can verify the signature
+    std::string message;
+    message += "{\"xAG\":" + xAG;
+    message += ",\"xAU\":" + xAU;
+    message += ",\"xAUD\":" + xAUD;
+    message += ",\"xBTC\":" + xBTC;
+    message += ",\"xCAD\":" + xCAD;
+    message += ",\"xCHF\":" + xCHF;
+    message += ",\"xCNY\":" + xCNY;
+    message += ",\"xEUR\":" + xEUR;
+    message += ",\"xGBP\":" + xGBP;
+    message += ",\"xJPY\":" + xJPY;
+    message += ",\"xNOK\":" + xNOK;
+    message += ",\"xNZD\":" + xNZD;
+    message += ",\"xUSD\":" + xUSD;
+    message += ",\"unused1\":" + unused1;
+    message += ",\"unused2\":" + unused2;
+    message += ",\"unused3\":" + unused3;
+    message += "}";
+
+    // Convert signature from hex-encoded to binary
+    std::string compact;
+    for (unsigned int i = 0; i < sig_rebuilt.length(); i += 2) {
+      std::string byteString = sig_rebuilt.substr(i, 2);
+      char byte = (char) strtol(byteString.c_str(), NULL, 16);
+      compact += (byte);
+    }
+
+    // HERE BE DRAGONS!!!
+    // NEAC: the public key should be in a file
+    static const char public_key[] = "-----BEGIN PUBLIC KEY-----\n"
+      "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE5YBxWx1AZCA9jTUk8Pr2uZ9jpfRt\n"
+      "KWv3Vo1/Gny+1vfaxsXhBQiG1KlHkafNGarzoL0WHW4ocqaaqF5iv8i35A==\n"
+      "-----END PUBLIC KEY-----\n";
+    // LAND AHOY!!!
+    
+    // Grab the public key and make it usable
+    BIO* bio = BIO_new_mem_buf(public_key, (int)sizeof(public_key));
+    assert(bio != NULL);
+    EVP_PKEY* pubkey = PEM_read_bio_PUBKEY(bio, NULL, NULL, NULL);
+    BIO_free(bio);
+    assert(pubkey != NULL);
+
+    // Create a verify digest from the message
+    EVP_MD_CTX *ctx = EVP_MD_CTX_create();
+    int ret = 0;
+    if (ctx) {
+      ret=EVP_DigestVerifyInit(ctx, NULL, EVP_sha256(), NULL, pubkey);
+      if (ret == 1) {
+	ret=EVP_DigestVerifyUpdate(ctx, message.data(), message.length());
+	if (ret == 1) {
+	  ret=EVP_DigestVerifyFinal(ctx, (const unsigned char *)compact.data(), compact.length());
+	}
+      }
+    }
+    // Cleanup the context we created
+    EVP_MD_CTX_destroy(ctx);
+
+    // Cleanup the openssl stuff
+    EVP_PKEY_free(pubkey);
+  
+    if (ret == 1)
+      return true;
+
+    // Get the errors from OpenSSL
+    //ERR_print_errors_fp (stderr);
+  
+    return false;
+  }
 }

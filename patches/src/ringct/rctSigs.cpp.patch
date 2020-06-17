@@ -1,5 +1,7 @@
---- monero/src/ringct/rctSigs.cpp	2020-05-28 17:21:37.251696233 +0100
-+++ monero-offshore/src/ringct/rctSigs.cpp	2020-05-28 15:14:08.260590482 +0100
+diff --git a/src/ringct/rctSigs.cpp b/src/ringct/rctSigs.cpp
+index ff2a81d43..b09027d65 100644
+--- a/src/ringct/rctSigs.cpp
++++ b/src/ringct/rctSigs.cpp
 @@ -35,6 +35,8 @@
  #include "rctSigs.h"
  #include "bulletproofs.h"
@@ -778,7 +780,7 @@
 +	  inSk_usd.push_back(inSk[i].back());
 +	}
 +	for (size_t i=0; i < outamounts.size(); ++i) {
-+	  if (outamounts[i].first == 0)
++	  if ((outamounts[i].first == 0) && (outamounts[i].second != 0))
 +	    outamounts_nonzero.push_back(outamounts[i].second);
 +	  else
 +	    outamounts_nonzero.push_back(outamounts[i].first);
@@ -883,7 +885,7 @@
 +
                  for (i = 0; i < outamounts.size(); ++i)
                  {
-+		  if (outamounts[i].first == 0) {
++		  if ((outamounts[i].first == 0) && (outamounts[i].second != 0)) {
 +                    rv.outPk[i].mask = zeromask;
 +                    rv.outPk_usd[i].mask = rct::scalarmult8(C[i]);
 +		  } else {
@@ -926,7 +928,7 @@
                  {
 -                  rv.outPk[i + amounts_proved].mask = rct::scalarmult8(C[i]);
 -                  outSk[i + amounts_proved].mask = masks[i];
-+		  if (outamounts[i + amounts_proved].first == 0) {
++		  if ((outamounts[i + amounts_proved].first == 0) && (outamounts[i + amounts_proved].second != 0)) {
 +                    rv.outPk[i + amounts_proved].mask = zeromask;
 +                    rv.outPk_usd[i + amounts_proved].mask = rct::scalarmult8(C[i]);
 +		  } else {
@@ -956,7 +958,7 @@
 +	  key tempkey = zero();
 +	  if (offshore || (!onshore && !offshore_to_offshore)) {
 +	    // SPENDING XHV
-+	    if (outamounts[i].first == 0) {
++	    if ((outamounts[i].first == 0) && (outamounts[i].second != 0)) {
 +	      // Convert output amount to XHV for equalKeys() testing
 +	      sc_mul(tempkey.bytes, outSk[i].mask.bytes, atomic.bytes);
 +	      sc_mul(outSk_scaled.bytes, tempkey.bytes, inverse_rate.bytes);
@@ -967,7 +969,7 @@
 +	    }
 +	  } else {
 +	    // SPENDING USD
-+	    if (outamounts[i].first == 0) {
++	    if ((outamounts[i].first == 0) && (outamounts[i].second != 0)) {
 +	      // Output amount in USD already - no conversion required
 +	      outSk_scaled = outSk[i].mask;
 +	    } else {
@@ -1113,12 +1115,17 @@
 -          DP(sumOutpks);
 -          const key txnFeeKey = scalarmultH(d2h(rv.txnFee));
 -          addKeys(sumOutpks, txnFeeKey, sumOutpks);
+-
+-          key sumPseudoOuts = addKeys(pseudoOuts);
+-          DP(sumPseudoOuts);
+-
+-          //check pseudoOuts vs Outs..
+-          if (!equalKeys(sumPseudoOuts, sumOutpks)) {
+-            LOG_PRINT_L1("Sum check failed");
 +	  // OUTPUTS SUMMED FOR EACH COLOUR
 +	  key zerokey = scalarmultH(d2h(0));
 +	  key Zi = zero();
- 
--          key sumPseudoOuts = addKeys(pseudoOuts);
--          DP(sumPseudoOuts);
++
 +	  // Calculate sum of all C'
 +	  rct::keyV masks(rv.outPk.size());
 +	  for (size_t i = 0; i < rv.outPk.size(); i++) {
@@ -1126,10 +1133,7 @@
 +	  }
 +	  key sumOutpks = addKeys(masks);
 +	  DP(sumOutpks);
- 
--          //check pseudoOuts vs Outs..
--          if (!equalKeys(sumPseudoOuts, sumOutpks)) {
--            LOG_PRINT_L1("Sum check failed");
++
 +	  // Calculate sum of all D'
 +	  rct::keyV masks_usd(rv.outPk_usd.size());
 +	  for (size_t i = 0; i < rv.outPk_usd.size(); i++) {
@@ -1262,7 +1266,7 @@
          DP("C");
          DP(C);
          key Ctmp;
-@@ -1207,12 +1910,13 @@ namespace rct {
+@@ -1207,12 +1907,13 @@ namespace rct {
        return decodeRctSimple(rv, sk, i, mask, hwdev);
      }
  
@@ -1277,7 +1281,7 @@
          if (rv.type == RCTTypeFull)
          {
            CHECK_AND_ASSERT_MES(rv.p.MGs.size() == 1, false, "MGs not a single element");
-@@ -1222,6 +1926,8 @@ namespace rct {
+@@ -1222,6 +1923,8 @@ namespace rct {
              CHECK_AND_ASSERT_MES(!rv.p.MGs[n].ss[indices[n]].empty(), false, "empty ss line");
          }
  
@@ -1286,7 +1290,7 @@
          for (size_t n = 0; n < indices.size(); ++n) {
              rct::key diff;
              sc_mulsub(diff.bytes, msout.c[n].bytes, secret_key.bytes, k[n].bytes);
-@@ -1229,4 +1935,33 @@ namespace rct {
+@@ -1229,4 +1932,33 @@ namespace rct {
          }
          return true;
      }

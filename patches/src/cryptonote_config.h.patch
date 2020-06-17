@@ -1,5 +1,5 @@
---- monero/src/cryptonote_config.h	2020-05-28 17:21:37.227695919 +0100
-+++ monero-offshore/src/cryptonote_config.h	2020-05-28 17:09:05.133619632 +0100
+--- a/src/cryptonote_config.h
++++ b/src/cryptonote_config.h
 @@ -33,18 +33,23 @@
  #include <stdexcept>
  #include <string>

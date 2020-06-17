@@ -64,7 +64,7 @@ namespace offshore
     uint64_t unused1;
     uint64_t unused2;
     uint64_t unused3;
-    char signature[64];
+    unsigned char signature[64];
 
     // Default c'tor
     pricing_record() noexcept;
@@ -79,6 +79,8 @@ namespace offshore
     pricing_record& operator=(const pricing_record& orig) noexcept;
     
     bool equal(const pricing_record& other) const noexcept;
+
+    bool verifySignature() const noexcept;
   };
 
   inline bool operator==(const pricing_record& a, const pricing_record& b) noexcept
