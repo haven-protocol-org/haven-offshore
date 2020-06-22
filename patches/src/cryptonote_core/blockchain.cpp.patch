@@ -691,7 +691,7 @@ index ac2c07913..bca4760e3 100644
 +  if (m_nettype == STAGENET) {
 +    http_client.set_server("oracle.havenprotocol.org:443", boost::none, epee::net_utils::ssl_support_t::e_ssl_support_autodetect);
 +  } else if (m_nettype == TESTNET) {
-+    http_client.set_server("testnet.oracle.havenprotocol.org:8443", boost::none, epee::net_utils::ssl_support_t::e_ssl_support_autodetect);
++    http_client.set_server("oracle.havenprotocol.org:443", boost::none, epee::net_utils::ssl_support_t::e_ssl_support_autodetect);
 +  } else {
 +    http_client.set_server("oracle.havenprotocol.org:443", boost::none, epee::net_utils::ssl_support_t::e_ssl_support_autodetect);
 +  }

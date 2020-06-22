@@ -261,24 +261,25 @@ namespace offshore
     sig_rebuilt += s_rebuilt;
 
     // Build the JSON string, so that we can verify the signature
-    std::string message;
-    message += "{\"xAG\":" + xAG;
-    message += ",\"xAU\":" + xAU;
-    message += ",\"xAUD\":" + xAUD;
-    message += ",\"xBTC\":" + xBTC;
-    message += ",\"xCAD\":" + xCAD;
-    message += ",\"xCHF\":" + xCHF;
-    message += ",\"xCNY\":" + xCNY;
-    message += ",\"xEUR\":" + xEUR;
-    message += ",\"xGBP\":" + xGBP;
-    message += ",\"xJPY\":" + xJPY;
-    message += ",\"xNOK\":" + xNOK;
-    message += ",\"xNZD\":" + xNZD;
-    message += ",\"xUSD\":" + xUSD;
-    message += ",\"unused1\":" + unused1;
-    message += ",\"unused2\":" + unused2;
-    message += ",\"unused3\":" + unused3;
-    message += "}";
+    std::ostringstream oss;
+    oss << "{\"xAG\":" << xAG;
+    oss << ",\"xAU\":" << xAU;
+    oss << ",\"xAUD\":" << xAUD;
+    oss << ",\"xBTC\":" << xBTC;
+    oss << ",\"xCAD\":" << xCAD;
+    oss << ",\"xCHF\":" << xCHF;
+    oss << ",\"xCNY\":" << xCNY;
+    oss << ",\"xEUR\":" << xEUR;
+    oss << ",\"xGBP\":" << xGBP;
+    oss << ",\"xJPY\":" << xJPY;
+    oss << ",\"xNOK\":" << xNOK;
+    oss << ",\"xNZD\":" << xNZD;
+    oss << ",\"xUSD\":" << xUSD;
+    oss << ",\"unused1\":" << unused1;
+    oss << ",\"unused2\":" << unused2;
+    oss << ",\"unused3\":" << unused3;
+    oss << "}";
+    std::string message = oss.str();    
 
     // Convert signature from hex-encoded to binary
     std::string compact;
