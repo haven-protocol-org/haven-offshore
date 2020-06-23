@@ -1,5 +1,7 @@
---- monero/src/wallet/wallet_rpc_server.cpp	2020-05-28 17:21:37.279696600 +0100
-+++ monero-offshore/src/wallet/wallet_rpc_server.cpp	2020-04-21 10:45:37.000000000 +0100
+diff --git a/src/wallet/wallet_rpc_server.cpp b/src/wallet/wallet_rpc_server.cpp
+index 0e2a34470..f01386216 100644
+--- a/src/wallet/wallet_rpc_server.cpp
++++ b/src/wallet/wallet_rpc_server.cpp
 @@ -285,7 +285,7 @@ namespace tools
      {
        MINFO("The daemon is not set up to background mine.");
@@ -116,6 +118,37 @@
    bool wallet_rpc_server::on_getaddress(const wallet_rpc::COMMAND_RPC_GET_ADDRESS::request& req, wallet_rpc::COMMAND_RPC_GET_ADDRESS::response& res, epee::json_rpc::error& er, const connection_context *ctx)
    {
      if (!m_wallet) return not_open(er);
+@@ -847,17 +911,17 @@ namespace tools
+     return true;
+   }
+   //------------------------------------------------------------------------------------------------------------------------------
+-  static uint64_t total_amount(const tools::wallet2::pending_tx &ptx)
++  static uint64_t total_amount(const tools::wallet2::pending_tx &ptx, bool use_offshore_amounts)
+   {
+     uint64_t amount = 0;
+-    for (const auto &dest: ptx.dests) amount += dest.amount;
++    for (const auto &dest: ptx.dests) amount += (use_offshore_amounts ? dest.amount_usd : dest.amount);
+     return amount;
+   }
+   //------------------------------------------------------------------------------------------------------------------------------
+   template<typename Ts, typename Tu>
+   bool wallet_rpc_server::fill_response(std::vector<tools::wallet2::pending_tx> &ptx_vector,
+-      bool get_tx_key, Ts& tx_key, Tu &amount, Tu &fee, std::string &multisig_txset, std::string &unsigned_txset, bool do_not_relay,
+-      Ts &tx_hash, bool get_tx_hex, Ts &tx_blob, bool get_tx_metadata, Ts &tx_metadata, epee::json_rpc::error &er)
++					bool get_tx_key, Ts& tx_key, Tu &amount, Tu &fee, std::string &multisig_txset, std::string &unsigned_txset, bool do_not_relay,
++					Ts &tx_hash, bool get_tx_hex, Ts &tx_blob, bool get_tx_metadata, Ts &tx_metadata, epee::json_rpc::error &er, bool use_offshore_amounts)
+   {
+     for (const auto & ptx : ptx_vector)
+     {
+@@ -869,7 +933,7 @@ namespace tools
+         fill(tx_key, std::string(s.data(), s.size()));
+       }
+       // Compute amount leaving wallet in tx. By convention dests does not include change outputs
+-      fill(amount, total_amount(ptx));
++      fill(amount, total_amount(ptx, use_offshore_amounts));
+       fill(fee, ptx.fee);
+     }
+ 
 @@ -914,6 +978,179 @@ namespace tools
      return true;
    }
@@ -168,7 +201,7 @@
 +      }
 +
 +      return fill_response(ptx_vector, req.get_tx_keys, res.tx_key_list, res.amount_list, res.fee_list, res.multisig_txset, res.unsigned_txset, req.do_not_relay,
-+          res.tx_hash_list, req.get_tx_hex, res.tx_blob_list, req.get_tx_metadata, res.tx_metadata_list, er);
++			   res.tx_hash_list, req.get_tx_hex, res.tx_blob_list, req.get_tx_metadata, res.tx_metadata_list, er);
 +    }
 +    catch (const std::exception& e)
 +    {
@@ -225,7 +258,7 @@
 +      }
 +
 +      return fill_response(ptx_vector, req.get_tx_keys, res.tx_key_list, res.amount_list, res.fee_list, res.multisig_txset, res.unsigned_txset, req.do_not_relay,
-+          res.tx_hash_list, req.get_tx_hex, res.tx_blob_list, req.get_tx_metadata, res.tx_metadata_list, er);
++			   res.tx_hash_list, req.get_tx_hex, res.tx_blob_list, req.get_tx_metadata, res.tx_metadata_list, er, true);
 +    }
 +    catch (const std::exception& e)
 +    {
