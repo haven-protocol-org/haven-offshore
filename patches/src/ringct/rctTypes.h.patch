@@ -1,5 +1,5 @@
---- monero/src/ringct/rctTypes.h	2020-05-28 17:21:37.251696233 +0100
-+++ monero-offshore/src/ringct/rctTypes.h	2020-04-15 14:16:18.000000000 +0100
+--- monero/src/ringct/rctTypes.h	2020-06-30 14:49:37.566511377 +0100
++++ monero-offshore/src/ringct/rctTypes.h	2020-06-26 11:05:55.655512666 +0100
 @@ -110,9 +110,14 @@ namespace rct {
  
      struct multisig_out {
@@ -47,15 +47,19 @@
      };
      enum RangeProofType { RangeProofBorromean, RangeProofBulletproof, RangeProofMultiOutputBulletproof, RangeProofPaddedBulletproof };
      struct RCTConfig {
-@@ -245,6 +268,7 @@ namespace rct {
+@@ -245,7 +268,11 @@ namespace rct {
          keyV pseudoOuts; //C - for simple rct
          std::vector<ecdhTuple> ecdhInfo;
          ctkeyV outPk;
 +        ctkeyV outPk_usd;
          xmr_amount txnFee; // contains b
++        xmr_amount txnFee_usd;
++        xmr_amount txnOffshoreFee;
++        xmr_amount txnOffshoreFee_usd;
  
          template<bool W, template <bool> class Archive>
-@@ -253,7 +277,7 @@ namespace rct {
+         bool serialize_rctsig_base(Archive<W> &ar, size_t inputs, size_t outputs)
+@@ -253,9 +280,12 @@ namespace rct {
            FIELD(type)
            if (type == RCTTypeNull)
              return ar.stream().good();
@@ -63,8 +67,13 @@
 +          if (type != RCTTypeFull && type != RCTTypeSimple && type != RCTTypeBulletproof && type != RCTTypeBulletproof2 && type != RCTTypeCLSAG)
              return false;
            VARINT_FIELD(txnFee)
++          VARINT_FIELD(txnFee_usd)
++          VARINT_FIELD(txnOffshoreFee)
++          VARINT_FIELD(txnOffshoreFee_usd)
            // inputs/outputs not saved, only here for serialization help
-@@ -282,7 +306,7 @@ namespace rct {
+           // FIELD(message) - not serialized, it can be reconstructed
+           // FIELD(mixRing) - not serialized, it can be reconstructed
+@@ -282,7 +312,7 @@ namespace rct {
              return false;
            for (size_t i = 0; i < outputs; ++i)
            {
@@ -73,7 +82,7 @@
              {
                ar.begin_object();
                if (!typename Archive<W>::is_saving())
-@@ -312,26 +336,42 @@ namespace rct {
+@@ -312,26 +342,42 @@ namespace rct {
                ar.delimit_array();
            }
            ar.end_array();
@@ -121,7 +130,7 @@
                VARINT_FIELD(nbp)
              else
                FIELD(nbp)
-@@ -366,55 +407,98 @@ namespace rct {
+@@ -366,55 +412,98 @@ namespace rct {
              ar.end_array();
            }
  
@@ -253,7 +262,7 @@
            {
              ar.tag("pseudoOuts");
              ar.begin_array();
-@@ -438,12 +522,12 @@ namespace rct {
+@@ -438,12 +527,12 @@ namespace rct {
  
          keyV& get_pseudo_outs()
          {
@@ -268,7 +277,7 @@
          }
      };
  
-@@ -605,6 +689,7 @@ VARIANT_TAG(debug_archive, rct::rctSig,
+@@ -605,6 +694,7 @@ VARIANT_TAG(debug_archive, rct::rctSig,
  VARIANT_TAG(debug_archive, rct::Bulletproof, "rct::bulletproof");
  VARIANT_TAG(debug_archive, rct::multisig_kLRki, "rct::multisig_kLRki");
  VARIANT_TAG(debug_archive, rct::multisig_out, "rct::multisig_out");
@@ -276,7 +285,7 @@
  
  VARIANT_TAG(binary_archive, rct::key, 0x90);
  VARIANT_TAG(binary_archive, rct::key64, 0x91);
-@@ -621,6 +706,7 @@ VARIANT_TAG(binary_archive, rct::rctSig,
+@@ -621,6 +711,7 @@ VARIANT_TAG(binary_archive, rct::rctSig,
  VARIANT_TAG(binary_archive, rct::Bulletproof, 0x9c);
  VARIANT_TAG(binary_archive, rct::multisig_kLRki, 0x9d);
  VARIANT_TAG(binary_archive, rct::multisig_out, 0x9e);
@@ -284,7 +293,7 @@
  
  VARIANT_TAG(json_archive, rct::key, "rct_key");
  VARIANT_TAG(json_archive, rct::key64, "rct_key64");
-@@ -637,5 +723,6 @@ VARIANT_TAG(json_archive, rct::rctSig, "
+@@ -637,5 +728,6 @@ VARIANT_TAG(json_archive, rct::rctSig, "
  VARIANT_TAG(json_archive, rct::Bulletproof, "rct_bulletproof");
  VARIANT_TAG(json_archive, rct::multisig_kLRki, "rct_multisig_kLR");
  VARIANT_TAG(json_archive, rct::multisig_out, "rct_multisig_out");

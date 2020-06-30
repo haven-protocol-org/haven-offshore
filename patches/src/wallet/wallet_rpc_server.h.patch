@@ -1,7 +1,5 @@
-diff --git a/src/wallet/wallet_rpc_server.h b/src/wallet/wallet_rpc_server.h
-index a327ed908..18c5934c3 100644
---- a/src/wallet/wallet_rpc_server.h
-+++ b/src/wallet/wallet_rpc_server.h
+--- monero/src/wallet/wallet_rpc_server.h	2020-06-30 14:49:37.586511644 +0100
++++ monero-offshore/src/wallet/wallet_rpc_server.h	2020-06-23 11:03:51.903459122 +0100
 @@ -69,6 +69,7 @@ namespace tools
      BEGIN_URI_MAP2()
        BEGIN_JSON_RPC_MAP("/json_rpc")

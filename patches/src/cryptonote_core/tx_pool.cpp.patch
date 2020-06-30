@@ -1,5 +1,5 @@
---- monero/src/cryptonote_core/tx_pool.cpp	2020-05-28 17:21:37.239696076 +0100
-+++ monero-offshore/src/cryptonote_core/tx_pool.cpp	2020-04-08 14:55:49.000000000 +0100
+--- monero/src/cryptonote_core/tx_pool.cpp	2020-06-30 14:49:37.554511216 +0100
++++ monero-offshore/src/cryptonote_core/tx_pool.cpp	2020-06-30 12:11:06.805937244 +0100
 @@ -82,8 +82,8 @@ namespace cryptonote
  
      uint64_t get_transaction_weight_limit(uint8_t version)
@@ -11,8 +11,22 @@
          return get_min_block_weight(version) / 2 - CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE;
        else
          return get_min_block_weight(version) - CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE;
-@@ -181,7 +181,7 @@ namespace cryptonote
+@@ -147,7 +147,7 @@ namespace cryptonote
+     }
+ 
+     // fee per kilobyte, size rounded up.
+-    uint64_t fee;
++    uint64_t fee = 0, fee_usd = 0, offshore_fee = 0, offshore_fee_usd = 0;
+ 
+     if (tx.version == 1)
+     {
+@@ -179,15 +179,22 @@ namespace cryptonote
+     else
+     {
        fee = tx.rct_signatures.txnFee;
++      fee_usd = tx.rct_signatures.txnFee_usd;
++      offshore_fee = tx.rct_signatures.txnOffshoreFee;
++      offshore_fee_usd = tx.rct_signatures.txnOffshoreFee_usd;
      }
  
 -    if (!kept_by_block && !m_blockchain.check_fee(tx_weight, fee))
@@ -20,7 +34,37 @@
      {
        tvc.m_verifivation_failed = true;
        tvc.m_fee_too_low = true;
-@@ -313,8 +313,12 @@ namespace cryptonote
+       return false;
+     }
+ 
++    // HERE BE DRAGONS!!!
++    // NEAC: Verify the offshore conversion fee is present and correct here
++    // LAND AHOY!!!
++    
+     size_t tx_weight_limit = get_transaction_weight_limit(version);
+     if ((!kept_by_block || version >= HF_VERSION_PER_BYTE_FEE) && tx_weight > tx_weight_limit)
+     {
+@@ -237,6 +244,9 @@ namespace cryptonote
+       {
+         meta.weight = tx_weight;
+         meta.fee = fee;
++	meta.fee_usd = fee_usd;
++	meta.offshore_fee = offshore_fee;
++	meta.offshore_fee_usd = offshore_fee_usd;
+         meta.max_used_block_id = null_hash;
+         meta.max_used_block_height = 0;
+         meta.last_failed_height = 0;
+@@ -281,6 +291,9 @@ namespace cryptonote
+       meta.weight = tx_weight;
+       meta.kept_by_block = kept_by_block;
+       meta.fee = fee;
++      meta.fee_usd = fee_usd;
++      meta.offshore_fee = offshore_fee;
++      meta.offshore_fee_usd = offshore_fee_usd;
+       meta.max_used_block_id = max_used_block_id;
+       meta.max_used_block_height = max_used_block_height;
+       meta.last_failed_height = 0;
+@@ -313,8 +326,12 @@ namespace cryptonote
        }
        tvc.m_added_to_pool = true;
  
@@ -34,7 +78,7 @@
      }
  
      tvc.m_verifivation_failed = false;
-@@ -413,15 +417,41 @@ namespace cryptonote
+@@ -413,15 +430,41 @@ namespace cryptonote
    //---------------------------------------------------------------------------------
    bool tx_memory_pool::insert_key_images(const transaction_prefix &tx, const crypto::hash &id, bool kept_by_block)
    {
@@ -85,7 +129,7 @@
      }
      ++m_cookie;
      return true;
-@@ -435,26 +465,71 @@ namespace cryptonote
+@@ -435,32 +478,77 @@ namespace cryptonote
      CRITICAL_REGION_LOCAL(m_transactions_lock);
      CRITICAL_REGION_LOCAL1(m_blockchain);
      // ND: Speedup
@@ -175,7 +219,24 @@
      }
      ++m_cookie;
      return true;
-@@ -957,11 +1032,29 @@ namespace cryptonote
+   }
+   //---------------------------------------------------------------------------------
+-  bool tx_memory_pool::take_tx(const crypto::hash &id, transaction &tx, cryptonote::blobdata &txblob, size_t& tx_weight, uint64_t& fee, bool &relayed, bool &do_not_relay, bool &double_spend_seen)
++  bool tx_memory_pool::take_tx(const crypto::hash &id, transaction &tx, cryptonote::blobdata &txblob, size_t& tx_weight, uint64_t& fee, uint64_t& fee_usd, uint64_t& offshore_fee, uint64_t& offshore_fee_usd, bool &relayed, bool &do_not_relay, bool &double_spend_seen)
+   {
+     CRITICAL_REGION_LOCAL(m_transactions_lock);
+     CRITICAL_REGION_LOCAL1(m_blockchain);
+@@ -493,6 +581,9 @@ namespace cryptonote
+       }
+       tx_weight = meta.weight;
+       fee = meta.fee;
++      fee_usd = meta.fee_usd;
++      offshore_fee = meta.offshore_fee;
++      offshore_fee_usd = meta.offshore_fee_usd;
+       relayed = meta.relayed;
+       do_not_relay = meta.do_not_relay;
+       double_spend_seen = meta.double_spend_seen;
+@@ -957,11 +1048,29 @@ namespace cryptonote
    {
      CRITICAL_REGION_LOCAL(m_transactions_lock);
      CRITICAL_REGION_LOCAL1(m_blockchain);
@@ -210,7 +271,7 @@
      }
      return false;
    }
-@@ -1070,22 +1163,58 @@ namespace cryptonote
+@@ -1070,22 +1179,58 @@ namespace cryptonote
    //---------------------------------------------------------------------------------
    bool tx_memory_pool::have_key_images(const std::unordered_set<crypto::key_image>& k_images, const transaction_prefix& tx)
    {
@@ -279,7 +340,7 @@
      }
      return true;
    }
-@@ -1098,8 +1227,18 @@ namespace cryptonote
+@@ -1098,8 +1243,18 @@ namespace cryptonote
      LockedTXN lock(m_blockchain);
      for(size_t i = 0; i!= tx.vin.size(); i++)
      {
@@ -300,7 +361,7 @@
        if (it != m_spent_key_images.end())
        {
          for (const crypto::hash &txid: it->second)
-@@ -1113,7 +1252,7 @@ namespace cryptonote
+@@ -1113,7 +1268,7 @@ namespace cryptonote
            }
            if (!meta.double_spend_seen)
            {
@@ -309,7 +370,26 @@
              meta.double_spend_seen = true;
              changed = true;
              try
-@@ -1218,7 +1357,10 @@ namespace cryptonote
+@@ -1166,7 +1321,7 @@ namespace cryptonote
+   }
+   //---------------------------------------------------------------------------------
+   //TODO: investigate whether boolean return is appropriate
+-  bool tx_memory_pool::fill_block_template(block &bl, size_t median_weight, uint64_t already_generated_coins, size_t &total_weight, uint64_t &fee, uint64_t &expected_reward, uint8_t version)
++  bool tx_memory_pool::fill_block_template(block &bl, size_t median_weight, uint64_t already_generated_coins, size_t &total_weight, uint64_t &fee, uint64_t &fee_usd, uint64_t &offshore_fee, uint64_t &offshore_fee_usd, uint64_t &expected_reward, uint8_t version)
+   {
+     CRITICAL_REGION_LOCAL(m_transactions_lock);
+     CRITICAL_REGION_LOCAL1(m_blockchain);
+@@ -1174,6 +1329,9 @@ namespace cryptonote
+     uint64_t best_coinbase = 0, coinbase = 0;
+     total_weight = 0;
+     fee = 0;
++    fee_usd = 0;
++    offshore_fee = 0;
++    offshore_fee_usd = 0;
+     
+     //baseline empty block
+     get_block_reward(median_weight, total_weight, already_generated_coins, best_coinbase, version);
+@@ -1218,7 +1376,10 @@ namespace cryptonote
            continue;
          }
          coinbase = block_reward + fee + meta.fee;
@@ -320,7 +400,7 @@
          {
            LOG_PRINT_L2("  would decrease coinbase to " << print_money(coinbase));
            continue;
-@@ -1274,7 +1416,14 @@ namespace cryptonote
+@@ -1274,10 +1435,20 @@ namespace cryptonote
          LOG_PRINT_L2("  key images already seen");
          continue;
        }
@@ -336,3 +416,9 @@
        bl.tx_hashes.push_back(sorted_it->second);
        total_weight += meta.weight;
        fee += meta.fee;
++      fee_usd += meta.fee_usd;
++      offshore_fee += meta.offshore_fee;
++      offshore_fee_usd += meta.offshore_fee_usd;
+       best_coinbase = coinbase;
+       append_key_images(k_images, tx);
+       LOG_PRINT_L2("  added, new block weight " << total_weight << "/" << max_total_weight << ", coinbase " << print_money(best_coinbase));
