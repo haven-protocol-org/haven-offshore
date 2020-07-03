@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_basic/cryptonote_boost_serialization.h b/src/cryptonote_basic/cryptonote_boost_serialization.h
-index 79ce610a9..b0b257f52 100644
+index 79ce610a9..33c1b00e0 100644
 --- a/src/cryptonote_basic/cryptonote_boost_serialization.h
 +++ b/src/cryptonote_basic/cryptonote_boost_serialization.h
 @@ -103,7 +103,13 @@ namespace boost
@@ -111,16 +111,22 @@ index 79ce610a9..b0b257f52 100644
        throw boost::archive::archive_exception(boost::archive::archive_exception::other_exception, "Unsupported rct type");
      // a & x.message; message is not serialized, as it can be reconstructed from the tx data
      // a & x.mixRing; mixRing is not serialized, as it can be reconstructed from the offsets
-@@ -303,6 +352,8 @@ namespace boost
+@@ -303,7 +352,14 @@ namespace boost
        a & x.pseudoOuts;
      a & x.ecdhInfo;
      serializeOutPk(a, x.outPk, ver);
 +    if (ver >= 1u)
 +      serializeOutPk(a, x.outPk_usd, ver);
      a & x.txnFee;
++    if (ver >= 1u) {
++      a & x.txnFee_usd;
++      a & x.txnOffshoreFee;
++      a & x.txnOffshoreFee_usd;
++    }
    }
  
-@@ -313,6 +364,8 @@ namespace boost
+   template <class Archive>
+@@ -313,6 +369,8 @@ namespace boost
      if (x.rangeSigs.empty())
        a & x.bulletproofs;
      a & x.MGs;
@@ -129,7 +135,7 @@ index 79ce610a9..b0b257f52 100644
      if (x.rangeSigs.empty())
        a & x.pseudoOuts;
    }
-@@ -323,7 +376,7 @@ namespace boost
+@@ -323,7 +381,7 @@ namespace boost
      a & x.type;
      if (x.type == rct::RCTTypeNull)
        return;
@@ -138,13 +144,18 @@ index 79ce610a9..b0b257f52 100644
        throw boost::archive::archive_exception(boost::archive::archive_exception::other_exception, "Unsupported rct type");
      // a & x.message; message is not serialized, as it can be reconstructed from the tx data
      // a & x.mixRing; mixRing is not serialized, as it can be reconstructed from the offsets
-@@ -331,13 +384,17 @@ namespace boost
+@@ -331,13 +389,22 @@ namespace boost
        a & x.pseudoOuts;
      a & x.ecdhInfo;
      serializeOutPk(a, x.outPk, ver);
 +    if (ver >= 1u)
 +      serializeOutPk(a, x.outPk_usd, ver);
      a & x.txnFee;
++    if (ver >= 1u) {
++      a & x.txnFee_usd;
++      a & x.txnOffshoreFee;
++      a & x.txnOffshoreFee_usd;
++    }
      //--------------
      a & x.p.rangeSigs;
      if (x.p.rangeSigs.empty())
@@ -157,7 +168,7 @@ index 79ce610a9..b0b257f52 100644
        a & x.p.pseudoOuts;
    }
  
-@@ -375,7 +432,35 @@ namespace boost
+@@ -375,7 +442,35 @@ namespace boost
      }
    }
  
