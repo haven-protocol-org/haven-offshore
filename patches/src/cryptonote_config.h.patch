@@ -1,3 +1,5 @@
+diff --git a/src/cryptonote_config.h b/src/cryptonote_config.h
+index 56b6a63b7..17af69ff3 100644
 --- a/src/cryptonote_config.h
 +++ b/src/cryptonote_config.h
 @@ -33,18 +33,23 @@
@@ -151,8 +153,8 @@
 +#define HF_VERSION_EFFECTIVE_SHORT_TERM_MEDIAN_IN_PENALTY 12
 +#define HF_VERSION_CLSAG                        13
 +#define HF_11_MIN_MIXIN_10                      11
-+#define HF_VERSION_OFFSHORE_PRICING             5
-+#define HF_VERSION_OFFSHORE_FULL                5
++#define HF_VERSION_OFFSHORE_PRICING             11
++#define HF_VERSION_OFFSHORE_FULL                13
 +
 +#define STAGENET_VERSION                        0x03
 +#define TESTNET_VERSION                         0x03
@@ -232,8 +234,8 @@
 +    std::string const GENESIS_TX = "013c01ff0001ffffffffffff0f029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd0880712101168d0c4ca86fb55a4cf6a36d31431be1c53a3bd7411bb24e8832410289fa6f3b";
 +  uint32_t const GENESIS_NONCE = 10001;
 +
-+  std::string const GOVERNANCE_WALLET_ADDRESS = "hvtaG41PNGsT5mWQGeqXFvScaNxHQj6YeJK7Vuq2uRF8fa58D6KawrcXS1EVt6g4PiBnSvYMqVRxoAMZaM7AVCqo4LknAJJBR9";
-+  std::string const GOVERNANCE_WALLET_ADDRESS_MULTI = "hvtaKW6432sck8vBR2AbkR5ZV5vU9gzfW2AyexzU2dF9Yhvm2rAEGMaS5RskxfC3JSL5xW2xCczAFKBg6Et7dubtAUhMPRX75D";
++  std::string const GOVERNANCE_WALLET_ADDRESS = "hvta9gEeEpp8tWm4DK3gzZH5dsoAkbtwBL19EGnaYjApRoo8bXQg2GJPjBiji6NMbLDUUkfZw9Q4sh558r37Ucjb9ZHaDUns8N";
++  std::string const GOVERNANCE_WALLET_ADDRESS_MULTI = "hvta9gEeEpp8tWm4DK3gzZH5dsoAkbtwBL19EGnaYjApRoo8bXQg2GJPjBiji6NMbLDUUkfZw9Q4sh558r37Ucjb9ZHaDUns8N";
    }
  
    namespace stagenet

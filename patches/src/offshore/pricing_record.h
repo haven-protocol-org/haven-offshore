@@ -28,6 +28,7 @@
 // Portions of this code based upon code Copyright (c) 2019, The Monero Project
 
 #pragma once
+#include "common/pod-class.h"
 
 #include <cstdint>
 
@@ -42,6 +43,29 @@ namespace epee
 
 namespace offshore
 {
+
+#pragma pack(push, 1)
+  POD_CLASS pricing_record_old {
+    double xAG;
+    double xAU;
+    double xAUD;
+    double xBTC;
+    double xCAN;
+    double xCHF;
+    double xCNY;
+    double xEUR;
+    double xGBP;
+    double xJPY;
+    double xNOK;
+    double xNZD;
+    double xUSD;
+    double unused1;
+    double unused2;
+    double unused3;
+    char signature[32];
+  };
+#pragma pack(pop)
+
   class pricing_record
   {
 
