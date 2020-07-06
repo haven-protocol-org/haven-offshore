@@ -86,7 +86,7 @@ jobs:
         sudo mv *.hpp /usr/local/include
     - name: build Haven
       run: |
-        ./build-haven.sh rele -j3ase-static -j3
+        ./build-haven.sh release-static -j3
         chmod +x monero/build/release/bin/*
     - name: Upload artifact
       uses: actions/upload-artifact@v2
