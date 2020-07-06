@@ -41,7 +41,7 @@ jobs:
         sudo mv *.hpp /usr/local/include
     - name: build Haven
       run: |
-        ./build-haven.sh release-static
+        ./build-haven.sh release-static -j3
         chmod +x monero/build/release/bin/*
     - name: Upload artifact
       uses: actions/upload-artifact@v2
@@ -86,7 +86,7 @@ jobs:
         sudo mv *.hpp /usr/local/include
     - name: build Haven
       run: |
-        ./build-haven.sh release-static
+        ./build-haven.sh rele -j3ase-static -j3
         chmod +x monero/build/release/bin/*
     - name: Upload artifact
       uses: actions/upload-artifact@v2
@@ -109,7 +109,7 @@ jobs:
         wget https://raw.githubusercontent.com/zeromq/cppzmq/v4.3.0/zmq.hpp -O /usr/local/include/zmq.hpp
     - name: build Haven
       run: |
-        ./build-haven.sh release-static
+        ./build-haven.sh release-static -j3
         chmod +x monero/build/release/bin/*
     - name: Upload artifact
       uses: actions/upload-artifact@v2
