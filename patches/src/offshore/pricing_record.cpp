@@ -139,10 +139,9 @@ namespace offshore
       }
       return true;
     }
-    // HERE BE DRAGONS!!!
+
     // Report error here?
     return false;
-    // LAND AHOY!!!
   }
 
   bool pricing_record::store(epee::serialization::portable_storage& dest, epee::serialization::section* hparent) const

@@ -1,7 +1,5 @@
-diff --git a/src/ringct/rctSigs.cpp b/src/ringct/rctSigs.cpp
-index ff2a81d43..b09027d65 100644
---- a/src/ringct/rctSigs.cpp
-+++ b/src/ringct/rctSigs.cpp
+--- monero/src/ringct/rctSigs.cpp	2020-06-30 14:49:37.566511377 +0100
++++ monero-offshore/src/ringct/rctSigs.cpp	2020-06-26 11:08:39.637764381 +0100
 @@ -35,6 +35,8 @@
  #include "rctSigs.h"
  #include "bulletproofs.h"
@@ -749,7 +747,7 @@ index ff2a81d43..b09027d65 100644
      //RCT simple    
      //for post-rct only
 -    rctSig genRctSimple(const key &message, const ctkeyV & inSk, const keyV & destinations, const vector<xmr_amount> &inamounts, const vector<xmr_amount> &outamounts, xmr_amount txnFee, const ctkeyM & mixRing, const keyV &amount_keys, const std::vector<multisig_kLRki> *kLRki, multisig_out *msout, const std::vector<unsigned int> & index, ctkeyV &outSk, const RCTConfig &rct_config, hw::device &hwdev) {
-+  rctSig genRctSimple(const key &message, const ctkeyM & inSk, const keyV & destinations, const vector<std::pair<xmr_amount,xmr_amount>> &inamounts, const vector<std::pair<xmr_amount,xmr_amount>> &outamounts, xmr_amount txnFee, const ctkeyM & mixRing, const keyV &amount_keys, const std::vector<multisig_kLRki> *kLRki, multisig_out *msout, const std::vector<unsigned int> & index, ctkeyV &outSk, const RCTConfig &rct_config, hw::device &hwdev, const offshore::pricing_record pr) {
++  rctSig genRctSimple(const key &message, const ctkeyM & inSk, const keyV & destinations, const vector<std::pair<xmr_amount,xmr_amount>> &inamounts, const vector<std::pair<xmr_amount,xmr_amount>> &outamounts, xmr_amount txnFee, xmr_amount txnFee_usd, xmr_amount txnOffshoreFee, xmr_amount txnOffshoreFee_usd, const ctkeyM & mixRing, const keyV &amount_keys, const std::vector<multisig_kLRki> *kLRki, multisig_out *msout, const std::vector<unsigned int> & index, ctkeyV &outSk, const RCTConfig &rct_config, hw::device &hwdev, const offshore::pricing_record pr) {
          const bool bulletproof = rct_config.range_proof_type != RangeProofBorromean;
          CHECK_AND_ASSERT_THROW_MES(inamounts.size() > 0, "Empty inamounts");
          CHECK_AND_ASSERT_THROW_MES(inamounts.size() == inSk.size(), "Different number of inamounts/inSk");
@@ -897,7 +895,7 @@ index ff2a81d43..b09027d65 100644
                  }
              }
              else while (amounts_proved < n_amounts)
-@@ -823,40 +1390,77 @@ namespace rct {
+@@ -823,71 +1390,133 @@ namespace rct {
                    while (batch_size * 2 + amounts_proved <= n_amounts && batch_size * 2 <= BULLETPROOF_MAX_OUTPUTS)
                      batch_size *= 2;
                  rct::keyV C, masks;
@@ -989,7 +987,12 @@ index ff2a81d43..b09027d65 100644
          }
              
          //set txn fee
-@@ -866,28 +1470,50 @@ namespace rct {
+         rv.txnFee = txnFee;
++        rv.txnFee_usd = txnFee_usd;
++        rv.txnOffshoreFee = txnOffshoreFee;
++        rv.txnOffshoreFee_usd = txnOffshoreFee_usd;
+ //        TODO: unused ??
+ //        key txnFeeKey = scalarmultH(d2h(rv.txnFee));
          rv.mixRing = mixRing;
          keyV &pseudoOuts = bulletproof ? rv.p.pseudoOuts : rv.pseudoOuts;
          pseudoOuts.resize(inamounts.size());
@@ -1045,20 +1048,20 @@ index ff2a81d43..b09027d65 100644
      }
  
 -    rctSig genRctSimple(const key &message, const ctkeyV & inSk, const ctkeyV & inPk, const keyV & destinations, const vector<xmr_amount> &inamounts, const vector<xmr_amount> &outamounts, const keyV &amount_keys, const std::vector<multisig_kLRki> *kLRki, multisig_out *msout, xmr_amount txnFee, unsigned int mixin, const RCTConfig &rct_config, hw::device &hwdev) {
-+  rctSig genRctSimple(const key &message, const ctkeyM & inSk, const ctkeyV & inPk, const keyV & destinations, const vector<pair<xmr_amount,xmr_amount>> &inamounts, const vector<pair<xmr_amount,xmr_amount>> &outamounts, const keyV &amount_keys, const std::vector<multisig_kLRki> *kLRki, multisig_out *msout, xmr_amount txnFee, unsigned int mixin, const RCTConfig &rct_config, hw::device &hwdev, const offshore::pricing_record pr) {
++  rctSig genRctSimple(const key &message, const ctkeyM & inSk, const ctkeyV & inPk, const keyV & destinations, const vector<pair<xmr_amount,xmr_amount>> &inamounts, const vector<pair<xmr_amount,xmr_amount>> &outamounts, const keyV &amount_keys, const std::vector<multisig_kLRki> *kLRki, multisig_out *msout, xmr_amount txnFee, xmr_amount txnFee_usd, xmr_amount txnOffshoreFee, xmr_amount txnOffshoreFee_usd, unsigned int mixin, const RCTConfig &rct_config, hw::device &hwdev, const offshore::pricing_record pr) {
          std::vector<unsigned int> index;
          index.resize(inPk.size());
          ctkeyM mixRing;
-@@ -897,7 +1523,7 @@ namespace rct {
+@@ -897,7 +1526,7 @@ namespace rct {
            mixRing[i].resize(mixin+1);
            index[i] = populateFromBlockchainSimple(mixRing[i], inPk[i], mixin);
          }
 -        return genRctSimple(message, inSk, destinations, inamounts, outamounts, txnFee, mixRing, amount_keys, kLRki, msout, index, outSk, rct_config, hwdev);
-+        return genRctSimple(message, inSk, destinations, inamounts, outamounts, txnFee, mixRing, amount_keys, kLRki, msout, index, outSk, rct_config, hwdev, pr);
++        return genRctSimple(message, inSk, destinations, inamounts, outamounts, txnFee, txnFee_usd, txnOffshoreFee, txnOffshoreFee_usd, mixRing, amount_keys, kLRki, msout, index, outSk, rct_config, hwdev, pr);
      }
  
      //RingCT protocol
-@@ -970,9 +1596,18 @@ namespace rct {
+@@ -970,9 +1599,18 @@ namespace rct {
          }
      }
  
@@ -1078,7 +1081,7 @@ index ff2a81d43..b09027d65 100644
        try
        {
          PERF_TIMER(verRctSemanticsSimple);
-@@ -987,13 +1622,22 @@ namespace rct {
+@@ -987,13 +1625,22 @@ namespace rct {
          {
            CHECK_AND_ASSERT_MES(rvp, false, "rctSig pointer is NULL");
            const rctSig &rv = *rvp;
@@ -1103,7 +1106,7 @@ index ff2a81d43..b09027d65 100644
              CHECK_AND_ASSERT_MES(rv.pseudoOuts.empty(), false, "rv.pseudoOuts is not empty");
            }
            else
-@@ -1016,21 +1660,72 @@ namespace rct {
+@@ -1016,21 +1663,79 @@ namespace rct {
            const bool bulletproof = is_rct_bulletproof(rv.type);
            const keyV &pseudoOuts = bulletproof ? rv.p.pseudoOuts : rv.pseudoOuts;
  
@@ -1115,17 +1118,12 @@ index ff2a81d43..b09027d65 100644
 -          DP(sumOutpks);
 -          const key txnFeeKey = scalarmultH(d2h(rv.txnFee));
 -          addKeys(sumOutpks, txnFeeKey, sumOutpks);
--
--          key sumPseudoOuts = addKeys(pseudoOuts);
--          DP(sumPseudoOuts);
--
--          //check pseudoOuts vs Outs..
--          if (!equalKeys(sumPseudoOuts, sumOutpks)) {
--            LOG_PRINT_L1("Sum check failed");
 +	  // OUTPUTS SUMMED FOR EACH COLOUR
 +	  key zerokey = scalarmultH(d2h(0));
 +	  key Zi = zero();
-+
+ 
+-          key sumPseudoOuts = addKeys(pseudoOuts);
+-          DP(sumPseudoOuts);
 +	  // Calculate sum of all C'
 +	  rct::keyV masks(rv.outPk.size());
 +	  for (size_t i = 0; i < rv.outPk.size(); i++) {
@@ -1133,7 +1131,10 @@ index ff2a81d43..b09027d65 100644
 +	  }
 +	  key sumOutpks = addKeys(masks);
 +	  DP(sumOutpks);
-+
+ 
+-          //check pseudoOuts vs Outs..
+-          if (!equalKeys(sumPseudoOuts, sumOutpks)) {
+-            LOG_PRINT_L1("Sum check failed");
 +	  // Calculate sum of all D'
 +	  rct::keyV masks_usd(rv.outPk_usd.size());
 +	  for (size_t i = 0; i < rv.outPk_usd.size(); i++) {
@@ -1147,9 +1148,14 @@ index ff2a81d43..b09027d65 100644
 +	  // Calculate tx fee for C colour
 +	  const key txnFeeKey = scalarmultH(d2h(rv.txnFee));
 +
++	  // Calculate offshore conversion fee (also always in C colour)
++	  const key txnOffshoreFeeKey = scalarmultH(d2h(rv.txnOffshoreFee));
++
 +	  // Calculate tx fee for D colour
-+	  //const key txnFeeKey_usd = scalarmultH(d2h(rv.txnFee));
-+	  const key txnFeeKey_usd = scalarmultH(d2h(0));
++	  const key txnFeeKey_usd = scalarmultH(d2h(rv.txnFee_usd));
++
++	  // Calculate onshore conversion fee (also always in D colour)
++	  const key txnOffshoreFeeKey_usd = scalarmultH(d2h(rv.txnOffshoreFee_usd));
 +
 +	  key sumPseudoOuts = (offshore || (!onshore && !offshore_to_offshore)) ? addKeys(pseudoOuts) : zerokey;
 +	  key sumPseudoOuts_usd = (offshore || (!onshore && !offshore_to_offshore)) ? zerokey : addKeys(pseudoOuts);
@@ -1157,14 +1163,16 @@ index ff2a81d43..b09027d65 100644
 +
 +	  // C COLOUR
 +	  key sumXHV;
-+	  // Remove the fee
++	  // Remove the fees
 +	  subKeys(sumXHV, sumPseudoOuts, txnFeeKey);
++	  subKeys(sumXHV, sumXHV, txnOffshoreFeeKey);
 +	  subKeys(sumXHV, sumXHV, sumOutpks);
 +
 +	  // D COLOUR
 +	  key sumUSD;
-+	  // Remove the fee
++	  // Remove the fees
 +	  subKeys(sumUSD, sumPseudoOuts_usd, txnFeeKey_usd);
++	  subKeys(sumUSD, sumUSD, txnOffshoreFeeKey_usd);
 +	  subKeys(sumUSD, sumUSD, sumOutpks_usd);
 +
 +	  // NEAC: attempt to only calculate forward
@@ -1191,7 +1199,7 @@ index ff2a81d43..b09027d65 100644
              return false;
            }
  
-@@ -1075,19 +1770,19 @@ namespace rct {
+@@ -1075,19 +1780,19 @@ namespace rct {
        }
      }
  
@@ -1215,7 +1223,7 @@ index ff2a81d43..b09027d65 100644
              false, "verRctNonSemanticsSimple called on non simple rctSig");
          const bool bulletproof = is_rct_bulletproof(rv.type);
          // semantics check is early, and mixRing/MGs aren't resolved yet
-@@ -1110,14 +1805,19 @@ namespace rct {
+@@ -1110,14 +1815,19 @@ namespace rct {
          results.resize(rv.mixRing.size());
          for (size_t i = 0 ; i < rv.mixRing.size() ; i++) {
            tpool.submit(&waiter, [&, i] {
@@ -1237,7 +1245,7 @@ index ff2a81d43..b09027d65 100644
              return false;
            }
          }
-@@ -1154,7 +1854,7 @@ namespace rct {
+@@ -1154,7 +1864,7 @@ namespace rct {
  
          //mask amount and mask
          ecdhTuple ecdh_info = rv.ecdhInfo[i];
@@ -1246,7 +1254,7 @@ index ff2a81d43..b09027d65 100644
          mask = ecdh_info.mask;
          key amount = ecdh_info.amount;
          key C = rv.outPk[i].mask;
-@@ -1178,16 +1878,16 @@ namespace rct {
+@@ -1178,16 +1888,16 @@ namespace rct {
      }
  
      xmr_amount decodeRctSimple(const rctSig & rv, const key & sk, unsigned int i, key &mask, hw::device &hwdev) {
@@ -1266,7 +1274,7 @@ index ff2a81d43..b09027d65 100644
          DP("C");
          DP(C);
          key Ctmp;
-@@ -1207,12 +1907,13 @@ namespace rct {
+@@ -1207,12 +1917,13 @@ namespace rct {
        return decodeRctSimple(rv, sk, i, mask, hwdev);
      }
  
@@ -1281,7 +1289,7 @@ index ff2a81d43..b09027d65 100644
          if (rv.type == RCTTypeFull)
          {
            CHECK_AND_ASSERT_MES(rv.p.MGs.size() == 1, false, "MGs not a single element");
-@@ -1222,6 +1923,8 @@ namespace rct {
+@@ -1222,6 +1933,8 @@ namespace rct {
              CHECK_AND_ASSERT_MES(!rv.p.MGs[n].ss[indices[n]].empty(), false, "empty ss line");
          }
  
@@ -1290,7 +1298,7 @@ index ff2a81d43..b09027d65 100644
          for (size_t n = 0; n < indices.size(); ++n) {
              rct::key diff;
              sc_mulsub(diff.bytes, msout.c[n].bytes, secret_key.bytes, k[n].bytes);
-@@ -1229,4 +1932,33 @@ namespace rct {
+@@ -1229,4 +1942,33 @@ namespace rct {
          }
          return true;
      }

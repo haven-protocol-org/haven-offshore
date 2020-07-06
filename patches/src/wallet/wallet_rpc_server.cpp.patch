@@ -1,7 +1,5 @@
-diff --git a/src/wallet/wallet_rpc_server.cpp b/src/wallet/wallet_rpc_server.cpp
-index 0e2a34470..f01386216 100644
---- a/src/wallet/wallet_rpc_server.cpp
-+++ b/src/wallet/wallet_rpc_server.cpp
+--- monero/src/wallet/wallet_rpc_server.cpp	2020-06-30 14:49:37.582511591 +0100
++++ monero-offshore/src/wallet/wallet_rpc_server.cpp	2020-06-23 11:02:44.014578411 +0100
 @@ -285,7 +285,7 @@ namespace tools
      {
        MINFO("The daemon is not set up to background mine.");

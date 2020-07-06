@@ -1,16 +1,14 @@
-diff --git a/src/cryptonote_core/cryptonote_tx_utils.h b/src/cryptonote_core/cryptonote_tx_utils.h
-index d38aa7474..1c74c3db8 100644
---- a/src/cryptonote_core/cryptonote_tx_utils.h
-+++ b/src/cryptonote_core/cryptonote_tx_utils.h
+--- monero/src/cryptonote_core/cryptonote_tx_utils.h	2020-06-30 14:49:37.554511216 +0100
++++ monero-offshore/src/cryptonote_core/cryptonote_tx_utils.h	2020-06-30 09:27:04.179071375 +0100
 @@ -37,8 +37,15 @@
  namespace cryptonote
  {
    //---------------------------------------------------------------
 -  bool construct_miner_tx(size_t height, size_t median_weight, uint64_t already_generated_coins, size_t current_block_weight, uint64_t fee, const account_public_address &miner_address, transaction& tx, const blobdata& extra_nonce = blobdata(), size_t max_outs = 999, uint8_t hard_fork_version = 1);
-+  bool construct_miner_tx(size_t height, size_t median_weight, uint64_t already_generated_coins, size_t current_block_weight, uint64_t fee, const account_public_address &miner_address, transaction& tx, const blobdata& extra_nonce = blobdata(), size_t max_outs = 999, uint8_t hard_fork_version = 1, cryptonote::network_type nettype = MAINNET);
- 
-+  keypair get_deterministic_keypair_from_height(uint64_t height);
++  bool construct_miner_tx(size_t height, size_t median_weight, uint64_t already_generated_coins, size_t current_block_weight, uint64_t fee, uint64_t fee_usd, uint64_t offshore_fee, uint64_t offshore_fee_usd, const account_public_address &miner_address, transaction& tx, const blobdata& extra_nonce = blobdata(), size_t max_outs = 999, uint8_t hard_fork_version = 1, cryptonote::network_type nettype = MAINNET);
 +
++  keypair get_deterministic_keypair_from_height(uint64_t height);
+ 
 +  uint64_t get_governance_reward(uint64_t height, uint64_t base_reward);
 +
 +  bool get_deterministic_output_key(const account_public_address& address, const keypair& tx_key, size_t output_index, crypto::public_key& output_key);
@@ -81,13 +79,15 @@ index d38aa7474..1c74c3db8 100644
    bool generate_output_ephemeral_keys(const size_t tx_version, const cryptonote::account_keys &sender_account_keys, const crypto::public_key &txkey_pub,  const crypto::secret_key &tx_key,
                                        const cryptonote::tx_destination_entry &dst_entr, const boost::optional<cryptonote::account_public_address> &change_addr, const size_t output_index,
                                        const bool &need_additional_txkeys, const std::vector<crypto::secret_key> &additional_tx_keys,
-@@ -115,12 +136,13 @@ namespace cryptonote
+@@ -115,12 +136,15 @@ namespace cryptonote
        block& bl
      , std::string const & genesis_tx
      , uint32_t nonce
 +    , cryptonote::network_type nettype
      );
  
++  bool get_offshore_fee(const std::vector<cryptonote::tx_destination_entry> dsts, const uint32_t unlock_time, const offshore::pricing_record &pr, uint64_t &fee_estimate);
++  bool get_onshore_fee(const std::vector<cryptonote::tx_destination_entry> dsts, const uint32_t unlock_time, const offshore::pricing_record &pr, uint64_t &fee_estimate);
  }
  
 -BOOST_CLASS_VERSION(cryptonote::tx_source_entry, 1)
@@ -97,7 +97,7 @@ index d38aa7474..1c74c3db8 100644
  
  namespace boost
  {
-@@ -140,6 +162,13 @@ namespace boost
+@@ -140,6 +164,13 @@ namespace boost
          return;
        a & x.multisig_kLRki;
        a & x.real_out_additional_tx_keys;
@@ -111,7 +111,7 @@ index d38aa7474..1c74c3db8 100644
      }
  
      template <class Archive>
-@@ -157,6 +186,9 @@ namespace boost
+@@ -157,6 +188,9 @@ namespace boost
        }
        a & x.original;
        a & x.is_integrated;

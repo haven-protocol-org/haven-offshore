@@ -1,8 +1,20 @@
-diff --git a/src/blockchain_db/blockchain_db.h b/src/blockchain_db/blockchain_db.h
-index b6b8c6c3..866a3f83 100644
---- a/src/blockchain_db/blockchain_db.h
-+++ b/src/blockchain_db/blockchain_db.h
-@@ -1116,6 +1116,13 @@ public:
+--- monero/src/blockchain_db/blockchain_db.h	2020-06-30 14:49:37.534510948 +0100
++++ monero-offshore/src/blockchain_db/blockchain_db.h	2020-06-30 09:43:29.167754578 +0100
+@@ -147,9 +147,12 @@ struct txpool_tx_meta_t
+   uint8_t relayed;
+   uint8_t do_not_relay;
+   uint8_t double_spend_seen: 1;
++  uint64_t fee_usd;
++  uint64_t offshore_fee;
++  uint64_t offshore_fee_usd;
+   uint8_t bf_padding: 7;
+ 
+-  uint8_t padding[76]; // till 192 bytes
++  uint8_t padding[52]; // till 192 bytes
+ };
+ 
+ #define DBF_SAFE       1
+@@ -1116,6 +1119,13 @@ public:
     */
    virtual uint64_t height() const = 0;
  

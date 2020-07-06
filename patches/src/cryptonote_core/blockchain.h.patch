@@ -1,5 +1,7 @@
---- monero/src/cryptonote_core/blockchain.h	2019-12-20 13:52:25.280151262 +0000
-+++ monero-offshore/src/cryptonote_core/blockchain.h	2019-11-27 08:35:56.016826926 +0000
+diff --git a/src/cryptonote_core/blockchain.h b/src/cryptonote_core/blockchain.h
+index 32ed96b5b..49760aa44 100644
+--- a/src/cryptonote_core/blockchain.h
++++ b/src/cryptonote_core/blockchain.h
 @@ -57,6 +57,7 @@
  #include "checkpoints/checkpoints.h"
  #include "cryptonote_basic/hardfork.h"
@@ -30,20 +32,20 @@
       * This function calculates an estimate for a dynamic fee which will be
       * valid for the next grace_blocks
       *
-@@ -650,6 +651,13 @@ namespace cryptonote
+@@ -649,6 +650,13 @@ namespace cryptonote
+      */
      uint64_t get_current_cumulative_block_weight_median() const;
  
-     /**
++    /**
 +     * @brief gets the pricing record for the specified timestamp
 +     *
 +     * @return false if method failed to obtain pricing record from oracle, otherwise true
 +     */
 +    bool get_pricing_record(offshore::pricing_record& pr, uint64_t timestamp) const;
 +
-+    /**
+     /**
       * @brief gets the difficulty of the block with a given height
       *
-      * @param i the height
 @@ -1086,6 +1094,8 @@ namespace cryptonote
  
      HardFork *m_hardfork;
@@ -77,3 +79,24 @@
      /**
       * @brief validate a transaction's inputs and their keys
       *
+@@ -1282,7 +1300,10 @@ namespace cryptonote
+      *
+      * @param b the block containing the miner transaction to be validated
+      * @param cumulative_block_weight the block's weight
+-     * @param fee the total fees collected in the block
++     * @param fee the total TX fees collected in XHV in the block
++     * @param fee_usd the total TX fees collected in xUSD in the block
++     * @param offshore_fee the total offshore fees collected in XHV in the block
++     * @param offshore_fee_usd the total offshore fees collected in xUSD in the block
+      * @param base_reward return-by-reference the new block's generated coins
+      * @param already_generated_coins the amount of currency generated prior to this block
+      * @param partial_block_reward return-by-reference true if miner accepted only partial reward
+@@ -1290,7 +1311,7 @@ namespace cryptonote
+      *
+      * @return false if anything is found wrong with the miner transaction, otherwise true
+      */
+-    bool validate_miner_transaction(const block& b, size_t cumulative_block_weight, uint64_t fee, uint64_t& base_reward, uint64_t already_generated_coins, bool &partial_block_reward, uint8_t version);
++    bool validate_miner_transaction(const block& b, size_t cumulative_block_weight, uint64_t fee, uint64_t fee_usd, uint64_t offshore_fee, uint64_t offshore_fee_usd, uint64_t& base_reward, uint64_t already_generated_coins, bool &partial_block_reward, uint8_t version);
+ 
+     /**
+      * @brief reverts the blockchain to its previous state following a failed switch
