@@ -1,5 +1,7 @@
---- monero/src/ringct/rctTypes.h	2020-06-30 14:49:37.566511377 +0100
-+++ monero-offshore/src/ringct/rctTypes.h	2020-06-26 11:05:55.655512666 +0100
+diff --git a/src/ringct/rctTypes.h b/src/ringct/rctTypes.h
+index f8729b872..7a29506eb 100644
+--- a/src/ringct/rctTypes.h
++++ b/src/ringct/rctTypes.h
 @@ -110,9 +110,14 @@ namespace rct {
  
      struct multisig_out {
@@ -59,7 +61,7 @@
  
          template<bool W, template <bool> class Archive>
          bool serialize_rctsig_base(Archive<W> &ar, size_t inputs, size_t outputs)
-@@ -253,9 +280,12 @@ namespace rct {
+@@ -253,9 +280,19 @@ namespace rct {
            FIELD(type)
            if (type == RCTTypeNull)
              return ar.stream().good();
@@ -67,13 +69,20 @@
 +          if (type != RCTTypeFull && type != RCTTypeSimple && type != RCTTypeBulletproof && type != RCTTypeBulletproof2 && type != RCTTypeCLSAG)
              return false;
            VARINT_FIELD(txnFee)
-+          VARINT_FIELD(txnFee_usd)
-+          VARINT_FIELD(txnOffshoreFee)
-+          VARINT_FIELD(txnOffshoreFee_usd)
++          if (type == RCTTypeCLSAG)
++          {
++	    VARINT_FIELD(txnFee_usd)
++	    VARINT_FIELD(txnOffshoreFee)
++	    VARINT_FIELD(txnOffshoreFee_usd)
++	  } else {
++	    txnFee_usd = 0;
++	    txnOffshoreFee = 0;
++	    txnOffshoreFee_usd = 0;
++	  }
            // inputs/outputs not saved, only here for serialization help
            // FIELD(message) - not serialized, it can be reconstructed
            // FIELD(mixRing) - not serialized, it can be reconstructed
-@@ -282,7 +312,7 @@ namespace rct {
+@@ -282,7 +319,7 @@ namespace rct {
              return false;
            for (size_t i = 0; i < outputs; ++i)
            {
@@ -82,26 +91,29 @@
              {
                ar.begin_object();
                if (!typename Archive<W>::is_saving())
-@@ -312,26 +342,42 @@ namespace rct {
+@@ -312,26 +349,45 @@ namespace rct {
                ar.delimit_array();
            }
            ar.end_array();
 -          return ar.stream().good();
 -        }
 +
-+	  ar.tag("outPk_usd");
-+	  ar.begin_array();
-+	  PREPARE_CUSTOM_VECTOR_SERIALIZATION(outputs, outPk_usd);
-+	  if (outPk_usd.size() != outputs)
-+	    return false;
-+	  for (size_t i = 0; i < outputs; ++i)
-+	  {
-+	    FIELDS(outPk_usd[i].mask)
-+	    if (outputs - i > 1)
-+	      ar.delimit_array();
++          if (type == RCTTypeCLSAG)
++          {
++	    ar.tag("outPk_usd");
++	    ar.begin_array();
++	    PREPARE_CUSTOM_VECTOR_SERIALIZATION(outputs, outPk_usd);
++	    if (outPk_usd.size() != outputs)
++	      return false;
++	    for (size_t i = 0; i < outputs; ++i)
++	    {
++	      FIELDS(outPk_usd[i].mask)
++	      if (outputs - i > 1)
++		ar.delimit_array();
++	    }
++	    ar.end_array();
 +	  }
-+	  ar.end_array();
-+ 
++	  
 +	  return ar.stream().good();
 +	}
      };
@@ -130,7 +142,7 @@
                VARINT_FIELD(nbp)
              else
                FIELD(nbp)
-@@ -366,55 +412,98 @@ namespace rct {
+@@ -366,55 +422,98 @@ namespace rct {
              ar.end_array();
            }
  
@@ -262,7 +274,7 @@
            {
              ar.tag("pseudoOuts");
              ar.begin_array();
-@@ -438,12 +527,12 @@ namespace rct {
+@@ -438,12 +537,12 @@ namespace rct {
  
          keyV& get_pseudo_outs()
          {
@@ -277,7 +289,7 @@
          }
      };
  
-@@ -605,6 +694,7 @@ VARIANT_TAG(debug_archive, rct::rctSig,
+@@ -605,6 +704,7 @@ VARIANT_TAG(debug_archive, rct::rctSig, "rct::rctSig");
  VARIANT_TAG(debug_archive, rct::Bulletproof, "rct::bulletproof");
  VARIANT_TAG(debug_archive, rct::multisig_kLRki, "rct::multisig_kLRki");
  VARIANT_TAG(debug_archive, rct::multisig_out, "rct::multisig_out");
@@ -285,7 +297,7 @@
  
  VARIANT_TAG(binary_archive, rct::key, 0x90);
  VARIANT_TAG(binary_archive, rct::key64, 0x91);
-@@ -621,6 +711,7 @@ VARIANT_TAG(binary_archive, rct::rctSig,
+@@ -621,6 +721,7 @@ VARIANT_TAG(binary_archive, rct::rctSig, 0x9b);
  VARIANT_TAG(binary_archive, rct::Bulletproof, 0x9c);
  VARIANT_TAG(binary_archive, rct::multisig_kLRki, 0x9d);
  VARIANT_TAG(binary_archive, rct::multisig_out, 0x9e);
@@ -293,7 +305,7 @@
  
  VARIANT_TAG(json_archive, rct::key, "rct_key");
  VARIANT_TAG(json_archive, rct::key64, "rct_key64");
-@@ -637,5 +728,6 @@ VARIANT_TAG(json_archive, rct::rctSig, "
+@@ -637,5 +738,6 @@ VARIANT_TAG(json_archive, rct::rctSig, "rct_rctSig");
  VARIANT_TAG(json_archive, rct::Bulletproof, "rct_bulletproof");
  VARIANT_TAG(json_archive, rct::multisig_kLRki, "rct_multisig_kLR");
  VARIANT_TAG(json_archive, rct::multisig_out, "rct_multisig_out");

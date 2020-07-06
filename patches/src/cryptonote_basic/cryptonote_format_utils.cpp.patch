@@ -1,6 +1,8 @@
---- monero/src/cryptonote_basic/cryptonote_format_utils.cpp	2020-05-28 17:21:37.227695919 +0100
-+++ monero-offshore/src/cryptonote_basic/cryptonote_format_utils.cpp	2020-05-27 14:40:07.939058372 +0100
-@@ -135,12 +135,16 @@ namespace cryptonote
+diff --git a/src/cryptonote_basic/cryptonote_format_utils.cpp b/src/cryptonote_basic/cryptonote_format_utils.cpp
+index 7d7de416d..b38b0275b 100644
+--- a/src/cryptonote_basic/cryptonote_format_utils.cpp
++++ b/src/cryptonote_basic/cryptonote_format_utils.cpp
+@@ -135,12 +135,32 @@ namespace cryptonote
        }
        for (size_t n = 0; n < tx.rct_signatures.outPk.size(); ++n)
        {
@@ -8,19 +10,35 @@
 -        {
 +        if (tx.vout[n].target.type() == typeid(txout_to_key)) {
 +	  rv.outPk[n].dest = rct::pk2rct(boost::get<txout_to_key>(tx.vout[n].target).key);
-+	  rv.outPk_usd[n].dest = rct::pk2rct(boost::get<txout_to_key>(tx.vout[n].target).key);
 +	} else if (tx.vout[n].target.type() == typeid(txout_offshore)) {
 +	  rv.outPk[n].dest = rct::pk2rct(boost::get<txout_offshore>(tx.vout[n].target).key);
-+	  rv.outPk_usd[n].dest = rct::pk2rct(boost::get<txout_offshore>(tx.vout[n].target).key);
 +	} else {
            LOG_PRINT_L1("Unsupported output type in tx " << get_transaction_hash(tx));
            return false;
          }
 -        rv.outPk[n].dest = rct::pk2rct(boost::get<txout_to_key>(tx.vout[n].target).key);
++      }
++      if (tx.rct_signatures.type == rct::RCTTypeCLSAG) {
++	if (rv.outPk_usd.size() != tx.vout.size())
++        {
++	  LOG_PRINT_L1("Failed to parse transaction from blob, bad outPk_usd size in tx " << get_transaction_hash(tx));
++	  return false;
++	}
++        for (size_t n = 0; n < tx.rct_signatures.outPk_usd.size(); ++n)
++        {
++	  if (tx.vout[n].target.type() == typeid(txout_to_key)) {
++	    rv.outPk_usd[n].dest = rct::pk2rct(boost::get<txout_to_key>(tx.vout[n].target).key);
++	  } else if (tx.vout[n].target.type() == typeid(txout_offshore)) {
++	    rv.outPk_usd[n].dest = rct::pk2rct(boost::get<txout_offshore>(tx.vout[n].target).key);
++	  } else {
++	    LOG_PRINT_L1("Unsupported output type in tx " << get_transaction_hash(tx));
++	    return false;
++	  }
++	}
        }
  
        if (!base_only)
-@@ -168,7 +172,11 @@ namespace cryptonote
+@@ -168,7 +188,11 @@ namespace cryptonote
            CHECK_AND_ASSERT_MES(n_amounts == rv.outPk.size(), false, "Internal error filling out V");
            rv.p.bulletproofs[0].V.resize(n_amounts);
            for (size_t i = 0; i < n_amounts; ++i)
@@ -33,7 +51,7 @@
          }
        }
      }
-@@ -435,8 +443,8 @@ namespace cryptonote
+@@ -435,8 +459,8 @@ namespace cryptonote
      uint64_t amount_out = 0;
      for(auto& in: tx.vin)
      {
@@ -44,7 +62,7 @@
      }
      for(auto& o: tx.vout)
        amount_out += o.amount;
-@@ -519,7 +527,7 @@ namespace cryptonote
+@@ -519,7 +543,7 @@ namespace cryptonote
        bool r = ::do_serialize(ar, field);
        if (!r)
        {
@@ -53,7 +71,7 @@
          if (!allow_partial)
            return false;
          break;
-@@ -533,7 +541,7 @@ namespace cryptonote
+@@ -533,7 +557,7 @@ namespace cryptonote
      }
      if (!::serialization::check_stream_state(ar))
      {
@@ -62,7 +80,7 @@
        if (!allow_partial)
          return false;
      }
-@@ -549,6 +557,7 @@ namespace cryptonote
+@@ -549,6 +573,7 @@ namespace cryptonote
      if (!pick<tx_extra_merge_mining_tag>(nar, tx_extra_fields, TX_EXTRA_MERGE_MINING_TAG)) return false;
      if (!pick<tx_extra_mysterious_minergate>(nar, tx_extra_fields, TX_EXTRA_MYSTERIOUS_MINERGATE_TAG)) return false;
      if (!pick<tx_extra_padding>(nar, tx_extra_fields, TX_EXTRA_TAG_PADDING)) return false;
@@ -70,7 +88,7 @@
  
      // if not empty, someone added a new type and did not add a case above
      if (!tx_extra_fields.empty())
-@@ -589,6 +598,13 @@ namespace cryptonote
+@@ -589,6 +614,13 @@ namespace cryptonote
      return get_tx_pub_key_from_extra(tx.extra, pk_index);
    }
    //---------------------------------------------------------------
@@ -84,7 +102,7 @@
    bool add_tx_pub_key_to_extra(transaction& tx, const crypto::public_key& tx_pub_key)
    {
      return add_tx_pub_key_to_extra(tx.extra, tx_pub_key);
-@@ -657,6 +673,18 @@ namespace cryptonote
+@@ -657,6 +689,18 @@ namespace cryptonote
      return true;
    }
    //---------------------------------------------------------------
@@ -103,7 +121,7 @@
    bool remove_field_from_tx_extra(std::vector<uint8_t>& tx_extra, const std::type_info &type)
    {
      if (tx_extra.empty())
-@@ -746,10 +774,9 @@ namespace cryptonote
+@@ -746,10 +790,9 @@ namespace cryptonote
    {
      for(const auto& in: tx.vin)
      {
@@ -117,7 +135,7 @@
      }
      return true;
    }
-@@ -758,17 +785,18 @@ namespace cryptonote
+@@ -758,17 +801,18 @@ namespace cryptonote
    {
      for(const tx_out& out: tx.vout)
      {
@@ -141,7 +159,7 @@
      }
      return true;
    }
-@@ -781,12 +809,32 @@ namespace cryptonote
+@@ -781,12 +825,32 @@ namespace cryptonote
    bool check_inputs_overflow(const transaction& tx)
    {
      uint64_t money = 0;
@@ -180,7 +198,7 @@
      }
      return true;
    }
-@@ -928,15 +976,15 @@ namespace cryptonote
+@@ -928,15 +992,15 @@ namespace cryptonote
      switch (decimal_point)
      {
        case 12:
@@ -201,7 +219,7 @@
        default:
          ASSERT_MES_AND_THROW("Invalid decimal point specification: " << decimal_point);
      }
-@@ -956,6 +1004,20 @@ namespace cryptonote
+@@ -956,6 +1020,20 @@ namespace cryptonote
      return s;
    }
    //---------------------------------------------------------------
@@ -222,7 +240,7 @@
    crypto::hash get_blob_hash(const blobdata& blob)
    {
      crypto::hash h = null_hash;
-@@ -1000,7 +1062,11 @@ namespace cryptonote
+@@ -1000,7 +1078,11 @@ namespace cryptonote
        binary_archive<true> ba(ss);
        const size_t inputs = t.vin.size();
        const size_t outputs = t.vout.size();
@@ -235,7 +253,7 @@
        bool r = tt.rct_signatures.p.serialize_rctsig_prunable(ba, t.rct_signatures.type, inputs, outputs, mixin);
        CHECK_AND_ASSERT_MES(r, false, "Failed to serialize rct signatures prunable");
        cryptonote::get_blob_hash(ss.str(), res);
-@@ -1220,16 +1286,23 @@ namespace cryptonote
+@@ -1220,16 +1302,23 @@ namespace cryptonote
    //---------------------------------------------------------------
    bool get_block_longhash(const block& b, crypto::hash& res, uint64_t height)
    {
@@ -267,7 +285,7 @@
      return true;
    }
    //---------------------------------------------------------------
-@@ -1352,7 +1425,8 @@ namespace cryptonote
+@@ -1352,7 +1441,8 @@ namespace cryptonote
    crypto::secret_key encrypt_key(crypto::secret_key key, const epee::wipeable_string &passphrase)
    {
      crypto::hash hash;
@@ -277,7 +295,7 @@
      sc_add((unsigned char*)key.data, (const unsigned char*)key.data, (const unsigned char*)hash.data);
      return key;
    }
-@@ -1360,7 +1434,8 @@ namespace cryptonote
+@@ -1360,7 +1450,8 @@ namespace cryptonote
    crypto::secret_key decrypt_key(crypto::secret_key key, const epee::wipeable_string &passphrase)
    {
      crypto::hash hash;

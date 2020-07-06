@@ -466,14 +466,12 @@
          if (!err.empty())
          {
            fail_msg_writer() << tr("failed to get blockchain height: ") << err;
-@@ -5869,6 +5978,10 @@ bool simple_wallet::transfer_main(int tr
+@@ -5869,6 +5978,8 @@ bool simple_wallet::transfer_main(int tr
        double worst_fee_per_byte = std::numeric_limits<double>::max();
        for (size_t n = 0; n < ptx_vector.size(); ++n)
        {
-+	// HERE BE DRAGONS!!!
 +	// NEAC : skip the check for offshore TXs
 +	if ((ptx_vector[n].tx.version >= OFFSHORE_TRANSACTION_VERSION) && (ptx_vector[n].tx.pricing_record_height != 0)) continue;
-+	// LAND AHOY!!!
          const uint64_t blob_size = cryptonote::tx_to_blob(ptx_vector[n].tx).size();
          const double fee_per_byte = ptx_vector[n].fee / (double)blob_size;
          if (fee_per_byte < worst_fee_per_byte)

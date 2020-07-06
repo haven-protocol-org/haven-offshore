@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/blockchain.cpp b/src/cryptonote_core/blockchain.cpp
-index ac2c07913..f3648da80 100644
+index ac2c07913..b8ebe1209 100644
 --- a/src/cryptonote_core/blockchain.cpp
 +++ b/src/cryptonote_core/blockchain.cpp
 @@ -55,6 +55,8 @@
@@ -84,8 +84,8 @@ index ac2c07913..f3648da80 100644
 +			  { 3, 50, 0, 1528489596 },
 +			  { 4, 75, 0, 1552960800 },
 +			  { 5, 100, 0, 1552980800 },
-+			  { 11, 125, 0, 1593613842 },
-+			  { 13, 135, 0, 1593615042 }
++			  { 11, 150, 0, 1593613842 },
++			  { 13, 160, 0, 1593615042 }
  };
 -static const uint64_t testnet_hard_fork_version_1_till = 624633;
 +static const uint64_t testnet_hard_fork_version_1_till = 24;

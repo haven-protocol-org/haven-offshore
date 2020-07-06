@@ -1,5 +1,5 @@
 diff --git a/src/wallet/wallet2.h b/src/wallet/wallet2.h
-index 921c150cb..8acdb7088 100644
+index 921c150cb..82e0f5b26 100644
 --- a/src/wallet/wallet2.h
 +++ b/src/wallet/wallet2.h
 @@ -118,9 +118,9 @@ private:
@@ -146,23 +146,18 @@ index 921c150cb..8acdb7088 100644
      void get_payments(const crypto::hash& payment_id, std::list<wallet2::payment_details>& payments, uint64_t min_height = 0, const boost::optional<uint32_t>& subaddr_account = boost::none, const std::set<uint32_t>& subaddr_indices = {}) const;
      void get_payments(std::list<std::pair<crypto::hash,wallet2::payment_details>>& payments, uint64_t min_height, uint64_t max_height = (uint64_t)-1, const boost::optional<uint32_t>& subaddr_account = boost::none, const std::set<uint32_t>& subaddr_indices = {}) const;
      void get_payments_out(std::list<std::pair<crypto::hash,wallet2::confirmed_transfer_details>>& confirmed_payments,
-@@ -889,6 +925,7 @@ private:
-         a & m_blockchain;
-       }
-       a & m_transfers;
+@@ -982,6 +1018,10 @@ private:
+       if(ver < 28)
+         return;
+       a & m_cold_key_images;
++      if (ver < 29)
++	return;
 +      a & m_offshore_transfers;
-       a & m_account_public_address;
-       a & m_key_images;
-       if(ver < 6)
-@@ -903,6 +940,7 @@ private:
-       if(ver < 9)
-         return;
-       a & m_confirmed_txs;
 +      a & m_confirmed_offshore_txs;
-       if(ver < 11)
-         return;
-       a & dummy_refresh_height;
-@@ -1053,13 +1091,13 @@ private:
+     }
+ 
+     /*!
+@@ -1053,13 +1093,13 @@ private:
      bool get_tx_key_cached(const crypto::hash &txid, crypto::secret_key &tx_key, std::vector<crypto::secret_key> &additional_tx_keys) const;
      void set_tx_key(const crypto::hash &txid, const crypto::secret_key &tx_key, const std::vector<crypto::secret_key> &additional_tx_keys);
      bool get_tx_key(const crypto::hash &txid, crypto::secret_key &tx_key, std::vector<crypto::secret_key> &additional_tx_keys);
@@ -181,7 +176,7 @@ index 921c150cb..8acdb7088 100644
  
      std::string get_spend_proof(const crypto::hash &txid, const std::string &message);
      bool check_spend_proof(const crypto::hash &txid, const std::string &message, const std::string &sig_str);
-@@ -1093,6 +1131,7 @@ private:
+@@ -1093,6 +1133,7 @@ private:
      uint64_t get_num_rct_outputs();
      size_t get_num_transfer_details() const { return m_transfers.size(); }
      const transfer_details &get_transfer_details(size_t idx) const;
@@ -189,7 +184,7 @@ index 921c150cb..8acdb7088 100644
  
      void get_hard_fork_info(uint8_t version, uint64_t &earliest_height) const;
      bool use_fork_rules(uint8_t version, int64_t early_blocks = 0) const;
-@@ -1115,7 +1154,7 @@ private:
+@@ -1115,7 +1156,7 @@ private:
      std::vector<size_t> select_available_mixable_outputs();
  
      size_t pop_best_value_from(const transfer_container &transfers, std::vector<size_t> &unused_dust_indices, const std::vector<size_t>& selected_transfers, bool smallest = false) const;
@@ -198,7 +193,7 @@ index 921c150cb..8acdb7088 100644
  
      void set_tx_note(const crypto::hash &txid, const std::string &note);
      std::string get_tx_note(const crypto::hash &txid) const;
-@@ -1204,6 +1243,8 @@ private:
+@@ -1204,6 +1245,8 @@ private:
  
      uint64_t get_fee_multiplier(uint32_t priority, int fee_algorithm = -1) const;
      uint64_t get_base_fee() const;
@@ -207,7 +202,7 @@ index 921c150cb..8acdb7088 100644
      uint64_t get_fee_quantization_mask() const;
      uint64_t get_min_ring_size() const;
      uint64_t get_max_ring_size() const;
-@@ -1212,6 +1253,8 @@ private:
+@@ -1212,6 +1255,8 @@ private:
  
      bool is_unattended() const { return m_unattended; }
  
@@ -216,7 +211,7 @@ index 921c150cb..8acdb7088 100644
      // Light wallet specific functions
      // fetch unspent outs from lw node and store in m_transfers
      void light_wallet_get_unspent_outs();
-@@ -1351,7 +1394,9 @@ private:
+@@ -1351,7 +1396,9 @@ private:
      uint64_t select_transfers(uint64_t needed_money, std::vector<size_t> unused_transfers_indices, std::vector<size_t>& selected_transfers) const;
      bool prepare_file_names(const std::string& file_path);
      void process_unconfirmed(const crypto::hash &txid, const cryptonote::transaction& tx, uint64_t height);
@@ -227,7 +222,7 @@ index 921c150cb..8acdb7088 100644
      void add_unconfirmed_tx(const cryptonote::transaction& tx, uint64_t amount_in, const std::vector<cryptonote::tx_destination_entry> &dests, const crypto::hash &payment_id, uint64_t change_amount, uint32_t subaddr_account, const std::set<uint32_t>& subaddr_indices);
      void generate_genesis(cryptonote::block& b) const;
      void check_genesis(const crypto::hash& genesis_hash) const; //throws
-@@ -1366,14 +1411,17 @@ private:
+@@ -1366,14 +1413,17 @@ private:
      std::vector<uint64_t> get_unspent_amounts_vector() const;
      uint64_t get_dynamic_base_fee_estimate() const;
      float get_output_relatedness(const transfer_details &td0, const transfer_details &td1) const;
@@ -249,7 +244,7 @@ index 921c150cb..8acdb7088 100644
      void trim_hashchain();
      crypto::key_image get_multisig_composite_key_image(size_t n) const;
      rct::multisig_kLRki get_multisig_composite_kLRki(size_t n,  const std::unordered_set<crypto::public_key> &ignore_set, std::unordered_set<rct::key> &used_L, std::unordered_set<rct::key> &new_used_L) const;
-@@ -1428,12 +1476,14 @@ private:
+@@ -1428,12 +1478,14 @@ private:
      hashchain m_blockchain;
      std::unordered_map<crypto::hash, unconfirmed_transfer_details> m_unconfirmed_txs;
      std::unordered_map<crypto::hash, confirmed_transfer_details> m_confirmed_txs;
@@ -264,7 +259,13 @@ index 921c150cb..8acdb7088 100644
      payment_container m_payments;
      std::unordered_map<crypto::key_image, size_t> m_key_images;
      std::unordered_map<crypto::public_key, size_t> m_pub_keys;
-@@ -1550,10 +1600,10 @@ BOOST_CLASS_VERSION(tools::wallet2::transfer_details, 12)
+@@ -1545,15 +1597,15 @@ private:
+     std::unique_ptr<wallet_device_callback> m_device_callback;
+   };
+ }
+-BOOST_CLASS_VERSION(tools::wallet2, 28)
++BOOST_CLASS_VERSION(tools::wallet2, 29)
+ BOOST_CLASS_VERSION(tools::wallet2::transfer_details, 12)
  BOOST_CLASS_VERSION(tools::wallet2::multisig_info, 1)
  BOOST_CLASS_VERSION(tools::wallet2::multisig_info::LR, 0)
  BOOST_CLASS_VERSION(tools::wallet2::multisig_tx_set, 1)
@@ -278,7 +279,7 @@ index 921c150cb..8acdb7088 100644
  BOOST_CLASS_VERSION(tools::wallet2::address_book_row, 17)
  BOOST_CLASS_VERSION(tools::wallet2::reserve_proof_entry, 0)
  BOOST_CLASS_VERSION(tools::wallet2::unsigned_tx_set, 0)
-@@ -1782,6 +1832,15 @@ namespace boost
+@@ -1782,6 +1834,15 @@ namespace boost
        if (ver < 8)
          return;
        a & x.m_rings;
@@ -294,7 +295,7 @@ index 921c150cb..8acdb7088 100644
      }
  
      template <class Archive>
-@@ -1829,6 +1888,15 @@ namespace boost
+@@ -1829,6 +1890,15 @@ namespace boost
        if (ver < 6)
          return;
        a & x.m_rings;
@@ -310,7 +311,7 @@ index 921c150cb..8acdb7088 100644
      }
  
      template <class Archive>
-@@ -1861,6 +1929,15 @@ namespace boost
+@@ -1861,6 +1931,15 @@ namespace boost
          return;
        }
        a & x.m_coinbase;
