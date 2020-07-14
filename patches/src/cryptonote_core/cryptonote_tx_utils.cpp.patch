@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/cryptonote_tx_utils.cpp b/src/cryptonote_core/cryptonote_tx_utils.cpp
-index 854f3d1c5..516597bd4 100644
+index 854f3d1c5..afe427f73 100644
 --- a/src/cryptonote_core/cryptonote_tx_utils.cpp
 +++ b/src/cryptonote_core/cryptonote_tx_utils.cpp
 @@ -74,8 +74,75 @@ namespace cryptonote
@@ -265,7 +265,7 @@ index 854f3d1c5..516597bd4 100644
 +    }
  
 -    if (hard_fork_version >= 4)
-+    if (hard_fork_version >= HF_VERSION_OFFSHORE_PRICING) {
++    if (hard_fork_version >= HF_VERSION_OFFSHORE_FULL) {
 +      tx.version = CURRENT_TRANSACTION_VERSION;
 +    } else {
        tx.version = 2;

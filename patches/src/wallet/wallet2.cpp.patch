@@ -1,5 +1,5 @@
 diff --git a/src/wallet/wallet2.cpp b/src/wallet/wallet2.cpp
-index 8f3f30da1..2a90a4cec 100644
+index 8f3f30da1..6c470b6b1 100644
 --- a/src/wallet/wallet2.cpp
 +++ b/src/wallet/wallet2.cpp
 @@ -29,10 +29,12 @@
@@ -1742,7 +1742,7 @@ index 8f3f30da1..2a90a4cec 100644
 +    offshore::pricing_record pr;
 +    bool b = get_pricing_record(pr, current_height);
 +    THROW_WALLET_EXCEPTION_IF(!b, error::wallet_internal_error, "Failed to get pricing record");
-+    bool use_offshore_tx_version = use_fork_rules(HF_VERSION_OFFSHORE_PRICING, 0);
++    bool use_offshore_tx_version = use_fork_rules(HF_VERSION_OFFSHORE_FULL, 0);
 +    bool r = cryptonote::construct_tx_and_get_tx_key(m_account.get_keys(), m_subaddresses, sd.sources, sd.splitted_dsts, sd.change_dts.addr, sd.extra, ptx.tx, sd.unlock_time, tx_key, additional_tx_keys, current_height, pr, use_offshore_tx_version, sd.use_rct, rct_config, m_multisig ? &msout : NULL);
      THROW_WALLET_EXCEPTION_IF(!r, error::tx_not_constructed, sd.sources, sd.splitted_dsts, sd.unlock_time, m_nettype);
      // we don't test tx size, because we don't know the current limit, due to not having a blockchain,
@@ -1756,7 +1756,7 @@ index 8f3f30da1..2a90a4cec 100644
 +    offshore::pricing_record pr;
 +    bool b = get_pricing_record(pr, current_height);
 +    THROW_WALLET_EXCEPTION_IF(!b, error::wallet_internal_error, "Failed to get pricing record");
-+    bool use_offshore_tx_version = use_fork_rules(HF_VERSION_OFFSHORE_PRICING, 0);
++    bool use_offshore_tx_version = use_fork_rules(HF_VERSION_OFFSHORE_FULL, 0);
 +    bool r = cryptonote::construct_tx_with_tx_key(m_account.get_keys(), m_subaddresses, sources, sd.splitted_dsts, ptx.change_dts.addr, sd.extra, tx, sd.unlock_time, ptx.tx_key, ptx.additional_tx_keys, current_height, pr, use_offshore_tx_version, sd.use_rct, rct_config, &msout, false);
      THROW_WALLET_EXCEPTION_IF(!r, error::tx_not_constructed, sd.sources, sd.splitted_dsts, sd.unlock_time, m_nettype);
  
@@ -1946,7 +1946,7 @@ index 8f3f30da1..2a90a4cec 100644
 +  offshore::pricing_record pr;
 +  bool b = get_pricing_record(pr, current_height);
 +  THROW_WALLET_EXCEPTION_IF(!b, error::wallet_internal_error, "Failed to get pricing record");
-+  bool use_offshore_tx_version = use_fork_rules(HF_VERSION_OFFSHORE_PRICING, 0);
++  bool use_offshore_tx_version = use_fork_rules(HF_VERSION_OFFSHORE_FULL, 0);
 +  bool r = cryptonote::construct_tx_and_get_tx_key(m_account.get_keys(), m_subaddresses, sources, splitted_dsts, change_dts.addr, extra, tx, unlock_time, tx_key, additional_tx_keys, current_height, pr, use_offshore_tx_version, false, {}, m_multisig ? &msout : NULL);
    LOG_PRINT_L2("constructed tx, r="<<r);
    THROW_WALLET_EXCEPTION_IF(!r, error::tx_not_constructed, sources, splitted_dsts, unlock_time, m_nettype);
@@ -2121,7 +2121,7 @@ index 8f3f30da1..2a90a4cec 100644
 +    bool b = get_pricing_record(pr, current_height);
 +    THROW_WALLET_EXCEPTION_IF(!b, error::wallet_internal_error, "Failed to get pricing record");
 +  }
-+  bool use_offshore_tx_version = use_fork_rules(HF_VERSION_OFFSHORE_PRICING, 0);
++  bool use_offshore_tx_version = use_fork_rules(HF_VERSION_OFFSHORE_FULL, 0);
 +  bool r = cryptonote::construct_tx_and_get_tx_key(m_account.get_keys(), m_subaddresses, sources, splitted_dsts, change_dts.addr, extra, tx, unlock_time, tx_key, additional_tx_keys, current_height, pr, use_offshore_tx_version, true, rct_config, m_multisig ? &msout : NULL);
    LOG_PRINT_L2("constructed tx, r="<<r);
    THROW_WALLET_EXCEPTION_IF(!r, error::tx_not_constructed, sources, dsts, unlock_time, m_nettype);
@@ -2135,7 +2135,7 @@ index 8f3f30da1..2a90a4cec 100644
 +	offshore::pricing_record pr;
 +	bool b = get_pricing_record(pr, current_height);
 +	THROW_WALLET_EXCEPTION_IF(!b, error::wallet_internal_error, "Failed to get pricing record");
-+	bool use_offshore_tx_version = use_fork_rules(HF_VERSION_OFFSHORE_PRICING, 0);
++	bool use_offshore_tx_version = use_fork_rules(HF_VERSION_OFFSHORE_FULL, 0);
 +        bool r = cryptonote::construct_tx_with_tx_key(m_account.get_keys(), m_subaddresses, sources_copy_copy, splitted_dsts, change_dts.addr, extra, ms_tx, unlock_time,tx_key, additional_tx_keys, current_height, pr, use_offshore_tx_version, true, rct_config, &msout, false);
          LOG_PRINT_L2("constructed tx, r="<<r);
          THROW_WALLET_EXCEPTION_IF(!r, error::tx_not_constructed, sources, splitted_dsts, unlock_time, m_nettype);
@@ -2181,7 +2181,7 @@ index 8f3f30da1..2a90a4cec 100644
 -  ptx.construction_data.rct_config = { tx.rct_signatures.p.bulletproofs.empty() ? rct::RangeProofBorromean : rct::RangeProofPaddedBulletproof, use_fork_rules(HF_VERSION_SMALLER_BP, -10) ? 2 : 1};
 +  ptx.construction_data.rct_config = {
 +    tx.rct_signatures.p.bulletproofs.empty() ? rct::RangeProofBorromean : rct::RangeProofPaddedBulletproof,
-+    use_fork_rules(HF_VERSION_CLSAG, -10) ? 3 : use_fork_rules(HF_VERSION_SMALLER_BP, -10) ? 2 : 1
++    use_fork_rules(HF_VERSION_CLSAG, 0) ? 3 : use_fork_rules(HF_VERSION_SMALLER_BP, -10) ? 2 : 1
 +  };
    ptx.construction_data.dests = dsts;
    // record which subaddress indices are being used as inputs
@@ -2337,7 +2337,7 @@ index 8f3f30da1..2a90a4cec 100644
    const rct::RCTConfig rct_config {
      bulletproof ? rct::RangeProofPaddedBulletproof : rct::RangeProofBorromean,
 -    bulletproof ? (use_fork_rules(HF_VERSION_SMALLER_BP, -10) ? 2 : 1) : 0
-+    bulletproof ? (use_fork_rules(HF_VERSION_CLSAG, -10) ? 3 : (use_fork_rules(HF_VERSION_SMALLER_BP, -10) ? 2 : 1)) : 0
++    bulletproof ? (use_fork_rules(HF_VERSION_CLSAG, 0) ? 3 : (use_fork_rules(HF_VERSION_SMALLER_BP, -10) ? 2 : 1)) : 0
    };
  
 +  bool bOffshoreTx = false;
@@ -3030,7 +3030,7 @@ index 8f3f30da1..2a90a4cec 100644
    const rct::RCTConfig rct_config {
      bulletproof ? rct::RangeProofPaddedBulletproof : rct::RangeProofBorromean,
 -    bulletproof ? (use_fork_rules(HF_VERSION_SMALLER_BP, -10) ? 2 : 1) : 0,
-+    bulletproof ? (use_fork_rules(HF_VERSION_CLSAG, -10) ? 3 : use_fork_rules(HF_VERSION_SMALLER_BP, -10) ? 2 : 1) : 0,
++    bulletproof ? (use_fork_rules(HF_VERSION_CLSAG, 0) ? 3 : use_fork_rules(HF_VERSION_SMALLER_BP, -10) ? 2 : 1) : 0,
    };
    const uint64_t base_fee  = get_base_fee();
    const uint64_t fee_multiplier = get_fee_multiplier(priority, get_fee_algorithm());

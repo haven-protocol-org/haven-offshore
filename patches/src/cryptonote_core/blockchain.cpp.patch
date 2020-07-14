@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/blockchain.cpp b/src/cryptonote_core/blockchain.cpp
-index ac2c07913..7372ba237 100644
+index ac2c07913..09c7ccfa9 100644
 --- a/src/cryptonote_core/blockchain.cpp
 +++ b/src/cryptonote_core/blockchain.cpp
 @@ -55,6 +55,8 @@
@@ -1006,7 +1006,7 @@ index ac2c07913..7372ba237 100644
 +  const uint8_t hf_version = m_hardfork->get_current_version();
 +  
 +  // If the HF version is at least 11, we require a TX version of 3, because we're using CLSAG and OFFSHORE functionality
-+  uint64_t tx_min_version = (hf_version >= HF_VERSION_OFFSHORE_PRICING) ? OFFSHORE_TRANSACTION_VERSION : 2;
++  uint64_t tx_min_version = (hf_version >= HF_VERSION_OFFSHORE_FULL) ? OFFSHORE_TRANSACTION_VERSION : 2;
 +  CHECK_AND_ASSERT_MES(tx.version >= tx_min_version, false, "Transaction version is not at least " + boost::lexical_cast<std::string>(tx_min_version));
  
    rct::rctSig &rv = tx.rct_signatures;
@@ -1127,7 +1127,7 @@ index ac2c07913..7372ba237 100644
  
      // min/max tx version based on HF, and we accept v1 txes if having a non mixable
 -    const size_t max_tx_version = (hf_version <= 3) ? 1 : 2;
-+    const size_t max_tx_version = (hf_version <= HF_VERSION_OFFSHORE_PRICING) ? 2 : CURRENT_TRANSACTION_VERSION;
++    const size_t max_tx_version = (hf_version < HF_VERSION_OFFSHORE_FULL) ? 2 : CURRENT_TRANSACTION_VERSION;
      if (tx.version > max_tx_version)
      {
        MERROR_VER("transaction version " << (unsigned)tx.version << " is higher than max accepted version " << max_tx_version);
