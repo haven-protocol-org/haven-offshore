@@ -1,5 +1,7 @@
---- monero/src/wallet/wallet_rpc_server.cpp	2020-06-30 14:49:37.582511591 +0100
-+++ monero-offshore/src/wallet/wallet_rpc_server.cpp	2020-06-23 11:02:44.014578411 +0100
+diff --git a/src/wallet/wallet_rpc_server.cpp b/src/wallet/wallet_rpc_server.cpp
+index 0e2a34470..354d89964 100644
+--- a/src/wallet/wallet_rpc_server.cpp
++++ b/src/wallet/wallet_rpc_server.cpp
 @@ -285,7 +285,7 @@ namespace tools
      {
        MINFO("The daemon is not set up to background mine.");
@@ -116,7 +118,7 @@
    bool wallet_rpc_server::on_getaddress(const wallet_rpc::COMMAND_RPC_GET_ADDRESS::request& req, wallet_rpc::COMMAND_RPC_GET_ADDRESS::response& res, epee::json_rpc::error& er, const connection_context *ctx)
    {
      if (!m_wallet) return not_open(er);
-@@ -847,17 +911,17 @@ namespace tools
+@@ -847,17 +911,18 @@ namespace tools
      return true;
    }
    //------------------------------------------------------------------------------------------------------------------------------
@@ -133,21 +135,23 @@
    bool wallet_rpc_server::fill_response(std::vector<tools::wallet2::pending_tx> &ptx_vector,
 -      bool get_tx_key, Ts& tx_key, Tu &amount, Tu &fee, std::string &multisig_txset, std::string &unsigned_txset, bool do_not_relay,
 -      Ts &tx_hash, bool get_tx_hex, Ts &tx_blob, bool get_tx_metadata, Ts &tx_metadata, epee::json_rpc::error &er)
-+					bool get_tx_key, Ts& tx_key, Tu &amount, Tu &fee, std::string &multisig_txset, std::string &unsigned_txset, bool do_not_relay,
-+					Ts &tx_hash, bool get_tx_hex, Ts &tx_blob, bool get_tx_metadata, Ts &tx_metadata, epee::json_rpc::error &er, bool use_offshore_amounts)
++					bool get_tx_key, Ts& tx_key, Tu &amount, Tu &amount_usd, Tu &fee, std::string &multisig_txset, std::string &unsigned_txset,
++					bool do_not_relay, Ts &tx_hash, bool get_tx_hex, Ts &tx_blob, bool get_tx_metadata, Ts &tx_metadata, epee::json_rpc::error &er,
++					bool use_offshore_amounts)
    {
      for (const auto & ptx : ptx_vector)
      {
-@@ -869,7 +933,7 @@ namespace tools
+@@ -869,7 +934,8 @@ namespace tools
          fill(tx_key, std::string(s.data(), s.size()));
        }
        // Compute amount leaving wallet in tx. By convention dests does not include change outputs
 -      fill(amount, total_amount(ptx));
-+      fill(amount, total_amount(ptx, use_offshore_amounts));
++      fill(amount, total_amount(ptx, false));
++      fill(amount_usd, total_amount(ptx, true));
        fill(fee, ptx.fee);
      }
  
-@@ -914,6 +978,179 @@ namespace tools
+@@ -914,6 +980,179 @@ namespace tools
      return true;
    }
    //------------------------------------------------------------------------------------------------------------------------------
@@ -198,8 +202,8 @@
 +        return false;
 +      }
 +
-+      return fill_response(ptx_vector, req.get_tx_keys, res.tx_key_list, res.amount_list, res.fee_list, res.multisig_txset, res.unsigned_txset, req.do_not_relay,
-+			   res.tx_hash_list, req.get_tx_hex, res.tx_blob_list, req.get_tx_metadata, res.tx_metadata_list, er);
++      return fill_response(ptx_vector, req.get_tx_keys, res.tx_key_list, res.amount_list, res.amount_usd_list, res.fee_list, res.multisig_txset, res.unsigned_txset,
++			   req.do_not_relay, res.tx_hash_list, req.get_tx_hex, res.tx_blob_list, req.get_tx_metadata, res.tx_metadata_list, er);
 +    }
 +    catch (const std::exception& e)
 +    {
@@ -255,8 +259,8 @@
 +        return false;
 +      }
 +
-+      return fill_response(ptx_vector, req.get_tx_keys, res.tx_key_list, res.amount_list, res.fee_list, res.multisig_txset, res.unsigned_txset, req.do_not_relay,
-+			   res.tx_hash_list, req.get_tx_hex, res.tx_blob_list, req.get_tx_metadata, res.tx_metadata_list, er, true);
++      return fill_response(ptx_vector, req.get_tx_keys, res.tx_key_list, res.amount_list, res.amount_usd_list, res.fee_list, res.multisig_txset, res.unsigned_txset,
++			   req.do_not_relay, res.tx_hash_list, req.get_tx_hex, res.tx_blob_list, req.get_tx_metadata, res.tx_metadata_list, er, true);
 +    }
 +    catch (const std::exception& e)
 +    {
@@ -313,8 +317,8 @@
 +        return false;
 +      }
 +
-+      return fill_response(ptx_vector, req.get_tx_keys, res.tx_key_list, res.amount_list, res.fee_list, res.multisig_txset, res.unsigned_txset, req.do_not_relay,
-+          res.tx_hash_list, req.get_tx_hex, res.tx_blob_list, req.get_tx_metadata, res.tx_metadata_list, er);
++      return fill_response(ptx_vector, req.get_tx_keys, res.tx_key_list, res.amount_list, res.amount_usd_list, res.fee_list, res.multisig_txset, res.unsigned_txset,
++			   req.do_not_relay, res.tx_hash_list, req.get_tx_hex, res.tx_blob_list, req.get_tx_metadata, res.tx_metadata_list, er);
 +    }
 +    catch (const std::exception& e)
 +    {
@@ -327,7 +331,58 @@
    bool wallet_rpc_server::on_transfer(const wallet_rpc::COMMAND_RPC_TRANSFER::request& req, wallet_rpc::COMMAND_RPC_TRANSFER::response& res, epee::json_rpc::error& er, const connection_context *ctx)
    {
  
-@@ -2187,7 +2424,7 @@ namespace tools
+@@ -956,7 +1195,7 @@ namespace tools
+         return false;
+       }
+ 
+-      return fill_response(ptx_vector, req.get_tx_key, res.tx_key, res.amount, res.fee, res.multisig_txset, res.unsigned_txset, req.do_not_relay,
++      return fill_response(ptx_vector, req.get_tx_key, res.tx_key, res.amount, res.amount_usd, res.fee, res.multisig_txset, res.unsigned_txset, req.do_not_relay,
+           res.tx_hash, req.get_tx_hex, res.tx_blob, req.get_tx_metadata, res.tx_metadata, er);
+     }
+     catch (const std::exception& e)
+@@ -995,8 +1234,8 @@ namespace tools
+       std::vector<wallet2::pending_tx> ptx_vector = m_wallet->create_transactions_2(dsts, mixin, req.unlock_time, priority, extra, req.account_index, req.subaddr_indices);
+       LOG_PRINT_L2("on_transfer_split called create_transactions_2");
+ 
+-      return fill_response(ptx_vector, req.get_tx_keys, res.tx_key_list, res.amount_list, res.fee_list, res.multisig_txset, res.unsigned_txset, req.do_not_relay,
+-          res.tx_hash_list, req.get_tx_hex, res.tx_blob_list, req.get_tx_metadata, res.tx_metadata_list, er);
++      return fill_response(ptx_vector, req.get_tx_keys, res.tx_key_list, res.amount_list, res.amount_usd_list, res.fee_list, res.multisig_txset, res.unsigned_txset,
++			   req.do_not_relay, res.tx_hash_list, req.get_tx_hex, res.tx_blob_list, req.get_tx_metadata, res.tx_metadata_list, er);
+     }
+     catch (const std::exception& e)
+     {
+@@ -1356,8 +1595,8 @@ namespace tools
+     {
+       std::vector<wallet2::pending_tx> ptx_vector = m_wallet->create_unmixable_sweep_transactions();
+ 
+-      return fill_response(ptx_vector, req.get_tx_keys, res.tx_key_list, res.amount_list, res.fee_list, res.multisig_txset, res.unsigned_txset, req.do_not_relay,
+-          res.tx_hash_list, req.get_tx_hex, res.tx_blob_list, req.get_tx_metadata, res.tx_metadata_list, er);
++      return fill_response(ptx_vector, req.get_tx_keys, res.tx_key_list, res.amount_list, res.amount_usd_list, res.fee_list, res.multisig_txset, res.unsigned_txset,
++			   req.do_not_relay, res.tx_hash_list, req.get_tx_hex, res.tx_blob_list, req.get_tx_metadata, res.tx_metadata_list, er);
+     }
+     catch (const std::exception& e)
+     {
+@@ -1403,8 +1642,8 @@ namespace tools
+       uint32_t priority = m_wallet->adjust_priority(req.priority);
+       std::vector<wallet2::pending_tx> ptx_vector = m_wallet->create_transactions_all(req.below_amount, dsts[0].addr, dsts[0].is_subaddress, req.outputs, mixin, req.unlock_time, priority, extra, req.account_index, req.subaddr_indices);
+ 
+-      return fill_response(ptx_vector, req.get_tx_keys, res.tx_key_list, res.amount_list, res.fee_list, res.multisig_txset, res.unsigned_txset, req.do_not_relay,
+-          res.tx_hash_list, req.get_tx_hex, res.tx_blob_list, req.get_tx_metadata, res.tx_metadata_list, er);
++      return fill_response(ptx_vector, req.get_tx_keys, res.tx_key_list, res.amount_list, res.amount_usd_list, res.fee_list, res.multisig_txset, res.unsigned_txset,
++			   req.do_not_relay, res.tx_hash_list, req.get_tx_hex, res.tx_blob_list, req.get_tx_metadata, res.tx_metadata_list, er);
+     }
+     catch (const std::exception& e)
+     {
+@@ -1478,7 +1717,7 @@ namespace tools
+         return false;
+       }
+ 
+-      return fill_response(ptx_vector, req.get_tx_key, res.tx_key, res.amount, res.fee, res.multisig_txset, res.unsigned_txset, req.do_not_relay,
++      return fill_response(ptx_vector, req.get_tx_key, res.tx_key, res.amount, res.amount_usd, res.fee, res.multisig_txset, res.unsigned_txset, req.do_not_relay,
+           res.tx_hash, req.get_tx_hex, res.tx_blob, req.get_tx_metadata, res.tx_metadata, er);
+     }
+     catch (const std::exception& e)
+@@ -2187,7 +2426,7 @@ namespace tools
  
      try
      {
@@ -336,7 +391,7 @@
      }
      catch (const std::exception &e)
      {
-@@ -2253,7 +2490,7 @@ namespace tools
+@@ -2253,7 +2492,7 @@ namespace tools
  
      try
      {
@@ -345,7 +400,7 @@
      }
      catch (const std::exception &e)
      {
-@@ -3378,6 +3615,9 @@ namespace tools
+@@ -3378,6 +3617,9 @@ namespace tools
        }
      }
  
@@ -355,7 +410,7 @@
      try
      {
        if (!req.spendkey.empty())
-@@ -3442,6 +3682,12 @@ namespace tools
+@@ -3442,6 +3684,12 @@ namespace tools
      }
  
      // early check for mandatory fields

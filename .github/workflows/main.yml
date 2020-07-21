@@ -133,7 +133,7 @@ jobs:
         msys2do wget http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-icu-62.1-1-any.pkg.tar.xz
         msys2do pacman -U --noconfirm *.tar.xz
     - name: build Haven
-      run: msys2do ./build-haven.sh release-static-win64 -j2
+      run: msys2do ./build-haven.sh release-static-win64
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
