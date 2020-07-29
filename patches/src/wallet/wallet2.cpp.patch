@@ -1,5 +1,5 @@
 diff --git a/src/wallet/wallet2.cpp b/src/wallet/wallet2.cpp
-index 8f3f30da1..6c470b6b1 100644
+index 8f3f30da1..9ead8b002 100644
 --- a/src/wallet/wallet2.cpp
 +++ b/src/wallet/wallet2.cpp
 @@ -29,10 +29,12 @@
@@ -2117,7 +2117,7 @@ index 8f3f30da1..6c470b6b1 100644
    auto sources_copy = sources;
 -  bool r = cryptonote::construct_tx_and_get_tx_key(m_account.get_keys(), m_subaddresses, sources, splitted_dsts, change_dts.addr, extra, tx, unlock_time, tx_key, additional_tx_keys, true, rct_config, m_multisig ? &msout : NULL);
 +  offshore::pricing_record pr;
-+  if (offshore || onshore || offshore_to_offshore) {
++  if (offshore || onshore) {
 +    bool b = get_pricing_record(pr, current_height);
 +    THROW_WALLET_EXCEPTION_IF(!b, error::wallet_internal_error, "Failed to get pricing record");
 +  }
@@ -2785,7 +2785,7 @@ index 8f3f30da1..6c470b6b1 100644
  
 -  THROW_WALLET_EXCEPTION_IF(!sanity_check(ptx_vector, original_dsts), error::wallet_internal_error, "Created transaction(s) failed sanity check");
 +  offshore::pricing_record pr;
-+  if (offshore || onshore || offshore_to_offshore) 
++  if (offshore || onshore) 
 +    bool b = get_pricing_record(pr, ptx_vector.back().tx.pricing_record_height);
 +  
 +  THROW_WALLET_EXCEPTION_IF(!sanity_check(ptx_vector, original_dsts, offshore, onshore, offshore_to_offshore, pr), error::wallet_internal_error, "Created transaction(s) failed sanity check");
