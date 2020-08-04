@@ -1,7 +1,5 @@
-diff --git a/src/rpc/core_rpc_server.h b/src/rpc/core_rpc_server.h
-index e4683bbe..3aa51d39 100644
---- a/src/rpc/core_rpc_server.h
-+++ b/src/rpc/core_rpc_server.h
+--- monero/src/rpc/core_rpc_server.h	2020-08-04 19:07:58.000000000 +0200
++++ monero-new/src/rpc/core_rpc_server.h	2020-08-03 21:31:15.000000000 +0200
 @@ -158,6 +158,7 @@ namespace cryptonote
          MAP_JON_RPC_WE("get_output_histogram",   on_get_output_histogram,       COMMAND_RPC_GET_OUTPUT_HISTOGRAM)
          MAP_JON_RPC_WE("get_version",            on_get_version,                COMMAND_RPC_GET_VERSION)

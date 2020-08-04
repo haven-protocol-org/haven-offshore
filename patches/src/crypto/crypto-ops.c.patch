@@ -1,5 +1,5 @@
---- monero/src/crypto/crypto-ops.c	2020-05-28 17:21:37.223695866 +0100
-+++ monero-offshore/src/crypto/crypto-ops.c	2020-04-08 14:55:48.000000000 +0100
+--- monero/src/crypto/crypto-ops.c	2020-08-04 19:07:58.000000000 +0200
++++ monero-new/src/crypto/crypto-ops.c	2020-08-03 21:31:15.000000000 +0200
 @@ -1234,6 +1234,56 @@ void ge_double_scalarmult_base_vartime(g
    }
  }
@@ -57,13 +57,10 @@
  void ge_double_scalarmult_base_vartime_p3(ge_p3 *r3, const unsigned char *a, const ge_p3 *A, const unsigned char *b) {
    signed char aslide[256];
    signed char bslide[256];
-@@ -2145,6 +2195,56 @@ void ge_double_scalarmult_precomp_vartim
-     }
+@@ -2148,6 +2198,56 @@ void ge_double_scalarmult_precomp_vartim
+   }
+ }
  
-     ge_p1p1_to_p2(r, &t);
-+  }
-+}
-+
 +// Computes aA + bB + cC (all points require precomputation)
 +void ge_triple_scalarmult_precomp_vartime(ge_p2 *r, const unsigned char *a, const ge_dsmp Ai, const unsigned char *b, const ge_dsmp Bi, const unsigned char *c, const ge_dsmp Ci) {
 +  signed char aslide[256];
@@ -111,6 +108,9 @@
 +    }
 +
 +    ge_p1p1_to_p2(r, &t);
-   }
- }
- 
++  }
++}
++
+ void ge_double_scalarmult_precomp_vartime2_p3(ge_p3 *r3, const unsigned char *a, const ge_dsmp Ai, const unsigned char *b, const ge_dsmp Bi) {
+   signed char aslide[256];
+   signed char bslide[256];

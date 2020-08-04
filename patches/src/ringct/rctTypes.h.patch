@@ -1,7 +1,5 @@
-diff --git a/src/ringct/rctTypes.h b/src/ringct/rctTypes.h
-index f8729b872..7a29506eb 100644
---- a/src/ringct/rctTypes.h
-+++ b/src/ringct/rctTypes.h
+--- monero/src/ringct/rctTypes.h	2020-08-04 19:07:58.000000000 +0200
++++ monero-new/src/ringct/rctTypes.h	2020-08-03 21:31:15.000000000 +0200
 @@ -110,9 +110,14 @@ namespace rct {
  
      struct multisig_out {
@@ -289,7 +287,7 @@ index f8729b872..7a29506eb 100644
          }
      };
  
-@@ -605,6 +704,7 @@ VARIANT_TAG(debug_archive, rct::rctSig, "rct::rctSig");
+@@ -605,6 +704,7 @@ VARIANT_TAG(debug_archive, rct::rctSig, 
  VARIANT_TAG(debug_archive, rct::Bulletproof, "rct::bulletproof");
  VARIANT_TAG(debug_archive, rct::multisig_kLRki, "rct::multisig_kLRki");
  VARIANT_TAG(debug_archive, rct::multisig_out, "rct::multisig_out");
@@ -297,7 +295,7 @@ index f8729b872..7a29506eb 100644
  
  VARIANT_TAG(binary_archive, rct::key, 0x90);
  VARIANT_TAG(binary_archive, rct::key64, 0x91);
-@@ -621,6 +721,7 @@ VARIANT_TAG(binary_archive, rct::rctSig, 0x9b);
+@@ -621,6 +721,7 @@ VARIANT_TAG(binary_archive, rct::rctSig,
  VARIANT_TAG(binary_archive, rct::Bulletproof, 0x9c);
  VARIANT_TAG(binary_archive, rct::multisig_kLRki, 0x9d);
  VARIANT_TAG(binary_archive, rct::multisig_out, 0x9e);
@@ -305,7 +303,7 @@ index f8729b872..7a29506eb 100644
  
  VARIANT_TAG(json_archive, rct::key, "rct_key");
  VARIANT_TAG(json_archive, rct::key64, "rct_key64");
-@@ -637,5 +738,6 @@ VARIANT_TAG(json_archive, rct::rctSig, "rct_rctSig");
+@@ -637,5 +738,6 @@ VARIANT_TAG(json_archive, rct::rctSig, "
  VARIANT_TAG(json_archive, rct::Bulletproof, "rct_bulletproof");
  VARIANT_TAG(json_archive, rct::multisig_kLRki, "rct_multisig_kLR");
  VARIANT_TAG(json_archive, rct::multisig_out, "rct_multisig_out");

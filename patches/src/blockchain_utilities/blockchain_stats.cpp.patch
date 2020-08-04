@@ -1,5 +1,5 @@
---- monero/src/blockchain_utilities/blockchain_stats.cpp	2019-12-20 13:52:25.268151102 +0000
-+++ monero-offshore/src/blockchain_utilities/blockchain_stats.cpp	2019-11-27 08:35:55.928826006 +0000
+--- monero/src/blockchain_utilities/blockchain_stats.cpp	2020-08-04 19:07:58.000000000 +0200
++++ monero-new/src/blockchain_utilities/blockchain_stats.cpp	2020-08-03 21:31:15.000000000 +0200
 @@ -107,7 +107,7 @@ int main(int argc, char* argv[])
  
    if (command_line::get_arg(vm, command_line::arg_help))
