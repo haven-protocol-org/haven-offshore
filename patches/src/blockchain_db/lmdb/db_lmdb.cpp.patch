@@ -1,7 +1,5 @@
-diff --git a/src/blockchain_db/lmdb/db_lmdb.cpp b/src/blockchain_db/lmdb/db_lmdb.cpp
-index d0fd787db..6acd3e525 100644
---- a/src/blockchain_db/lmdb/db_lmdb.cpp
-+++ b/src/blockchain_db/lmdb/db_lmdb.cpp
+--- monero/src/blockchain_db/lmdb/db_lmdb.cpp	2020-08-04 19:07:58.000000000 +0200
++++ monero-new/src/blockchain_db/lmdb/db_lmdb.cpp	2020-08-03 21:31:15.000000000 +0200
 @@ -41,6 +41,7 @@
  #include "crypto/crypto.h"
  #include "profile_tools.h"
@@ -19,7 +17,7 @@ index d0fd787db..6acd3e525 100644
  
  namespace
  {
-@@ -226,6 +227,9 @@ const char* const LMDB_HF_VERSIONS = "hf_versions";
+@@ -226,6 +227,9 @@ const char* const LMDB_HF_VERSIONS = "hf
  
  const char* const LMDB_PROPERTIES = "properties";
  
@@ -29,7 +27,7 @@ index d0fd787db..6acd3e525 100644
  const char zerokey[8] = {0};
  const MDB_val zerokval = { sizeof(zerokey), (void *)zerokey };
  
-@@ -248,14 +252,14 @@ inline void lmdb_db_open(MDB_txn* txn, const char* name, int flags, MDB_dbi& dbi
+@@ -248,14 +252,14 @@ inline void lmdb_db_open(MDB_txn* txn, c
  	if (!m_cur_ ## name) { \
  	  int result = mdb_cursor_open(*m_write_txn, m_ ## name, &m_cur_ ## name); \
  	  if (result) \
@@ -93,7 +91,7 @@ index d0fd787db..6acd3e525 100644
  std::atomic<uint64_t> mdb_txn_safe::num_active_txns{0};
  std::atomic_flag mdb_txn_safe::creation_gate = ATOMIC_FLAG_INIT;
  
-@@ -774,7 +807,8 @@ void BlockchainLMDB::add_block(const block& blk, size_t block_weight, uint64_t l
+@@ -774,7 +807,8 @@ void BlockchainLMDB::add_block(const blo
    bi.bi_diff_lo = (cumulative_difficulty & 0xffffffffffffffff).convert_to<uint64_t>();
    bi.bi_hash = blk_hash;
    bi.bi_cum_rct = num_rct_outs;
@@ -103,7 +101,7 @@ index d0fd787db..6acd3e525 100644
    {
      uint64_t last_height = m_height-1;
      MDB_val_set(h, last_height);
-@@ -852,6 +886,8 @@ uint64_t BlockchainLMDB::add_transaction_data(const crypto::hash& blk_hash, cons
+@@ -852,6 +886,8 @@ uint64_t BlockchainLMDB::add_transaction
    CURSOR(txs_prunable_hash)
    CURSOR(txs_prunable_tip)
    CURSOR(tx_indices)
@@ -112,7 +110,7 @@ index d0fd787db..6acd3e525 100644
  
    MDB_val_set(val_tx_id, tx_id);
    MDB_val_set(val_h, tx_hash);
-@@ -920,6 +956,80 @@ uint64_t BlockchainLMDB::add_transaction_data(const crypto::hash& blk_hash, cons
+@@ -920,6 +956,80 @@ uint64_t BlockchainLMDB::add_transaction
        throw0(DB_ERROR(lmdb_error("Failed to add prunable tx prunable hash to db transaction: ", result).c_str()));
    }
  
@@ -193,7 +191,7 @@ index d0fd787db..6acd3e525 100644
    return tx_id;
  }
  
-@@ -938,6 +1050,8 @@ void BlockchainLMDB::remove_transaction_data(const crypto::hash& tx_hash, const
+@@ -938,6 +1048,8 @@ void BlockchainLMDB::remove_transaction_
    CURSOR(txs_prunable)
    CURSOR(txs_prunable_hash)
    CURSOR(txs_prunable_tip)
@@ -202,7 +200,7 @@ index d0fd787db..6acd3e525 100644
    CURSOR(tx_outputs)
  
    MDB_val_set(val_h, tx_hash);
-@@ -982,6 +1096,65 @@ void BlockchainLMDB::remove_transaction_data(const crypto::hash& tx_hash, const
+@@ -982,6 +1094,65 @@ void BlockchainLMDB::remove_transaction_
          throw1(DB_ERROR(lmdb_error("Failed to add removal of prunable hash tx to db transaction: ", result).c_str()));
    }
  
@@ -268,7 +266,7 @@ index d0fd787db..6acd3e525 100644
    remove_tx_outputs(tip->data.tx_id, tx);
  
    result = mdb_cursor_get(m_cur_tx_outputs, &val_tx_id, NULL, MDB_SET);
-@@ -1018,8 +1191,8 @@ uint64_t BlockchainLMDB::add_output(const crypto::hash& tx_hash,
+@@ -1018,8 +1189,8 @@ uint64_t BlockchainLMDB::add_output(cons
    CURSOR(output_txs)
    CURSOR(output_amounts)
  
@@ -279,7 +277,7 @@ index d0fd787db..6acd3e525 100644
    if (tx_output.amount == 0 && !commitment)
      throw0(DB_ERROR("RCT output without commitment"));
  
-@@ -1047,7 +1220,7 @@ uint64_t BlockchainLMDB::add_output(const crypto::hash& tx_hash,
+@@ -1047,7 +1218,7 @@ uint64_t BlockchainLMDB::add_output(cons
    else
      ok.amount_index = 0;
    ok.output_id = m_num_outputs;
@@ -288,7 +286,7 @@ index d0fd787db..6acd3e525 100644
    ok.data.unlock_time = unlock_time;
    ok.data.height = m_height;
    if (tx_output.amount == 0)
-@@ -1410,6 +1583,9 @@ void BlockchainLMDB::open(const std::string& filename, const int db_flags)
+@@ -1410,6 +1581,9 @@ void BlockchainLMDB::open(const std::str
  
    lmdb_db_open(txn, LMDB_PROPERTIES, MDB_CREATE, m_properties, "Failed to open db handle for m_properties");
  
@@ -298,7 +296,7 @@ index d0fd787db..6acd3e525 100644
    mdb_set_dupsort(txn, m_spent_keys, compare_hash32);
    mdb_set_dupsort(txn, m_block_heights, compare_hash32);
    mdb_set_dupsort(txn, m_tx_indices, compare_hash32);
-@@ -1425,6 +1601,9 @@ void BlockchainLMDB::open(const std::string& filename, const int db_flags)
+@@ -1425,6 +1599,9 @@ void BlockchainLMDB::open(const std::str
    mdb_set_compare(txn, m_txpool_blob, compare_hash32);
    mdb_set_compare(txn, m_properties, compare_string);
  
@@ -308,7 +306,7 @@ index d0fd787db..6acd3e525 100644
    if (!(mdb_flags & MDB_RDONLY))
    {
      result = mdb_drop(txn, m_hf_starting_heights, 1);
-@@ -1461,7 +1643,7 @@ void BlockchainLMDB::open(const std::string& filename, const int db_flags)
+@@ -1461,7 +1638,7 @@ void BlockchainLMDB::open(const std::str
          mdb_env_close(m_env);
          m_open = false;
          MFATAL("Existing lmdb database needs to be converted, which cannot be done on a read-only database.");
@@ -317,7 +315,7 @@ index d0fd787db..6acd3e525 100644
          return;
        }
        // Note that there was a schema change within version 0 as well.
-@@ -1584,6 +1766,10 @@ void BlockchainLMDB::reset()
+@@ -1584,6 +1761,10 @@ void BlockchainLMDB::reset()
      throw0(DB_ERROR(lmdb_error("Failed to drop m_tx_indices: ", result).c_str()));
    if (auto result = mdb_drop(txn, m_tx_outputs, 0))
      throw0(DB_ERROR(lmdb_error("Failed to drop m_tx_outputs: ", result).c_str()));
@@ -328,7 +326,7 @@ index d0fd787db..6acd3e525 100644
    if (auto result = mdb_drop(txn, m_output_txs, 0))
      throw0(DB_ERROR(lmdb_error("Failed to drop m_output_txs: ", result).c_str()));
    if (auto result = mdb_drop(txn, m_output_amounts, 0))
-@@ -2807,6 +2993,52 @@ uint64_t BlockchainLMDB::height() const
+@@ -2807,6 +2988,52 @@ uint64_t BlockchainLMDB::height() const
    return db_stats.ms_entries;
  }
  
@@ -381,7 +379,7 @@ index d0fd787db..6acd3e525 100644
  uint64_t BlockchainLMDB::num_outputs() const
  {
    LOG_PRINT_L3("BlockchainLMDB::" << __func__);
-@@ -5227,6 +5459,7 @@ void BlockchainLMDB::migrate_4_5()
+@@ -5227,6 +5454,7 @@ void BlockchainLMDB::migrate_4_5()
        bi.bi_hash = bi_old->bi_hash;
        bi.bi_cum_rct = bi_old->bi_cum_rct;
        bi.bi_long_term_block_weight = bi_old->bi_long_term_block_weight;
@@ -389,7 +387,7 @@ index d0fd787db..6acd3e525 100644
  
        MDB_val_set(nv, bi);
        result = mdb_cursor_put(c_cur, (MDB_val *)&zerokval, &nv, MDB_APPENDDUP);
-@@ -5272,6 +5505,134 @@ void BlockchainLMDB::migrate_4_5()
+@@ -5272,6 +5500,134 @@ void BlockchainLMDB::migrate_4_5()
    txn.commit();
  }
  
@@ -524,7 +522,7 @@ index d0fd787db..6acd3e525 100644
  void BlockchainLMDB::migrate(const uint32_t oldversion)
  {
    if (oldversion < 1)
-@@ -5284,6 +5645,8 @@ void BlockchainLMDB::migrate(const uint32_t oldversion)
+@@ -5284,6 +5640,8 @@ void BlockchainLMDB::migrate(const uint3
      migrate_3_4();
    if (oldversion < 5)
      migrate_4_5();

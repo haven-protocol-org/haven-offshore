@@ -1,7 +1,5 @@
-diff --git a/src/wallet/wallet_rpc_server.h b/src/wallet/wallet_rpc_server.h
-index a327ed908..7fbac1b89 100644
---- a/src/wallet/wallet_rpc_server.h
-+++ b/src/wallet/wallet_rpc_server.h
+--- monero/src/wallet/wallet_rpc_server.h	2020-08-04 19:07:58.000000000 +0200
++++ monero-new/src/wallet/wallet_rpc_server.h	2020-08-03 21:31:15.000000000 +0200
 @@ -69,6 +69,7 @@ namespace tools
      BEGIN_URI_MAP2()
        BEGIN_JSON_RPC_MAP("/json_rpc")

@@ -1,5 +1,5 @@
---- monero/src/CMakeLists.txt	2019-12-20 13:52:25.260150996 +0000
-+++ monero-offshore/src/CMakeLists.txt	2019-11-27 08:35:55.872825421 +0000
+--- monero/src/CMakeLists.txt	2020-08-04 19:07:58.000000000 +0200
++++ monero-new/src/CMakeLists.txt	2020-08-03 21:31:15.000000000 +0200
 @@ -108,6 +108,7 @@ add_subdirectory(crypto)
  add_subdirectory(ringct)
  add_subdirectory(checkpoints)

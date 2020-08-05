@@ -1,5 +1,5 @@
---- monero/src/simplewallet/CMakeLists.txt	2019-12-20 13:52:25.296151474 +0000
-+++ monero-offshore/src/simplewallet/CMakeLists.txt	2019-11-27 08:35:55.976826508 +0000
+--- monero/src/simplewallet/CMakeLists.txt	2020-08-04 19:07:58.000000000 +0200
++++ monero-new/src/simplewallet/CMakeLists.txt	2020-08-03 21:31:15.000000000 +0200
 @@ -61,5 +61,6 @@ target_link_libraries(simplewallet
      ${EXTRA_LIBRARIES})
  set_property(TARGET simplewallet

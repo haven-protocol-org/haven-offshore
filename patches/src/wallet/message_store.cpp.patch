@@ -1,6 +1,15 @@
---- monero/src/wallet/message_store.cpp	2019-12-20 13:52:25.304151580 +0000
-+++ monero-offshore/src/wallet/message_store.cpp	2019-11-27 08:35:56.040827177 +0000
-@@ -705,7 +705,7 @@ void message_store::write_to_file(const
+--- monero/src/wallet/message_store.cpp	2020-08-04 19:07:58.000000000 +0200
++++ monero-new/src/wallet/message_store.cpp	2020-08-04 13:52:56.000000000 +0200
+@@ -48,7 +48,7 @@
+ namespace mms
+ {
+ 
+-message_store::message_store()
++message_store::message_store(std::unique_ptr<epee::net_utils::http::abstract_http_client> http_client) : m_transporter(std::move(http_client))
+ {
+   m_active = false;
+   m_auto_send = false;
+@@ -705,7 +705,7 @@ void message_store::write_to_file(const 
    std::string buf = oss.str();
  
    crypto::chacha_key key;

@@ -1,5 +1,5 @@
---- monero/src/wallet/CMakeLists.txt	2019-12-20 13:52:25.304151580 +0000
-+++ monero-offshore/src/wallet/CMakeLists.txt	2019-11-27 08:35:56.052827304 +0000
+--- monero/src/wallet/CMakeLists.txt	2020-08-04 19:07:58.000000000 +0200
++++ monero-new/src/wallet/CMakeLists.txt	2020-08-03 21:31:15.000000000 +0200
 @@ -107,7 +107,7 @@ target_link_libraries(wallet_rpc_server
      ${EXTRA_LIBRARIES})
  set_property(TARGET wallet_rpc_server

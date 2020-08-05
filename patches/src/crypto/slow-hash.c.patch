@@ -1,5 +1,5 @@
---- monero/src/crypto/slow-hash.c	2019-12-20 13:52:25.272151155 +0000
-+++ monero-offshore/src/crypto/slow-hash.c	2019-11-27 08:35:55.840825086 +0000
+--- monero/src/crypto/slow-hash.c	2020-08-04 19:07:58.000000000 +0200
++++ monero-new/src/crypto/slow-hash.c	2020-08-03 21:31:15.000000000 +0200
 @@ -39,11 +39,6 @@
  #include "hash-ops.h"
  #include "oaes_lib.h"

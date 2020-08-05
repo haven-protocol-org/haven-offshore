@@ -1,7 +1,5 @@
-diff --git a/src/ringct/rctOps.h b/src/ringct/rctOps.h
-index dd6d8759..f8a8eae1 100644
---- a/src/ringct/rctOps.h
-+++ b/src/ringct/rctOps.h
+--- monero/src/ringct/rctOps.h	2020-08-04 19:07:58.000000000 +0200
++++ monero-new/src/ringct/rctOps.h	2020-08-03 21:31:15.000000000 +0200
 @@ -144,6 +144,10 @@ namespace rct {
      //B must be input after applying "precomp"
      void addKeys3(key &aAbB, const key &a, const key &A, const key &b, const ge_dsmp B);
