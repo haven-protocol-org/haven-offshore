@@ -157,8 +157,8 @@ index 56b6a63b7..43a0bc0e5 100644
 +#define HF_VERSION_OFFSHORE_FULL                13
 +#define HF_VERSION_OFFSHORE_FEES_V2             14
 +
-+#define STAGENET_VERSION                        0x05
-+#define TESTNET_VERSION                         0x05
++#define STAGENET_VERSION                        0x06
++#define TESTNET_VERSION                         0x06
 +
 +#define OFFSHORE_PRICING_BLOCKS_TO_AVERAGE      30
  
