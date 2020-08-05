@@ -1,5 +1,5 @@
---- monero/src/blockchain_db/blockchain_db.cpp	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/src/blockchain_db/blockchain_db.cpp	2020-08-03 21:31:15.000000000 +0200
+--- monero/src/blockchain_db/blockchain_db.cpp	2020-05-28 17:21:37.211695709 +0100
++++ monero-offshore/src/blockchain_db/blockchain_db.cpp	2020-05-15 16:42:32.000000000 +0100
 @@ -151,6 +151,14 @@ void BlockchainDB::add_transaction(const
      {
        add_spent_key(boost::get<txin_to_key>(tx_input).k_image);
@@ -48,7 +48,7 @@
      }
    }
    add_tx_amount_output_indices(tx_id, amount_output_indices);
-@@ -224,7 +240,7 @@ uint64_t BlockchainDB::add_block( const 
+@@ -224,7 +240,7 @@ uint64_t BlockchainDB::add_block( const
  
    uint64_t num_rct_outs = 0;
    add_transaction(blk_hash, std::make_pair(blk.miner_tx, tx_to_blob(blk.miner_tx)));

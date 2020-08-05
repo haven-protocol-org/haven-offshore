@@ -1,5 +1,7 @@
---- monero/src/cryptonote_basic/cryptonote_boost_serialization.h	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/src/cryptonote_basic/cryptonote_boost_serialization.h	2020-08-03 21:31:15.000000000 +0200
+diff --git a/src/cryptonote_basic/cryptonote_boost_serialization.h b/src/cryptonote_basic/cryptonote_boost_serialization.h
+index 79ce610a9..33c1b00e0 100644
+--- a/src/cryptonote_basic/cryptonote_boost_serialization.h
++++ b/src/cryptonote_basic/cryptonote_boost_serialization.h
 @@ -103,7 +103,13 @@ namespace boost
    {
      a & x.key;
@@ -15,10 +17,11 @@
    template <class Archive>
    inline void serialize(Archive &a, cryptonote::txout_to_scripthash &x, const boost::serialization::version_type ver)
    {
-@@ -142,6 +148,22 @@ namespace boost
+@@ -141,6 +147,22 @@ namespace boost
+     a & x.k_image;
    }
  
-   template <class Archive>
++  template <class Archive>
 +  inline void serialize(Archive &a, cryptonote::txin_offshore &x, const boost::serialization::version_type ver)
 +  {
 +    a & x.amount;
@@ -34,10 +37,9 @@
 +    a & x.k_image;
 +  }
 +
-+  template <class Archive>
+   template <class Archive>
    inline void serialize(Archive &a, cryptonote::tx_out &x, const boost::serialization::version_type ver)
    {
-     a & x.amount;
 @@ -157,6 +179,12 @@ namespace boost
      a & x.vin;
      a & x.vout;
@@ -74,10 +76,11 @@
      //------------------
      a & b.miner_tx;
      a & b.tx_hashes;
-@@ -246,6 +283,15 @@ namespace boost
+@@ -245,6 +282,15 @@ namespace boost
+     // a & x.II; // not serialized, we can recover it from the tx vin
    }
  
-   template <class Archive>
++  template <class Archive>
 +  inline void serialize(Archive &a, rct::clsag &x, const boost::serialization::version_type ver)
 +  {
 +    a & x.s;
@@ -86,10 +89,9 @@
 +    a & x.D;
 +  }
 +
-+  template <class Archive>
+   template <class Archive>
    inline void serialize(Archive &a, rct::ecdhTuple &x, const boost::serialization::version_type ver)
    {
-     a & x.mask;
 @@ -265,6 +311,9 @@ namespace boost
    inline void serialize(Archive &a, rct::multisig_out &x, const boost::serialization::version_type ver)
    {

@@ -1,5 +1,5 @@
---- monero/src/cryptonote_core/tx_pool.cpp	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/src/cryptonote_core/tx_pool.cpp	2020-08-03 21:31:15.000000000 +0200
+--- monero/src/cryptonote_core/tx_pool.cpp	2020-06-30 14:49:37.554511216 +0100
++++ monero-offshore/src/cryptonote_core/tx_pool.cpp	2020-06-30 12:11:06.805937244 +0100
 @@ -82,8 +82,8 @@ namespace cryptonote
  
      uint64_t get_transaction_weight_limit(uint8_t version)

@@ -1,6 +1,6 @@
---- monero/src/common/compat/glibc_compat.cpp	2020-08-04 19:06:05.000000000 +0200
-+++ monero-new/src/common/compat/glibc_compat.cpp	2020-08-03 21:31:15.000000000 +0200
-@@ -82,7 +82,7 @@ __explicit_bzero_chk (void *dst, size_t 
+--- monero/src/common/compat/glibc_compat.cpp	2019-12-20 13:52:25.268151102 +0000
++++ monero-offshore/src/common/compat/glibc_compat.cpp	2019-11-27 08:35:55.816824835 +0000
+@@ -82,7 +82,7 @@ __explicit_bzero_chk (void *dst, size_t
  #undef glob
  extern "C" int glob_old(const char * pattern, int flags, int (*errfunc) (const char *epath, int eerrno), glob_t *pglob);
  #ifdef __i386__

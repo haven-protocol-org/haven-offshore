@@ -1,12 +1,12 @@
---- monero/src/version.cpp.in	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/src/version.cpp.in	2020-08-03 21:31:15.000000000 +0200
+--- monero/src/version.cpp.in	2019-12-20 13:52:25.304151580 +0000
++++ monero-offshore/src/version.cpp.in	2019-11-27 08:35:56.076827554 +0000
 @@ -1,7 +1,9 @@
  #define DEF_MONERO_VERSION_TAG "@VERSIONTAG@"
  #define DEF_MONERO_VERSION "0.14.1.2"
 -#define DEF_MONERO_RELEASE_NAME "Boron Butterfly"
 -#define DEF_MONERO_VERSION_FULL DEF_MONERO_VERSION "-" DEF_MONERO_VERSION_TAG
 +#define DEF_HAVEN_VERSION "1.0.3"
-+#define DEF_HAVEN_VERSION_TAG "d219422"
++#define DEF_HAVEN_VERSION_TAG "@HAVENTAG@"
 +#define DEF_MONERO_RELEASE_NAME "Apollo"
 +#define DEF_MONERO_VERSION_FULL DEF_HAVEN_VERSION "-" DEF_HAVEN_VERSION_TAG ", based on Monero " DEF_MONERO_VERSION "-" DEF_MONERO_VERSION_TAG
  

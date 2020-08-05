@@ -1,5 +1,7 @@
---- monero/src/blockchain_db/lmdb/db_lmdb.h	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/src/blockchain_db/lmdb/db_lmdb.h	2020-08-03 21:31:15.000000000 +0200
+diff --git a/src/blockchain_db/lmdb/db_lmdb.h b/src/blockchain_db/lmdb/db_lmdb.h
+index 4b46f081e..2293d9924 100644
+--- a/src/blockchain_db/lmdb/db_lmdb.h
++++ b/src/blockchain_db/lmdb/db_lmdb.h
 @@ -70,6 +70,11 @@ typedef struct mdb_txn_cursors
    MDB_cursor *m_txc_hf_versions;
  
@@ -12,7 +14,7 @@
  } mdb_txn_cursors;
  
  #define m_cur_blocks	m_cursors->m_txc_blocks
-@@ -89,6 +94,8 @@ typedef struct mdb_txn_cursors
+@@ -89,6 +95,8 @@ typedef struct mdb_txn_cursors
  #define m_cur_txpool_blob	m_cursors->m_txc_txpool_blob
  #define m_cur_hf_versions	m_cursors->m_txc_hf_versions
  #define m_cur_properties	m_cursors->m_txc_properties
@@ -21,7 +23,7 @@
  
  typedef struct mdb_rflags
  {
-@@ -110,6 +117,8 @@ typedef struct mdb_rflags
+@@ -110,6 +118,8 @@ typedef struct mdb_rflags
    bool m_rf_txpool_blob;
    bool m_rf_hf_versions;
    bool m_rf_properties;
@@ -30,7 +32,7 @@
  } mdb_rflags;
  
  typedef struct mdb_threadinfo
-@@ -241,6 +250,8 @@ public:
+@@ -241,6 +251,8 @@ public:
  
    virtual block get_top_block() const;
  
@@ -39,7 +41,7 @@
    virtual uint64_t height() const;
  
    virtual bool tx_exists(const crypto::hash& h) const;
-@@ -427,6 +438,9 @@ private:
+@@ -427,6 +439,9 @@ private:
    // migrate from DB version 4 to 5
    void migrate_4_5();
  
@@ -49,7 +51,7 @@
    void cleanup_batch();
  
  private:
-@@ -456,7 +470,10 @@ private:
+@@ -456,7 +471,10 @@ private:
    MDB_dbi m_hf_versions;
  
    MDB_dbi m_properties;

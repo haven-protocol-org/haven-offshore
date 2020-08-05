@@ -1,5 +1,7 @@
---- monero/src/cryptonote_core/cryptonote_tx_utils.cpp	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/src/cryptonote_core/cryptonote_tx_utils.cpp	2020-08-03 21:31:15.000000000 +0200
+diff --git a/src/cryptonote_core/cryptonote_tx_utils.cpp b/src/cryptonote_core/cryptonote_tx_utils.cpp
+index 854f3d1c5..afe427f73 100644
+--- a/src/cryptonote_core/cryptonote_tx_utils.cpp
++++ b/src/cryptonote_core/cryptonote_tx_utils.cpp
 @@ -74,8 +74,75 @@ namespace cryptonote
      }
      LOG_PRINT_L2("destinations include " << num_stdaddresses << " standard addresses and " << num_subaddresses << " subaddresses");
@@ -234,19 +236,18 @@
 +	// Miner component of the offshore fee
 +	r = crypto::derive_public_key(derivation, 2, miner_address.m_spend_public_key, out_eph_public_key);
 +	CHECK_AND_ASSERT_MES(r, false, "while creating outs: failed to derive_public_key(" << derivation << ", " << "2" << ", "<< miner_address.m_spend_public_key << ")");
- 
--    CHECK_AND_ASSERT_MES(summary_amounts == block_reward, false, "Failed to construct miner tx, summary_amounts = " << summary_amounts << " not equal block_reward = " << block_reward);
++
 +	txout_offshore tk_off;
 +	tk_off.key = out_eph_public_key;
- 
--    if (hard_fork_version >= 4)
++
 +	tx_out out_off;
 +	out_off.amount = block_reward_usd;
 +	out_off.target = tk_off;
 +	tx.vout.push_back(out_off);
 +
 +        crypto::public_key out_eph_public_key_usd = AUTO_VAL_INIT(out_eph_public_key_usd);
-+
+ 
+-    CHECK_AND_ASSERT_MES(summary_amounts == block_reward, false, "Failed to construct miner tx, summary_amounts = " << summary_amounts << " not equal block_reward = " << block_reward);
 +        if (!get_deterministic_output_key(governance_wallet_address.address, gov_key, 3 /* fourth output in miner tx */, out_eph_public_key_usd))
 +        {
 +          MERROR("Failed to generate deterministic output key for governance wallet output creation (2)");
@@ -262,7 +263,8 @@
 +        tx.vout.push_back(out_gov);
 +      }
 +    }
-+
+ 
+-    if (hard_fork_version >= 4)
 +    if (hard_fork_version >= HF_VERSION_OFFSHORE_FULL) {
 +      tx.version = CURRENT_TRANSACTION_VERSION;
 +    } else {
@@ -371,24 +373,13 @@
 -            LOG_ERROR("Destinations have to have exactly one output to support encrypted payment ids");
 -            return false;
 -          }
-+    bool offshore = false;
-+    bool onshore = false;
-+    bool offshore_to_offshore = false;
-+    if (bOffshoreTx) {
- 
+-
 -          if (!hwdev.encrypt_payment_id(payment_id8, view_key_pub, tx_key))
 -          {
 -            LOG_ERROR("Failed to encrypt payment id");
 -            return false;
 -          }
-+      tx.pricing_record_height = current_height;
-+      tx.offshore_data.assign(offshore_data.data.begin(), offshore_data.data.end());
-+      
-+      // HERE BE DRAGONS!!!
-+      // Filter out the offshore information?
-+      //remove_field_from_tx_extra(tx.extra, typeid(tx_extra_offshore));
-+      // LAND AHOY!!!
- 
+-
 -          std::string extra_nonce;
 -          set_encrypted_payment_id_to_tx_extra_nonce(extra_nonce, payment_id8);
 -          remove_field_from_tx_extra(tx.extra, typeid(tx_extra_nonce));
@@ -404,6 +395,19 @@
 -        {
 -          add_dummy_payment_id = false;
 -        }
++    bool offshore = false;
++    bool onshore = false;
++    bool offshore_to_offshore = false;
++    if (bOffshoreTx) {
++
++      tx.pricing_record_height = current_height;
++      tx.offshore_data.assign(offshore_data.data.begin(), offshore_data.data.end());
++      
++      // HERE BE DRAGONS!!!
++      // Filter out the offshore information?
++      //remove_field_from_tx_extra(tx.extra, typeid(tx_extra_offshore));
++      // LAND AHOY!!!
++
 +      // Set the bool flags
 +      if ((offshore_data.data.at(0) > 'A') && (offshore_data.data.at(1) > 'A')) {
 +	offshore_to_offshore = true;
@@ -412,43 +416,11 @@
 +      } else {
 +	offshore = true;
        }
-+      
-+      // HERE BE DRAGONS!!!
-+      // NEAC : Disable shuffling of outs - it buggers up EVERYTHING!!!
-+      shuffle_outs = false;
-+      // LAND AHOY!!!
-+      
-+    } else {
-+      
-+      // if we have a stealth payment id, find it and encrypt it with the tx key now
-+      std::vector<tx_extra_field> tx_extra_fields;
-+      if (parse_tx_extra(tx.extra, tx_extra_fields))
-+	{
-+	  bool add_dummy_payment_id = true;
-+	  tx_extra_nonce extra_nonce;
-+	  if (find_tx_extra_field_by_type(tx_extra_fields, extra_nonce))
-+	    {
-+	      crypto::hash payment_id = null_hash;
-+	      crypto::hash8 payment_id8 = null_hash8;
-+	      if (get_encrypted_payment_id_from_tx_extra_nonce(extra_nonce.nonce, payment_id8))
-+		{
-+		  LOG_PRINT_L2("Encrypting payment id " << payment_id8);
-+		  crypto::public_key view_key_pub = get_destination_view_key_pub(destinations, change_addr);
-+		  if (view_key_pub == null_pkey)
-+		    {
-+		      LOG_ERROR("Destinations have to have exactly one output to support encrypted payment ids");
-+		      return false;
-+		    }
- 
+-
 -      // we don't add one if we've got more than the usual 1 destination plus change
 -      if (destinations.size() > 2)
 -        add_dummy_payment_id = false;
-+		  if (!hwdev.encrypt_payment_id(payment_id8, view_key_pub, tx_key))
-+		    {
-+		      LOG_ERROR("Failed to encrypt payment id");
-+		      return false;
-+		    }
- 
+-
 -      if (add_dummy_payment_id)
 -      {
 -        // if we have neither long nor short payment id, add a dummy short one,
@@ -476,7 +448,40 @@
 -    {
 -      MWARNING("Failed to parse tx extra");
 -      tx_extra_fields.clear();
--    }
++      
++      // HERE BE DRAGONS!!!
++      // NEAC : Disable shuffling of outs - it buggers up EVERYTHING!!!
++      shuffle_outs = false;
++      // LAND AHOY!!!
++      
++    } else {
++      
++      // if we have a stealth payment id, find it and encrypt it with the tx key now
++      std::vector<tx_extra_field> tx_extra_fields;
++      if (parse_tx_extra(tx.extra, tx_extra_fields))
++	{
++	  bool add_dummy_payment_id = true;
++	  tx_extra_nonce extra_nonce;
++	  if (find_tx_extra_field_by_type(tx_extra_fields, extra_nonce))
++	    {
++	      crypto::hash payment_id = null_hash;
++	      crypto::hash8 payment_id8 = null_hash8;
++	      if (get_encrypted_payment_id_from_tx_extra_nonce(extra_nonce.nonce, payment_id8))
++		{
++		  LOG_PRINT_L2("Encrypting payment id " << payment_id8);
++		  crypto::public_key view_key_pub = get_destination_view_key_pub(destinations, change_addr);
++		  if (view_key_pub == null_pkey)
++		    {
++		      LOG_ERROR("Destinations have to have exactly one output to support encrypted payment ids");
++		      return false;
++		    }
++
++		  if (!hwdev.encrypt_payment_id(payment_id8, view_key_pub, tx_key))
++		    {
++		      LOG_ERROR("Failed to encrypt payment id");
++		      return false;
++		    }
++
 +		  std::string extra_nonce;
 +		  set_encrypted_payment_id_to_tx_extra_nonce(extra_nonce, payment_id8);
 +		  remove_field_from_tx_extra(tx.extra, typeid(tx_extra_nonce));
@@ -497,7 +502,7 @@
 +	  // we don't add one if we've got more than the usual 1 destination plus change
 +	  if (destinations.size() > 2)
 +	    add_dummy_payment_id = false;
- 
++
 +	  if (add_dummy_payment_id)
 +	    {
 +	      // if we have neither long nor short payment id, add a dummy short one,
@@ -526,7 +531,8 @@
 +	  MWARNING("Failed to parse tx extra");
 +	  tx_extra_fields.clear();
 +	}
-+    }
+     }
+-
 +    
      struct input_generation_context_data
      {
@@ -554,11 +560,15 @@
 -      txin_to_key input_to_key;
 -      input_to_key.amount = src_entr.amount;
 -      input_to_key.k_image = msout ? rct::rct2ki(src_entr.multisig_kLRki.ki) : img;
-+      if (offshore_to_offshore) {
- 
+-
 -      //fill outputs array and use relative offsets
 -      for(const tx_source_entry::output_entry& out_entry: src_entr.outputs)
 -        input_to_key.key_offsets.push_back(out_entry.first);
+-
+-      input_to_key.key_offsets = absolute_output_offsets_to_relative(input_to_key.key_offsets);
+-      tx.vin.push_back(input_to_key);
++      if (offshore_to_offshore) {
++
 +	// In-wallet swap
 +	txin_offshore input_to_key;
 +	input_to_key.amount = src_entr.amount;
@@ -572,9 +582,7 @@
 +	tx.vin.push_back(input_to_key);
 +	
 +      } else if (onshore) {
- 
--      input_to_key.key_offsets = absolute_output_offsets_to_relative(input_to_key.key_offsets);
--      tx.vin.push_back(input_to_key);
++
 +	// Onshoring
 +	txin_onshore input_to_key;
 +	input_to_key.amount = src_entr.amount;
@@ -728,7 +736,6 @@
 -    {
 -      LOG_ERROR("Transaction inputs money ("<< summary_inputs_money << ") less than outputs money (" << summary_outs_money << ")");
 -      return false;
--    }
 +    LOG_ERROR("SIM=" << summary_inputs_money);
 +    LOG_ERROR("SIMu=" << summary_inputs_money_usd);
 +    LOG_ERROR("SOM=" << summary_outs_money);
@@ -744,7 +751,7 @@
 +      }
 +      uint64_t diff = summary_outs_money - summary_inputs_money;
 +      uint64_t diff_usd = summary_inputs_money_usd - summary_outs_money_usd;
- 
++
 +      double d_diff_usd = boost::lexical_cast<double>(diff_usd);
 +      double d_exchange_rate = boost::lexical_cast<double>(pr.unused1);
 +      if (diff != (uint64_t)((d_diff_usd / d_exchange_rate) * 1000000000000.0)) {
@@ -771,7 +778,8 @@
 +	LOG_ERROR("Transaction inputs wrong - diff:"<< diff << " != diff_usd:" << diff_usd << ", exchange rate:" << pr.unused1);
 +	return false;
 +      }
-+    }
+     }
+-
 +    */
 +    
      // check for watch only wallet

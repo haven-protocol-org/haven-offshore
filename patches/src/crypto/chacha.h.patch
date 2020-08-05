@@ -1,5 +1,5 @@
---- monero/src/crypto/chacha.h	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/src/crypto/chacha.h	2020-08-03 21:31:15.000000000 +0200
+--- monero/src/crypto/chacha.h	2019-12-20 13:52:25.268151102 +0000
++++ monero-offshore/src/crypto/chacha.h	2019-11-27 08:35:55.836825044 +0000
 @@ -38,10 +38,14 @@
  
  #if defined(__cplusplus)

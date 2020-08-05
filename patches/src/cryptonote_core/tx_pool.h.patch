@@ -1,5 +1,7 @@
---- monero/src/cryptonote_core/tx_pool.h	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/src/cryptonote_core/tx_pool.h	2020-08-03 21:31:15.000000000 +0200
+diff --git a/src/cryptonote_core/tx_pool.h b/src/cryptonote_core/tx_pool.h
+index 877f2b82f..eb109aded 100644
+--- a/src/cryptonote_core/tx_pool.h
++++ b/src/cryptonote_core/tx_pool.h
 @@ -136,13 +136,16 @@ namespace cryptonote
       * @param txblob return-by-reference the transaction as a blob
       * @param tx_weight return-by-reference the transaction's weight

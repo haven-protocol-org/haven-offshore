@@ -1,5 +1,5 @@
---- monero/src/ringct/rctSigs.cpp	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/src/ringct/rctSigs.cpp	2020-08-03 21:31:15.000000000 +0200
+--- monero/src/ringct/rctSigs.cpp	2020-06-30 14:49:37.566511377 +0100
++++ monero-offshore/src/ringct/rctSigs.cpp	2020-06-26 11:08:39.637764381 +0100
 @@ -35,6 +35,8 @@
  #include "rctSigs.h"
  #include "bulletproofs.h"
