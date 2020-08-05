@@ -105,7 +105,7 @@ jobs:
         submodules: recursive
     - name: Install dependencies
       run: |
-        brew update && brew install boost hidapi zmq libpgm miniupnpc ldns expat libunwind-headers protobuf pkgconfig
+        brew update && brew install boost@1.60.0 hidapi zmq libpgm miniupnpc ldns expat libunwind-headers protobuf pkgconfig
         wget https://raw.githubusercontent.com/zeromq/cppzmq/v4.3.0/zmq.hpp -O /usr/local/include/zmq.hpp
     - name: build Haven
       run: |
