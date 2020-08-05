@@ -1,6 +1,29 @@
 --- monero/src/checkpoints/checkpoints.cpp	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/src/checkpoints/checkpoints.cpp	2020-08-03 21:31:15.000000000 +0200
-@@ -159,57 +159,6 @@ namespace cryptonote
++++ monero-new/src/checkpoints/checkpoints.cpp	2020-08-05 15:17:27.000000000 +0200
+@@ -34,6 +34,7 @@
+ #include "string_tools.h"
+ #include "storages/portable_storage_template_helper.h" // epee json include
+ #include "serialization/keyvalue_serialization.h"
++#include <functional>
+ #include <vector>
+ 
+ using namespace epee;
+@@ -133,11 +134,9 @@ namespace cryptonote
+   //---------------------------------------------------------------------------
+   uint64_t checkpoints::get_max_height() const
+   {
+-    std::map< uint64_t, crypto::hash >::const_iterator highest = 
+-        std::max_element( m_points.begin(), m_points.end(),
+-                         ( boost::bind(&std::map< uint64_t, crypto::hash >::value_type::first, _1) < 
+-                           boost::bind(&std::map< uint64_t, crypto::hash >::value_type::first, _2 ) ) );
+-    return highest->first;
++    if (m_points.empty())
++      return 0;
++    return m_points.rbegin()->first;
+   }
+   //---------------------------------------------------------------------------
+   const std::map<uint64_t, crypto::hash>& checkpoints::get_points() const
+@@ -159,57 +158,6 @@ namespace cryptonote
  
    bool checkpoints::init_default_checkpoints(network_type nettype)
    {
@@ -58,7 +81,7 @@
      return true;
    }
  
-@@ -254,22 +203,13 @@ namespace cryptonote
+@@ -254,22 +202,13 @@ namespace cryptonote
      std::vector<std::string> records;
  
      // All four MoneroPulse domains have DNSSEC on and valid
