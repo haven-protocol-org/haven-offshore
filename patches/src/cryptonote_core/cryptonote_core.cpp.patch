@@ -1,5 +1,5 @@
---- monero/src/cryptonote_core/cryptonote_core.cpp	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/src/cryptonote_core/cryptonote_core.cpp	2020-08-03 21:31:15.000000000 +0200
+--- monero/src/cryptonote_core/cryptonote_core.cpp	2020-08-05 16:35:28.000000000 +0200
++++ monero-new/src/cryptonote_core/cryptonote_core.cpp	2020-08-05 16:32:48.000000000 +0200
 @@ -155,7 +155,7 @@ namespace cryptonote
    };
    static const command_line::arg_descriptor<std::string> arg_check_updates = {

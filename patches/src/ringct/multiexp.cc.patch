@@ -1,5 +1,5 @@
---- monero/src/ringct/multiexp.cc	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/src/ringct/multiexp.cc	2020-08-03 21:31:15.000000000 +0200
+--- monero/src/ringct/multiexp.cc	2020-08-05 16:35:28.000000000 +0200
++++ monero-new/src/ringct/multiexp.cc	2020-08-05 16:32:05.000000000 +0200
 @@ -447,7 +447,6 @@ rct::key straus(const std::vector<Multie
  {
    CHECK_AND_ASSERT_THROW_MES(cache == NULL || cache->size >= data.size(), "Cache is too small");

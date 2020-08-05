@@ -1,5 +1,5 @@
---- monero/src/ringct/rctOps.cpp	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/src/ringct/rctOps.cpp	2020-08-03 21:31:15.000000000 +0200
+--- monero/src/ringct/rctOps.cpp	2020-08-05 16:35:28.000000000 +0200
++++ monero-new/src/ringct/rctOps.cpp	2020-08-05 16:32:05.000000000 +0200
 @@ -499,6 +499,23 @@ namespace rct {
          ge_tobytes(aAbB.bytes, &rv);
      }

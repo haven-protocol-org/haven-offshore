@@ -1,5 +1,5 @@
---- monero/src/cryptonote_basic/cryptonote_format_utils.cpp	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/src/cryptonote_basic/cryptonote_format_utils.cpp	2020-08-03 21:31:15.000000000 +0200
+--- monero/src/cryptonote_basic/cryptonote_format_utils.cpp	2020-08-05 16:35:28.000000000 +0200
++++ monero-new/src/cryptonote_basic/cryptonote_format_utils.cpp	2020-08-05 16:32:48.000000000 +0200
 @@ -135,12 +135,32 @@ namespace cryptonote
        }
        for (size_t n = 0; n < tx.rct_signatures.outPk.size(); ++n)

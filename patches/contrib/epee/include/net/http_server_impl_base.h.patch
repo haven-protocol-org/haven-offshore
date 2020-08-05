@@ -1,0 +1,11 @@
+--- monero/contrib/epee/include/net/http_server_impl_base.h	2020-08-05 16:35:27.000000000 +0200
++++ monero-new/contrib/epee/include/net/http_server_impl_base.h	2020-08-05 15:34:56.000000000 +0200
+@@ -31,7 +31,7 @@
+ 
+ 
+ #include <boost/thread.hpp>
+-#include <boost/bind.hpp> 
++#include <boost/bind/bind.hpp>
+ 
+ #include "net/abstract_tcp_server2.h"
+ #include "http_protocol_handler.h"

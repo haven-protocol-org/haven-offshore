@@ -1,5 +1,14 @@
---- monero/src/p2p/net_node.inl	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/src/p2p/net_node.inl	2020-08-03 21:31:15.000000000 +0200
+--- monero/src/p2p/net_node.inl	2020-08-05 16:35:28.000000000 +0200
++++ monero-new/src/p2p/net_node.inl	2020-08-05 16:32:48.000000000 +0200
+@@ -31,7 +31,7 @@
+ // IP blocking adapted from Boolberry
+ 
+ #include <algorithm>
+-#include <boost/bind.hpp>
++#include <boost/bind/bind.hpp>
+ #include <boost/date_time/posix_time/posix_time.hpp>
+ #include <boost/filesystem/operations.hpp>
+ #include <boost/optional/optional.hpp>
 @@ -448,30 +448,24 @@ namespace nodetool
      std::set<std::string> full_addrs;
      if (nettype == cryptonote::TESTNET)

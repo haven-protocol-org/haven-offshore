@@ -1,5 +1,5 @@
---- monero/src/cryptonote_basic/account.cpp	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/src/cryptonote_basic/account.cpp	2020-08-03 21:31:15.000000000 +0200
+--- monero/src/cryptonote_basic/account.cpp	2020-08-05 16:35:28.000000000 +0200
++++ monero-new/src/cryptonote_basic/account.cpp	2020-08-05 16:32:48.000000000 +0200
 @@ -70,7 +70,7 @@ DISABLE_VS_WARNINGS(4244 4345)
      epee::mlocked<tools::scrubbed_arr<char, sizeof(base_key)+1>> data;
      memcpy(data.data(), &base_key, sizeof(base_key));

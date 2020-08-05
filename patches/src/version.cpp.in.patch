@@ -1,5 +1,5 @@
---- monero/src/version.cpp.in	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/src/version.cpp.in	2020-08-03 21:31:15.000000000 +0200
+--- monero/src/version.cpp.in	2020-08-05 16:35:28.000000000 +0200
++++ monero-new/src/version.cpp.in	2020-08-05 16:32:49.000000000 +0200
 @@ -1,7 +1,9 @@
  #define DEF_MONERO_VERSION_TAG "@VERSIONTAG@"
  #define DEF_MONERO_VERSION "0.14.1.2"

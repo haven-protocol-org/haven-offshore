@@ -1,5 +1,5 @@
---- monero/src/wallet/wallet_rpc_server.cpp	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/src/wallet/wallet_rpc_server.cpp	2020-08-03 21:31:15.000000000 +0200
+--- monero/src/wallet/wallet_rpc_server.cpp	2020-08-05 16:35:28.000000000 +0200
++++ monero-new/src/wallet/wallet_rpc_server.cpp	2020-08-05 16:32:48.000000000 +0200
 @@ -285,7 +285,7 @@ namespace tools
      {
        MINFO("The daemon is not set up to background mine.");

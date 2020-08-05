@@ -1,5 +1,5 @@
---- monero/src/wallet/wallet2.cpp	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/src/wallet/wallet2.cpp	2020-08-04 14:42:40.000000000 +0200
+--- monero/src/wallet/wallet2.cpp	2020-08-05 16:35:28.000000000 +0200
++++ monero-new/src/wallet/wallet2.cpp	2020-08-05 16:32:48.000000000 +0200
 @@ -1,21 +1,21 @@
  // Copyright (c) 2014-2019, The Monero Project
 -// 
@@ -168,6 +168,15 @@
      return calculate_fee(base_fee, estimated_tx_size, fee_multiplier);
    }
  }
+@@ -921,7 +947,7 @@ uint32_t get_subaddress_clamped_sum(uint
+ 
+ static void setup_shim(hw::wallet_shim * shim, tools::wallet2 * wallet)
+ {
+-  shim->get_tx_pub_key_from_received_outs = boost::bind(&tools::wallet2::get_tx_pub_key_from_received_outs, wallet, _1);
++  shim->get_tx_pub_key_from_received_outs = std::bind(&tools::wallet2::get_tx_pub_key_from_received_outs, wallet, std::placeholders::_1);
+ }
+ 
+ bool get_pruned_tx(const cryptonote::COMMAND_RPC_GET_TRANSACTIONS::entry &entry, cryptonote::transaction &tx, crypto::hash &tx_hash)
 @@ -984,7 +1010,8 @@ gamma_picker::gamma_picker(const std::ve
    end = rct_offsets.data() + rct_offsets.size() - CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE;
    num_rct_outputs = *(end - 1);

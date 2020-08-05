@@ -1,5 +1,5 @@
---- monero/src/daemon/command_server.cpp	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/src/daemon/command_server.cpp	2020-08-03 21:31:15.000000000 +0200
+--- monero/src/daemon/command_server.cpp	2020-08-05 16:35:28.000000000 +0200
++++ monero-new/src/daemon/command_server.cpp	2020-08-05 16:32:48.000000000 +0200
 @@ -363,7 +363,7 @@ bool t_command_server::help(const std::v
  std::string t_command_server::get_commands_str()
  {

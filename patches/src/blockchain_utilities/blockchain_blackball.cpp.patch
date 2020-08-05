@@ -1,5 +1,5 @@
---- monero/src/blockchain_utilities/blockchain_blackball.cpp	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/src/blockchain_utilities/blockchain_blackball.cpp	2020-08-03 21:31:15.000000000 +0200
+--- monero/src/blockchain_utilities/blockchain_blackball.cpp	2020-08-05 16:35:27.000000000 +0200
++++ monero-new/src/blockchain_utilities/blockchain_blackball.cpp	2020-08-05 16:32:48.000000000 +0200
 @@ -1084,7 +1084,7 @@ int main(int argc, char* argv[])
    const command_line::arg_descriptor<bool> arg_rct_only  = {"rct-only", "Only work on ringCT outputs", false};
    const command_line::arg_descriptor<bool> arg_check_subsets  = {"check-subsets", "Check ring subsets (very expensive)", false};

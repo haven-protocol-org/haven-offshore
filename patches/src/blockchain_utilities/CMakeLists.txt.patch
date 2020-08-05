@@ -1,5 +1,5 @@
---- monero/src/blockchain_utilities/CMakeLists.txt	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/src/blockchain_utilities/CMakeLists.txt	2020-08-03 21:31:15.000000000 +0200
+--- monero/src/blockchain_utilities/CMakeLists.txt	2020-08-05 16:35:27.000000000 +0200
++++ monero-new/src/blockchain_utilities/CMakeLists.txt	2020-08-05 16:32:48.000000000 +0200
 @@ -157,7 +157,7 @@ endif()
  
  set_property(TARGET blockchain_import

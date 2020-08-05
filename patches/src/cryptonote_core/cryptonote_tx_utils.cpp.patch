@@ -1,5 +1,5 @@
---- monero/src/cryptonote_core/cryptonote_tx_utils.cpp	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/src/cryptonote_core/cryptonote_tx_utils.cpp	2020-08-03 21:31:15.000000000 +0200
+--- monero/src/cryptonote_core/cryptonote_tx_utils.cpp	2020-08-05 16:35:28.000000000 +0200
++++ monero-new/src/cryptonote_core/cryptonote_tx_utils.cpp	2020-08-05 16:32:48.000000000 +0200
 @@ -74,8 +74,75 @@ namespace cryptonote
      }
      LOG_PRINT_L2("destinations include " << num_stdaddresses << " standard addresses and " << num_subaddresses << " subaddresses");

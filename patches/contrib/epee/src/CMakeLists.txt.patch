@@ -1,5 +1,5 @@
---- monero/contrib/epee/src/CMakeLists.txt	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/contrib/epee/src/CMakeLists.txt	2020-08-04 13:52:56.000000000 +0200
+--- monero/contrib/epee/src/CMakeLists.txt	2020-08-05 16:35:27.000000000 +0200
++++ monero-new/contrib/epee/src/CMakeLists.txt	2020-08-05 16:32:05.000000000 +0200
 @@ -1,21 +1,21 @@
  # Copyright (c) 2014-2019, The Monero Project
 -# 

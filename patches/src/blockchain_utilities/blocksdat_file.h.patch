@@ -1,0 +1,10 @@
+--- monero/src/blockchain_utilities/blocksdat_file.h	2020-08-05 16:35:27.000000000 +0200
++++ monero-new/src/blockchain_utilities/blocksdat_file.h	2020-08-05 15:34:56.000000000 +0200
+@@ -43,7 +43,6 @@
+ #include <algorithm>
+ #include <cstdio>
+ #include <fstream>
+-#include <boost/iostreams/copy.hpp>
+ #include <atomic>
+ 
+ #include "common/command_line.h"

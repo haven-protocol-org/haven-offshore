@@ -1,5 +1,5 @@
---- monero/src/serialization/json_object.cpp	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/src/serialization/json_object.cpp	2020-08-03 21:31:15.000000000 +0200
+--- monero/src/serialization/json_object.cpp	2020-08-05 16:35:28.000000000 +0200
++++ monero-new/src/serialization/json_object.cpp	2020-08-05 16:32:05.000000000 +0200
 @@ -254,6 +254,7 @@ void toJsonValue(rapidjson::Document& do
    INSERT_INTO_JSON_OBJECT(val, doc, timestamp, b.timestamp);
    INSERT_INTO_JSON_OBJECT(val, doc, prev_id, b.prev_id);

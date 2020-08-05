@@ -1,5 +1,5 @@
---- monero/src/checkpoints/checkpoints.cpp	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/src/checkpoints/checkpoints.cpp	2020-08-05 15:17:27.000000000 +0200
+--- monero/src/checkpoints/checkpoints.cpp	2020-08-05 16:35:27.000000000 +0200
++++ monero-new/src/checkpoints/checkpoints.cpp	2020-08-05 16:32:48.000000000 +0200
 @@ -34,6 +34,7 @@
  #include "string_tools.h"
  #include "storages/portable_storage_template_helper.h" // epee json include

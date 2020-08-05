@@ -1,5 +1,5 @@
---- monero/src/cryptonote_core/CMakeLists.txt	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/src/cryptonote_core/CMakeLists.txt	2020-08-03 21:31:15.000000000 +0200
+--- monero/src/cryptonote_core/CMakeLists.txt	2020-08-05 16:35:28.000000000 +0200
++++ monero-new/src/cryptonote_core/CMakeLists.txt	2020-08-05 16:32:48.000000000 +0200
 @@ -58,6 +58,7 @@ target_link_libraries(cryptonote_core
      multisig
      ringct

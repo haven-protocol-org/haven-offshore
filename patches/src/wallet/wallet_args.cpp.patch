@@ -1,5 +1,5 @@
---- monero/src/wallet/wallet_args.cpp	2020-08-04 19:07:58.000000000 +0200
-+++ monero-new/src/wallet/wallet_args.cpp	2020-08-03 21:31:15.000000000 +0200
+--- monero/src/wallet/wallet_args.cpp	2020-08-05 16:35:28.000000000 +0200
++++ monero-new/src/wallet/wallet_args.cpp	2020-08-05 16:32:48.000000000 +0200
 @@ -140,7 +140,7 @@ namespace wallet_args
  
        if (command_line::get_arg(vm, command_line::arg_help))
