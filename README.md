@@ -108,9 +108,9 @@ invokes cmake commands as needed.
     both unstable and incompatible with release software, though testing is always
     encouraged.
 
-* The resulting executables can be found in `build/release/bin`
+* The resulting executables can be found in `monero/build/release/bin`
 
-* Add `PATH="$PATH:$HOME/haven-offshore/build/release/bin"` to `.profile`
+* Add `PATH="$PATH:$HOME/haven-offshore/monero/build/release/bin"` to `.profile`
 
 * Run Haven with `havend --detach`
 
