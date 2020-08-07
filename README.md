@@ -1,4 +1,4 @@
-# Haven Apollo v1.1.1
+# Haven Apollo v1.1.2
 
 Copyright (c) 2018-2020 Haven.   
 Portions Copyright (c) 2014-2019 The Monero Project.   
