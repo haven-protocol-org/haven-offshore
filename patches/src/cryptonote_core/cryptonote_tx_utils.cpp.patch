@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/cryptonote_tx_utils.cpp b/src/cryptonote_core/cryptonote_tx_utils.cpp
-index 854f3d1c5..2c67111fa 100644
+index 854f3d1c5..a39a7b06e 100644
 --- a/src/cryptonote_core/cryptonote_tx_utils.cpp
 +++ b/src/cryptonote_core/cryptonote_tx_utils.cpp
 @@ -74,8 +74,75 @@ namespace cryptonote
@@ -298,10 +298,10 @@ index 854f3d1c5..2c67111fa 100644
 +    if (use_offshore_fees_v2) {
 +
 +      fee_estimate =
-+	(unlock_time == 180) ? (amount / 5) :
-+	(unlock_time == 720) ? (amount / 10) :
-+	(unlock_time == 1440) ? (amount / 20) :
-+	amount / 500;
++	(unlock_time >= 5040) ? (amount / 500) :
++	(unlock_time >= 1440) ? (amount / 20) :
++	(unlock_time >= 720) ? (amount / 10) :
++	amount / 5;
 +
 +    } else {
 +      // Get the delta
@@ -333,10 +333,10 @@ index 854f3d1c5..2c67111fa 100644
 +    if (use_offshore_fees_v2) {
 +
 +      fee_estimate =
-+	(unlock_time == 180) ? (amount_usd / 5) :
-+	(unlock_time == 720) ? (amount_usd / 10) :
-+	(unlock_time == 1440) ? (amount_usd / 20) :
-+	amount_usd / 500;
++	(unlock_time >= 5040) ? (amount_usd / 500) :
++	(unlock_time >= 1440) ? (amount_usd / 20) :
++	(unlock_time >= 720) ? (amount_usd / 10) :
++	amount_usd / 5;
 +
 +    } else {
 +      // Get the delta
