@@ -95,8 +95,7 @@ jobs:
         path: monero/build/release/bin/
   build-macos:
     env:
-      LDFLAGS: "-L/usr/local/opt/boost@1.60/lib"
-      CPPFLAGS: "-I/usr/local/opt/boost@1.60/include"
+      BOOST_DIR: "/usr/local/Cellar/boost@1.60/1.60.0"
       CMAKE_OSX_DEPLOYMENT_TARGET: 10.13
       OSX_MIN_VERSION: 10.13
       DEVELOPER_DIR: /Applications/Xcode_10.3.app/Contents/Developer
