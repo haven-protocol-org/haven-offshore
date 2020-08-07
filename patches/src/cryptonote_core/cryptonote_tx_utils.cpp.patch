@@ -1,5 +1,3 @@
-diff --git a/src/cryptonote_core/cryptonote_tx_utils.cpp b/src/cryptonote_core/cryptonote_tx_utils.cpp
-index 854f3d1c5..90e55234d 100644
 --- a/src/cryptonote_core/cryptonote_tx_utils.cpp
 +++ b/src/cryptonote_core/cryptonote_tx_utils.cpp
 @@ -74,8 +74,75 @@ namespace cryptonote
@@ -361,11 +359,7 @@ index 854f3d1c5..90e55234d 100644
    {
      hw::device &hwdev = sender_account_keys.get_device();
  
-<<<<<<< Updated upstream
-@@ -216,95 +432,132 @@ namespace cryptonote
-=======
 @@ -216,95 +407,136 @@ namespace cryptonote
->>>>>>> Stashed changes
        msout->c.clear();
      }
  

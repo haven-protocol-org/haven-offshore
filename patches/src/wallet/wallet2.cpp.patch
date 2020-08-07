@@ -1,9 +1,3 @@
-diff --git a/src/wallet/wallet2.cpp b/src/wallet/wallet2.cpp
-<<<<<<< Updated upstream
-index 8f3f30da1..c9538af1d 100644
-=======
-index 8f3f30da1..9ead8b002 100644
->>>>>>> Stashed changes
 --- a/src/wallet/wallet2.cpp
 +++ b/src/wallet/wallet2.cpp
 @@ -29,10 +29,12 @@
@@ -3675,7 +3669,7 @@ index 8f3f30da1..9ead8b002 100644
        amount = rct::h2d(ecdh_info.amount);
      }
      total += amount;
-@@ -12354,45 +13834,55 @@ crypto::key_image wallet2::get_multisig_composite_key_image(size_t n) const
+@@ -12354,62 +13834,76 @@ crypto::key_image wallet2::get_multisig_composite_key_image(size_t n) const
  //----------------------------------------------------------------------------------------------------
  cryptonote::blobdata wallet2::export_multisig()
  {
@@ -3708,11 +3702,12 @@ index 8f3f30da1..9ead8b002 100644
 -    size_t nlr = tools::combinations_count(m_multisig_signers.size() - m_multisig_threshold, m_multisig_signers.size() - 1);
 -    for (size_t m = 0; m < nlr; ++m)
 +  std::vector<transfer_container> transfer_containers = {m_transfers, m_offshore_transfers};
++  std::string container_sizes;
 +  for (transfer_container& specific_transfers: transfer_containers) {
 +    // Write the expected number of entries for each container to the stream
 +    std::stringstream ss;
 +    ss << std::setfill('0') << std::setw(16) << specific_transfers.size();
-+    ar << ss.str();
++    container_sizes += ss.str();
 +    MDEBUG("HERE BE DRAGONS!!! " << ss.str());
 +  }
 +  for (transfer_container& specific_transfers: transfer_containers) {
@@ -3764,7 +3759,11 @@ index 8f3f30da1..9ead8b002 100644
    const cryptonote::account_public_address &keys = get_account().get_keys().m_account_address;
    std::string header;
    header += std::string((const char *)&keys.m_spend_public_key, sizeof(crypto::public_key));
-@@ -12403,13 +13893,15 @@ cryptonote::blobdata wallet2::export_multisig()
+   header += std::string((const char *)&keys.m_view_public_key, sizeof(crypto::public_key));
+   header += std::string((const char *)&signer, sizeof(crypto::public_key));
++  header += container_sizes;
+   std::string ciphertext = encrypt_with_view_secret_key(header + oss.str());
+ 
    return MULTISIG_EXPORT_FILE_MAGIC + ciphertext;
  }
  //----------------------------------------------------------------------------------------------------
@@ -3784,7 +3783,7 @@ index 8f3f30da1..9ead8b002 100644
    td.m_multisig_info.clear();
    for (const auto &pi: info)
    {
-@@ -12430,24 +13922,27 @@ size_t wallet2::import_multisig(std::vector<cryptonote::blobdata> blobs)
+@@ -12430,24 +13924,27 @@ size_t wallet2::import_multisig(std::vector<cryptonote::blobdata> blobs)
    CHECK_AND_ASSERT_THROW_MES(m_multisig, "Wallet is not multisig");
  
    std::vector<std::vector<tools::wallet2::multisig_info>> info;
@@ -3818,7 +3817,7 @@ index 8f3f30da1..9ead8b002 100644
      if (get_multisig_signer_public_key() == signer)
      {
        MINFO("Multisig info from this wallet ignored");
-@@ -12459,84 +13954,118 @@ size_t wallet2::import_multisig(std::vector<cryptonote::blobdata> blobs)
+@@ -12459,84 +13956,118 @@ size_t wallet2::import_multisig(std::vector<cryptonote::blobdata> blobs)
        continue;
      }
      seen.insert(signer);
@@ -4001,7 +4000,7 @@ index 8f3f30da1..9ead8b002 100644
  }
  //----------------------------------------------------------------------------------------------------
  std::string wallet2::encrypt(const char *plaintext, size_t len, const crypto::secret_key &skey, bool authenticated) const
-@@ -12968,7 +14497,7 @@ uint64_t wallet2::get_segregation_fork_height() const
+@@ -12968,7 +14499,7 @@ uint64_t wallet2::get_segregation_fork_height() const
  }
  //----------------------------------------------------------------------------------------------------
  void wallet2::generate_genesis(cryptonote::block& b) const {
@@ -4010,7 +4009,7 @@ index 8f3f30da1..9ead8b002 100644
  }
  //----------------------------------------------------------------------------------------------------
  mms::multisig_wallet_state wallet2::get_multisig_wallet_state() const
-@@ -13121,4 +14650,137 @@ uint64_t wallet2::get_bytes_received() const
+@@ -13121,4 +14652,137 @@ uint64_t wallet2::get_bytes_received() const
  {
    return m_http_client.get_bytes_received();
  }
