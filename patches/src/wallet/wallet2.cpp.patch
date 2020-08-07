@@ -1,5 +1,9 @@
 diff --git a/src/wallet/wallet2.cpp b/src/wallet/wallet2.cpp
+<<<<<<< Updated upstream
 index 8f3f30da1..c9538af1d 100644
+=======
+index 8f3f30da1..9ead8b002 100644
+>>>>>>> Stashed changes
 --- a/src/wallet/wallet2.cpp
 +++ b/src/wallet/wallet2.cpp
 @@ -29,10 +29,12 @@

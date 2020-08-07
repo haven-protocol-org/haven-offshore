@@ -361,7 +361,11 @@ index 854f3d1c5..90e55234d 100644
    {
      hw::device &hwdev = sender_account_keys.get_device();
  
+<<<<<<< Updated upstream
 @@ -216,95 +432,132 @@ namespace cryptonote
+=======
+@@ -216,95 +407,136 @@ namespace cryptonote
+>>>>>>> Stashed changes
        msout->c.clear();
      }
  
@@ -425,8 +429,12 @@ index 854f3d1c5..90e55234d 100644
 +    bool offshore_to_offshore = false;
 +    if (bOffshoreTx) {
 +
-+      tx.pricing_record_height = current_height;
-+      tx.offshore_data.assign(offshore_data.data.begin(), offshore_data.data.end());
++      if (offshore || onshore) {
++        tx.pricing_record_height = current_height;
++        tx.offshore_data.assign(offshore_data.data.begin(), offshore_data.data.end());
++      } else {
++        tx.pricing_record_height = 0;
++      }
 +      
 +      // HERE BE DRAGONS!!!
 +      // Filter out the offshore information?
