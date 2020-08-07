@@ -96,7 +96,7 @@ jobs:
   build-macos:
     env:
       BOOST_DIR: "/usr/local/Cellar/boost@1.60/1.60.0"
-      Boost_INCLUDE_DIR: "/usr/local/Cellar/boost@1.60/1.60.0/stage/lib"
+      Boost_INCLUDE_DIR: "/usr/local/Cellar/boost@1.60/1.60.0/lib"
       CMAKE_OSX_DEPLOYMENT_TARGET: 10.13
       OSX_MIN_VERSION: 10.13
       DEVELOPER_DIR: /Applications/Xcode_10.3.app/Contents/Developer
