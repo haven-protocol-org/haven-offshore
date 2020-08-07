@@ -1,5 +1,5 @@
 diff --git a/src/wallet/wallet_rpc_server.cpp b/src/wallet/wallet_rpc_server.cpp
-index 0e2a34470..354d89964 100644
+index 0e2a34470..00ae4e117 100644
 --- a/src/wallet/wallet_rpc_server.cpp
 +++ b/src/wallet/wallet_rpc_server.cpp
 @@ -285,7 +285,7 @@ namespace tools
@@ -151,7 +151,7 @@ index 0e2a34470..354d89964 100644
        fill(fee, ptx.fee);
      }
  
-@@ -914,6 +980,179 @@ namespace tools
+@@ -914,6 +980,189 @@ namespace tools
      return true;
    }
    //------------------------------------------------------------------------------------------------------------------------------
@@ -192,7 +192,12 @@ index 0e2a34470..354d89964 100644
 +    {
 +      uint64_t mixin = m_wallet->adjust_mixin(req.ring_size ? req.ring_size - 1 : 0);
 +      uint32_t priority = m_wallet->adjust_priority(req.priority);
-+      uint64_t unlock_time = 60 * pow(3, std::max((uint32_t)0, 4-priority)) + m_wallet->get_blockchain_current_height();
++      uint64_t unlock_time = 0;
++      if (m_wallet->use_fork_rules(HF_VERSION_OFFSHORE_FEES_V2, 0)) {
++	unlock_time = (priority == 4) ? 180 : (priority == 3) ? 720 : (priority == 2) ? 1440 : 5040;
++      } else {
++	unlock_time = 60 * pow(3, std::max((uint32_t)0, 4-priority)) + m_wallet->get_blockchain_current_height();
++      }
 +      std::vector<wallet2::pending_tx> ptx_vector = m_wallet->create_transactions_2(dsts, mixin, unlock_time, priority, extra, req.account_index, req.subaddr_indices);
 +
 +      if (ptx_vector.empty())
@@ -307,7 +312,12 @@ index 0e2a34470..354d89964 100644
 +    {
 +      uint64_t mixin = m_wallet->adjust_mixin(req.ring_size ? req.ring_size - 1 : 0);
 +      uint32_t priority = m_wallet->adjust_priority(req.priority);
-+      uint64_t unlock_time = 60 * pow(3, std::max((uint32_t)0, 4-priority)) + m_wallet->get_blockchain_current_height();
++      uint64_t unlock_time = 0;
++      if (m_wallet->use_fork_rules(HF_VERSION_OFFSHORE_FEES_V2, 0)) {
++	unlock_time = (priority == 4) ? 180 : (priority == 3) ? 720 : (priority == 2) ? 1440 : 5040;
++      } else {
++	unlock_time = 60 * pow(3, std::max((uint32_t)0, 4-priority)) + m_wallet->get_blockchain_current_height();
++      }
 +      std::vector<wallet2::pending_tx> ptx_vector = m_wallet->create_transactions_2(dsts, mixin, unlock_time, priority, extra, req.account_index, req.subaddr_indices);
 +
 +      if (ptx_vector.empty())
@@ -331,7 +341,7 @@ index 0e2a34470..354d89964 100644
    bool wallet_rpc_server::on_transfer(const wallet_rpc::COMMAND_RPC_TRANSFER::request& req, wallet_rpc::COMMAND_RPC_TRANSFER::response& res, epee::json_rpc::error& er, const connection_context *ctx)
    {
  
-@@ -956,7 +1195,7 @@ namespace tools
+@@ -956,7 +1205,7 @@ namespace tools
          return false;
        }
  
@@ -340,7 +350,7 @@ index 0e2a34470..354d89964 100644
            res.tx_hash, req.get_tx_hex, res.tx_blob, req.get_tx_metadata, res.tx_metadata, er);
      }
      catch (const std::exception& e)
-@@ -995,8 +1234,8 @@ namespace tools
+@@ -995,8 +1244,8 @@ namespace tools
        std::vector<wallet2::pending_tx> ptx_vector = m_wallet->create_transactions_2(dsts, mixin, req.unlock_time, priority, extra, req.account_index, req.subaddr_indices);
        LOG_PRINT_L2("on_transfer_split called create_transactions_2");
  
@@ -351,7 +361,7 @@ index 0e2a34470..354d89964 100644
      }
      catch (const std::exception& e)
      {
-@@ -1356,8 +1595,8 @@ namespace tools
+@@ -1356,8 +1605,8 @@ namespace tools
      {
        std::vector<wallet2::pending_tx> ptx_vector = m_wallet->create_unmixable_sweep_transactions();
  
@@ -362,7 +372,7 @@ index 0e2a34470..354d89964 100644
      }
      catch (const std::exception& e)
      {
-@@ -1403,8 +1642,8 @@ namespace tools
+@@ -1403,8 +1652,8 @@ namespace tools
        uint32_t priority = m_wallet->adjust_priority(req.priority);
        std::vector<wallet2::pending_tx> ptx_vector = m_wallet->create_transactions_all(req.below_amount, dsts[0].addr, dsts[0].is_subaddress, req.outputs, mixin, req.unlock_time, priority, extra, req.account_index, req.subaddr_indices);
  
@@ -373,7 +383,7 @@ index 0e2a34470..354d89964 100644
      }
      catch (const std::exception& e)
      {
-@@ -1478,7 +1717,7 @@ namespace tools
+@@ -1478,7 +1727,7 @@ namespace tools
          return false;
        }
  
@@ -382,7 +392,7 @@ index 0e2a34470..354d89964 100644
            res.tx_hash, req.get_tx_hex, res.tx_blob, req.get_tx_metadata, res.tx_metadata, er);
      }
      catch (const std::exception& e)
-@@ -2187,7 +2426,7 @@ namespace tools
+@@ -2187,7 +2436,7 @@ namespace tools
  
      try
      {
@@ -391,7 +401,7 @@ index 0e2a34470..354d89964 100644
      }
      catch (const std::exception &e)
      {
-@@ -2253,7 +2492,7 @@ namespace tools
+@@ -2253,7 +2502,7 @@ namespace tools
  
      try
      {
@@ -400,7 +410,7 @@ index 0e2a34470..354d89964 100644
      }
      catch (const std::exception &e)
      {
-@@ -3378,6 +3617,9 @@ namespace tools
+@@ -3378,6 +3627,9 @@ namespace tools
        }
      }
  
@@ -410,7 +420,7 @@ index 0e2a34470..354d89964 100644
      try
      {
        if (!req.spendkey.empty())
-@@ -3442,6 +3684,12 @@ namespace tools
+@@ -3442,6 +3694,12 @@ namespace tools
      }
  
      // early check for mandatory fields
