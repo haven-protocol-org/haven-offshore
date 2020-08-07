@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/cryptonote_tx_utils.cpp b/src/cryptonote_core/cryptonote_tx_utils.cpp
-index 854f3d1c5..2c67111fa 100644
+index 854f3d1c5..90e55234d 100644
 --- a/src/cryptonote_core/cryptonote_tx_utils.cpp
 +++ b/src/cryptonote_core/cryptonote_tx_utils.cpp
 @@ -74,8 +74,75 @@ namespace cryptonote
@@ -275,7 +275,7 @@ index 854f3d1c5..2c67111fa 100644
  
      //lock
      tx.unlock_time = height + CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW;
-@@ -198,7 +337,78 @@ namespace cryptonote
+@@ -198,7 +337,84 @@ namespace cryptonote
      return addr.m_view_public_key;
    }
    //---------------------------------------------------------------
@@ -297,11 +297,14 @@ index 854f3d1c5..2c67111fa 100644
 +
 +    if (use_offshore_fees_v2) {
 +
++      // The tests have to be written largest unlock_time first, as it is possible to delay the construction of the TX using GDB etc
++      // which would otherwise cause the umlock_time to fall through the gaps and give a minimum fee for a short unlock_time.
++      // This way, the code is safe, and the fee is always correct.
 +      fee_estimate =
-+	(unlock_time == 180) ? (amount / 5) :
-+	(unlock_time == 720) ? (amount / 10) :
-+	(unlock_time == 1440) ? (amount / 20) :
-+	amount / 500;
++	(unlock_time >= 5040) ? (amount / 500) :
++	(unlock_time >= 1440) ? (amount / 20) :
++	(unlock_time >= 720) ? (amount / 10) :
++	amount / 5;
 +
 +    } else {
 +      // Get the delta
@@ -332,11 +335,14 @@ index 854f3d1c5..2c67111fa 100644
 +
 +    if (use_offshore_fees_v2) {
 +
++      // The tests have to be written largest unlock_time first, as it is possible to delay the construction of the TX using GDB etc
++      // which would otherwise cause the umlock_time to fall through the gaps and give a minimum fee for a short unlock_time.
++      // This way, the code is safe, and the fee is always correct.
 +      fee_estimate =
-+	(unlock_time == 180) ? (amount_usd / 5) :
-+	(unlock_time == 720) ? (amount_usd / 10) :
-+	(unlock_time == 1440) ? (amount_usd / 20) :
-+	amount_usd / 500;
++	(unlock_time >= 5040) ? (amount_usd / 500) :
++	(unlock_time >= 1440) ? (amount_usd / 20) :
++	(unlock_time >= 720) ? (amount_usd / 10) :
++	amount_usd / 5;
 +
 +    } else {
 +      // Get the delta
@@ -355,7 +361,7 @@ index 854f3d1c5..2c67111fa 100644
    {
      hw::device &hwdev = sender_account_keys.get_device();
  
-@@ -216,95 +426,132 @@ namespace cryptonote
+@@ -216,95 +432,132 @@ namespace cryptonote
        msout->c.clear();
      }
  
@@ -564,7 +570,7 @@ index 854f3d1c5..2c67111fa 100644
      //fill inputs
      int idx = -1;
      for(const tx_source_entry& src_entr:  sources)
-@@ -316,6 +563,7 @@ namespace cryptonote
+@@ -316,6 +569,7 @@ namespace cryptonote
          return false;
        }
        summary_inputs_money += src_entr.amount;
@@ -572,7 +578,7 @@ index 854f3d1c5..2c67111fa 100644
  
        //key_derivation recv_derivation;
        in_contexts.push_back(input_generation_context_data());
-@@ -340,16 +588,48 @@ namespace cryptonote
+@@ -340,16 +594,48 @@ namespace cryptonote
        }
  
        //put key image into tx input
@@ -631,7 +637,7 @@ index 854f3d1c5..2c67111fa 100644
      }
  
      if (shuffle_outs)
-@@ -362,9 +642,19 @@ namespace cryptonote
+@@ -362,9 +648,19 @@ namespace cryptonote
      for (size_t n = 0; n < sources.size(); ++n)
        ins_order[n] = n;
      std::sort(ins_order.begin(), ins_order.end(), [&](const size_t i0, const size_t i1) {
@@ -654,7 +660,7 @@ index 854f3d1c5..2c67111fa 100644
      });
      tools::apply_permutation(ins_order, [&] (size_t i0, size_t i1) {
        std::swap(tx.vin[i0], tx.vin[i1]);
-@@ -399,7 +689,12 @@ namespace cryptonote
+@@ -399,7 +695,12 @@ namespace cryptonote
      if (need_additional_txkeys)
        CHECK_AND_ASSERT_MES(destinations.size() == additional_tx_keys.size(), false, "Wrong amount of additional tx keys");
  
@@ -668,7 +674,7 @@ index 854f3d1c5..2c67111fa 100644
      //fill outputs
      size_t output_index = 0;
      for(const tx_destination_entry& dst_entr: destinations)
-@@ -407,19 +702,65 @@ namespace cryptonote
+@@ -407,19 +708,65 @@ namespace cryptonote
        CHECK_AND_ASSERT_MES(dst_entr.amount > 0 || tx.version > 1, false, "Destination with wrong amount: " << dst_entr.amount);
        crypto::public_key out_eph_public_key;
  
@@ -740,7 +746,7 @@ index 854f3d1c5..2c67111fa 100644
      }
      CHECK_AND_ASSERT_MES(additional_tx_public_keys.size() == additional_tx_keys.size(), false, "Internal error creating additional public keys");
  
-@@ -434,16 +775,57 @@ namespace cryptonote
+@@ -434,16 +781,57 @@ namespace cryptonote
        add_additional_tx_pub_keys_to_extra(tx.extra, additional_tx_public_keys);
      }
  
@@ -804,7 +810,7 @@ index 854f3d1c5..2c67111fa 100644
      // check for watch only wallet
      bool zero_secret_key = true;
      for (size_t i = 0; i < sizeof(sender_account_keys.m_spend_secret_key); ++i)
-@@ -517,26 +899,38 @@ namespace cryptonote
+@@ -517,26 +905,38 @@ namespace cryptonote
          }
        }
  
@@ -851,7 +857,7 @@ index 854f3d1c5..2c67111fa 100644
          // inPk: (public key, commitment)
          // will be done when filling in mixRing
          if (msout)
-@@ -544,13 +938,7 @@ namespace cryptonote
+@@ -544,13 +944,7 @@ namespace cryptonote
            kLRki.push_back(sources[i].multisig_kLRki);
          }
        }
@@ -866,7 +872,7 @@ index 854f3d1c5..2c67111fa 100644
        if (use_simple_rct)
        {
          // mixRing indexing is done the other way round for simple
-@@ -576,27 +964,88 @@ namespace cryptonote
+@@ -576,27 +970,88 @@ namespace cryptonote
        }
  
        // fee
@@ -965,7 +971,7 @@ index 854f3d1c5..2c67111fa 100644
        CHECK_AND_ASSERT_MES(tx.vout.size() == outSk.size(), false, "outSk size does not match vout");
  
        MCINFO("construct_tx", "transaction_created: " << get_transaction_hash(tx) << ENDL << obj_to_json_str(tx) << ENDL);
-@@ -607,7 +1056,7 @@ namespace cryptonote
+@@ -607,7 +1062,7 @@ namespace cryptonote
      return true;
    }
    //---------------------------------------------------------------
@@ -974,7 +980,7 @@ index 854f3d1c5..2c67111fa 100644
    {
      hw::device &hwdev = sender_account_keys.get_device();
      hwdev.open_tx(tx_key);
-@@ -625,7 +1074,7 @@ namespace cryptonote
+@@ -625,7 +1080,7 @@ namespace cryptonote
          additional_tx_keys.push_back(keypair::generate(sender_account_keys.get_device()).sec);
      }
  
@@ -983,7 +989,7 @@ index 854f3d1c5..2c67111fa 100644
      hwdev.close_tx();
      return r;
    }
-@@ -635,22 +1084,32 @@ namespace cryptonote
+@@ -635,22 +1090,32 @@ namespace cryptonote
       std::unordered_map<crypto::public_key, cryptonote::subaddress_index> subaddresses;
       subaddresses[sender_account_keys.m_account_address.m_spend_public_key] = {0,0};
       crypto::secret_key tx_key;
