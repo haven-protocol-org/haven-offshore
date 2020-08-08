@@ -194,7 +194,7 @@ index 0e2a34470..00ae4e117 100644
 +      uint32_t priority = m_wallet->adjust_priority(req.priority);
 +      uint64_t unlock_time = 0;
 +      if (m_wallet->use_fork_rules(HF_VERSION_OFFSHORE_FEES_V2, 0)) {
-+	unlock_time = (priority == 4) ? 180 : (priority == 3) ? 720 : (priority == 2) ? 1440 : 5040;
++	unlock_time = ((priority == 4) ? 180 : (priority == 3) ? 720 : (priority == 2) ? 1440 : 5040) +  m_wallet->get_blockchain_current_height();
 +      } else {
 +	unlock_time = 60 * pow(3, std::max((uint32_t)0, 4-priority)) + m_wallet->get_blockchain_current_height();
 +      }
@@ -314,7 +314,7 @@ index 0e2a34470..00ae4e117 100644
 +      uint32_t priority = m_wallet->adjust_priority(req.priority);
 +      uint64_t unlock_time = 0;
 +      if (m_wallet->use_fork_rules(HF_VERSION_OFFSHORE_FEES_V2, 0)) {
-+	unlock_time = (priority == 4) ? 180 : (priority == 3) ? 720 : (priority == 2) ? 1440 : 5040;
++	unlock_time = ((priority == 4) ? 180 : (priority == 3) ? 720 : (priority == 2) ? 1440 : 5040) + m_wallet->get_blockchain_current_height();
 +      } else {
 +	unlock_time = 60 * pow(3, std::max((uint32_t)0, 4-priority)) + m_wallet->get_blockchain_current_height();
 +      }
