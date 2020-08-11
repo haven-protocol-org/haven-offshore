@@ -1,5 +1,7 @@
---- monero/src/ringct/rctSigs.cpp	2020-06-30 14:49:37.566511377 +0100
-+++ monero-offshore/src/ringct/rctSigs.cpp	2020-06-26 11:08:39.637764381 +0100
+diff --git a/src/ringct/rctSigs.cpp b/src/ringct/rctSigs.cpp
+index ff2a81d43..e166e885f 100644
+--- a/src/ringct/rctSigs.cpp
++++ b/src/ringct/rctSigs.cpp
 @@ -35,6 +35,8 @@
  #include "rctSigs.h"
  #include "bulletproofs.h"
@@ -1118,12 +1120,17 @@
 -          DP(sumOutpks);
 -          const key txnFeeKey = scalarmultH(d2h(rv.txnFee));
 -          addKeys(sumOutpks, txnFeeKey, sumOutpks);
+-
+-          key sumPseudoOuts = addKeys(pseudoOuts);
+-          DP(sumPseudoOuts);
+-
+-          //check pseudoOuts vs Outs..
+-          if (!equalKeys(sumPseudoOuts, sumOutpks)) {
+-            LOG_PRINT_L1("Sum check failed");
 +	  // OUTPUTS SUMMED FOR EACH COLOUR
 +	  key zerokey = scalarmultH(d2h(0));
 +	  key Zi = zero();
- 
--          key sumPseudoOuts = addKeys(pseudoOuts);
--          DP(sumPseudoOuts);
++
 +	  // Calculate sum of all C'
 +	  rct::keyV masks(rv.outPk.size());
 +	  for (size_t i = 0; i < rv.outPk.size(); i++) {
@@ -1131,10 +1138,7 @@
 +	  }
 +	  key sumOutpks = addKeys(masks);
 +	  DP(sumOutpks);
- 
--          //check pseudoOuts vs Outs..
--          if (!equalKeys(sumPseudoOuts, sumOutpks)) {
--            LOG_PRINT_L1("Sum check failed");
++
 +	  // Calculate sum of all D'
 +	  rct::keyV masks_usd(rv.outPk_usd.size());
 +	  for (size_t i = 0; i < rv.outPk_usd.size(); i++) {
@@ -1298,7 +1302,7 @@
          for (size_t n = 0; n < indices.size(); ++n) {
              rct::key diff;
              sc_mulsub(diff.bytes, msout.c[n].bytes, secret_key.bytes, k[n].bytes);
-@@ -1229,4 +1942,33 @@ namespace rct {
+@@ -1229,4 +1942,71 @@ namespace rct {
          }
          return true;
      }
@@ -1331,4 +1335,42 @@
 +        else
 +            return signMultisigMLSAG(rv, indices, k, msout, secret_key);
 +    }
++
++  bool checkBurntAndMinted(const rctSig &rv, const xmr_amount amount_burnt, const xmr_amount amount_minted, const offshore::pricing_record pr, bool offshore, bool onshore) {
++
++    if (offshore) {
++
++      boost::multiprecision::uint128_t xhv_128 = amount_burnt;
++      boost::multiprecision::uint128_t exchange_128 = pr.unused1;
++      boost::multiprecision::uint128_t xusd_128 = xhv_128 * exchange_128;
++      xusd_128 /= 1000000000000;
++      boost::multiprecision::uint128_t minted_128 = amount_minted;
++      if (xusd_128 != minted_128) {
++
++	LOG_PRINT_L1("Sum check failed (offshore)");
++	return false;
++      }
++      
++    } else if (onshore) {
++
++      boost::multiprecision::uint128_t xusd_128 = amount_burnt;
++      boost::multiprecision::uint128_t exchange_128 = pr.unused1;
++      boost::multiprecision::uint128_t xhv_128 = xusd_128 * 1000000000000;
++      xhv_128 /= exchange_128;
++      boost::multiprecision::uint128_t minted_128 = amount_minted;
++      if ((uint64_t)xhv_128 != minted_128) {
++
++	LOG_PRINT_L1("Sum check failed (onshore)");
++	return false;
++      }
++
++    } else {
++
++      LOG_PRINT_L1("Invalid request - minted/burnt values only valid for offshore/onshore TXs");
++      return false;
++    }
++
++    // Must have succeeded
++    return true;
++  }
  }

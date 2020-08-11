@@ -1,5 +1,7 @@
---- monero/src/ringct/rctSigs.h	2020-06-30 14:49:37.566511377 +0100
-+++ monero-offshore/src/ringct/rctSigs.h	2020-06-26 11:10:24.079197864 +0100
+diff --git a/src/ringct/rctSigs.h b/src/ringct/rctSigs.h
+index 9227eab1e..d022e299b 100644
+--- a/src/ringct/rctSigs.h
++++ b/src/ringct/rctSigs.h
 @@ -47,6 +47,7 @@ extern "C" {
  }
  #include "crypto/crypto.h"
@@ -32,7 +34,7 @@
      //Ring-ct MG sigs
      //Prove:
      //   c.f. https://eprint.iacr.org/2015/1098 section 4. definition 10.
-@@ -119,16 +125,16 @@ namespace rct {
+@@ -119,22 +125,24 @@ namespace rct {
      //decodeRct: (c.f. https://eprint.iacr.org/2015/1098 section 5.1.1)
      //   uses the attached ecdh info to find the amounts represented by each output commitment
      //   must know the destination private key to find the correct amount, else will return a random number
@@ -57,3 +59,11 @@
      xmr_amount decodeRct(const rctSig & rv, const key & sk, unsigned int i, key & mask, hw::device &hwdev);
      xmr_amount decodeRct(const rctSig & rv, const key & sk, unsigned int i, hw::device &hwdev);
      xmr_amount decodeRctSimple(const rctSig & rv, const key & sk, unsigned int i, key & mask, hw::device &hwdev);
+     xmr_amount decodeRctSimple(const rctSig & rv, const key & sk, unsigned int i, hw::device &hwdev);
+     key get_pre_mlsag_hash(const rctSig &rv, hw::device &hwdev);
+     bool signMultisig(rctSig &rv, const std::vector<unsigned int> &indices, const keyV &k, const multisig_out &msout, const key &secret_key);
++
++  bool checkBurntAndMinted(const rctSig &rv, const xmr_amount amount_burnt, const xmr_amount amount_minted, const offshore::pricing_record pr, bool offshore, bool onshore);
+ }
+ #endif  /* RCTSIGS_H */
+ 
