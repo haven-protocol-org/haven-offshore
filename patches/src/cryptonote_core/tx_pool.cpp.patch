@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/tx_pool.cpp b/src/cryptonote_core/tx_pool.cpp
-index 49d5a8ccc..8ad5b14d3 100644
+index 49d5a8ccc..ebea08752 100644
 --- a/src/cryptonote_core/tx_pool.cpp
 +++ b/src/cryptonote_core/tx_pool.cpp
 @@ -82,8 +82,8 @@ namespace cryptonote
@@ -64,7 +64,7 @@ index 49d5a8ccc..8ad5b14d3 100644
 +	offshore = true;
 +      }
 +
-+      if (tx.pricing_record_height > 0) {
++      if (tx.pricing_record_height > 658500) {
 +
 +	// Get the pricing record that was used for conversion
 +	block bl;
