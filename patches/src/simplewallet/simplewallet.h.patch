@@ -1,8 +1,15 @@
-diff --git a/src/simplewallet/simplewallet.h b/src/simplewallet/simplewallet.h
-index 33b18612c..c0e2ae52b 100644
---- a/src/simplewallet/simplewallet.h
-+++ b/src/simplewallet/simplewallet.h
-@@ -156,15 +156,17 @@ namespace cryptonote
+--- simplewallet/simplewallet.h.orig	2020-08-14 16:26:35.011448800 +0200
++++ simplewallet/simplewallet.h	2020-08-14 20:17:46.773812500 +0200
+@@ -53,7 +53,7 @@
+ #undef MONERO_DEFAULT_LOG_CATEGORY
+ #define MONERO_DEFAULT_LOG_CATEGORY "wallet.simplewallet"
+ // Hardcode Monero's donation address (see #1447)
+-constexpr const char MONERO_DONATION_ADDR[] = "44AFFq5kSiGBoZ4NMDwYtN18obc8AemS33DBLWs3H7otXft3XjrpDtQGv7SqSsaBYBb98uNbr2VBBEt7f2wfn3RVGQBEP3A";
++constexpr const char MONERO_DONATION_ADDR[] = "hvxy3f2PhAhimkeLf617BsbVn6UTbofVcMzofXGsSNLoMFr2SrSxRJ9f52Am1QLVddKetXPKHoTLbBaLNT1kMU6Q3kYRc3t6pF";
+ 
+ /*!
+  * \namespace cryptonote
+@@ -165,16 +165,18 @@
      bool show_incoming_transfers(const std::vector<std::string> &args);
      bool show_payments(const std::vector<std::string> &args);
      bool show_blockchain_height(const std::vector<std::string> &args);
@@ -11,9 +18,10 @@ index 33b18612c..c0e2ae52b 100644
      bool transfer(const std::vector<std::string> &args);
      bool locked_transfer(const std::vector<std::string> &args);
      bool locked_sweep_all(const std::vector<std::string> &args);
--    bool sweep_main(uint64_t below, bool locked, const std::vector<std::string> &args);
-+    bool sweep_main(uint64_t below, bool locked, const std::vector<std::string> &args, bool bOffshoreTx = false);
+-    bool sweep_main(uint32_t account, uint64_t below, bool locked, const std::vector<std::string> &args);
++    bool sweep_main(uint32_t account, uint64_t below, bool locked, const std::vector<std::string> &args, bool bOffshoreTx = false);
      bool sweep_all(const std::vector<std::string> &args);
+     bool sweep_account(const std::vector<std::string> &args);
      bool sweep_below(const std::vector<std::string> &args);
      bool sweep_single(const std::vector<std::string> &args);
      bool sweep_unmixable(const std::vector<std::string> &args);
@@ -22,9 +30,9 @@ index 33b18612c..c0e2ae52b 100644
      bool donate(const std::vector<std::string> &args);
      bool sign_transfer(const std::vector<std::string> &args);
      bool submit_transfer(const std::vector<std::string> &args);
-@@ -247,6 +249,10 @@ namespace cryptonote
-     bool welcome(const std::vector<std::string>& args);
+@@ -263,6 +265,10 @@
      bool version(const std::vector<std::string>& args);
+     bool on_unknown_command(const std::vector<std::string>& args);
  
 +    bool onshore(const std::vector<std::string> &args);
 +    bool offshore(const std::vector<std::string> &args);
@@ -33,12 +41,12 @@ index 33b18612c..c0e2ae52b 100644
      bool cold_sign_tx(const std::vector<tools::wallet2::pending_tx>& ptx_vector, tools::wallet2::signed_tx_set &exported_txs, std::vector<cryptonote::address_parse_info> &dsts_info, std::function<bool(const tools::wallet2::signed_tx_set &)> accept_func);
      uint64_t get_daemon_blockchain_height(std::string& err);
      bool try_connect_to_daemon(bool silent = false, uint32_t* version = nullptr);
-@@ -310,9 +316,9 @@ namespace cryptonote
+@@ -341,9 +347,9 @@
  
      //----------------- i_wallet2_callback ---------------------
      virtual void on_new_block(uint64_t height, const cryptonote::block& block);
--    virtual void on_money_received(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& tx, uint64_t amount, const cryptonote::subaddress_index& subaddr_index, uint64_t unlock_time);
-+    virtual void on_money_received(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& tx, uint64_t amount, const cryptonote::subaddress_index& subaddr_index, uint64_t unlock_time, bool offshore=false);
+-    virtual void on_money_received(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& tx, uint64_t amount, const cryptonote::subaddress_index& subaddr_index, bool is_change, uint64_t unlock_time);
++    virtual void on_money_received(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& tx, uint64_t amount, const cryptonote::subaddress_index& subaddr_index, bool is_change, uint64_t unlock_time, bool offshore=false);     
      virtual void on_unconfirmed_money_received(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& tx, uint64_t amount, const cryptonote::subaddress_index& subaddr_index);
 -    virtual void on_money_spent(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& in_tx, uint64_t amount, const cryptonote::transaction& spend_tx, const cryptonote::subaddress_index& subaddr_index);
 +    virtual void on_money_spent(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& in_tx, uint64_t amount, const cryptonote::transaction& spend_tx, const cryptonote::subaddress_index& subaddr_index, bool offshore=false);
