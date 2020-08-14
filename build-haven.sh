@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MONERO_BRANCH="release-v0.14"
+MONERO_BRANCH="release-v0.16"
 
 # Check for presence of monero code
 if [ ! -d "monero" ] || [ ! -e "monero/.git" ]; then
