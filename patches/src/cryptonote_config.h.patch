@@ -1,7 +1,5 @@
-diff --git a/src/cryptonote_config.h b/src/cryptonote_config.h
-index 56b6a63b7..43a0bc0e5 100644
---- a/src/cryptonote_config.h
-+++ b/src/cryptonote_config.h
+--- src/cryptonote_config.h.orig	2020-08-14 16:26:34.106299000 +0200
++++ src/cryptonote_config.h	2020-08-14 17:22:03.129302800 +0200
 @@ -33,18 +33,23 @@
  #include <stdexcept>
  #include <string>
@@ -75,33 +73,19 @@ index 56b6a63b7..43a0bc0e5 100644
  
  
  #define CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_SECONDS_V1   DIFFICULTY_TARGET_V1 * CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS
-@@ -96,10 +104,24 @@
- #define BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT          10000  //by default, blocks ids count in synchronizing
- #define BLOCKS_SYNCHRONIZING_DEFAULT_COUNT_PRE_V4       100    //by default, blocks count in blocks downloading
+@@ -98,9 +106,10 @@
  #define BLOCKS_SYNCHRONIZING_DEFAULT_COUNT              20     //by default, blocks count in blocks downloading
-+#define BLOCKS_SYNCHRONIZING_MAX_COUNT                  2048   //must be a power of 2, greater than 128, equal to SEEDHASH_EPOCH_BLOCKS
+ #define BLOCKS_SYNCHRONIZING_MAX_COUNT                  2048   //must be a power of 2, greater than 128, equal to SEEDHASH_EPOCH_BLOCKS
  
 -#define CRYPTONOTE_MEMPOOL_TX_LIVETIME                    (86400*3) //seconds, three days
 +#define CRYPTONOTE_MEMPOOL_TX_LIVETIME                    86400 //seconds, one day
  #define CRYPTONOTE_MEMPOOL_TX_FROM_ALT_BLOCK_LIVETIME     604800 //seconds, one week
  
-+
 +#define CRYPTONOTE_DANDELIONPP_FLUSH_AVERAGE 5 // seconds
-+
-+// see src/cryptonote_protocol/levin_notify.cpp
-+#define CRYPTONOTE_NOISE_MIN_EPOCH                      5      // minutes
-+#define CRYPTONOTE_NOISE_EPOCH_RANGE                    30     // seconds
-+#define CRYPTONOTE_NOISE_MIN_DELAY                      10     // seconds
-+#define CRYPTONOTE_NOISE_DELAY_RANGE                    5      // seconds
-+#define CRYPTONOTE_NOISE_BYTES                          3*1024 // 3 KiB
-+#define CRYPTONOTE_NOISE_CHANNELS                       2      // Max outgoing connections per zone used for noise/covert sending
-+
-+#define CRYPTONOTE_MAX_FRAGMENTS                        20 // ~20 * NOISE_BYTES max payload size for covert/noise send
-+
- #define COMMAND_RPC_GET_BLOCKS_FAST_MAX_COUNT           1000
  
- #define P2P_LOCAL_WHITE_PEERLIST_LIMIT                  1000
-@@ -111,6 +133,7 @@
+ #define CRYPTONOTE_DANDELIONPP_STEMS              2 // number of outgoing stem connections per epoch
+ #define CRYPTONOTE_DANDELIONPP_FLUFF_PROBABILITY 10 // out of 100
+@@ -130,6 +139,7 @@
  #define P2P_DEFAULT_PEERS_IN_HANDSHAKE                  250
  #define P2P_DEFAULT_CONNECTION_TIMEOUT                  5000       //5 seconds
  #define P2P_DEFAULT_SOCKS_CONNECT_TIMEOUT               45         // seconds
@@ -109,22 +93,16 @@ index 56b6a63b7..43a0bc0e5 100644
  #define P2P_DEFAULT_PING_CONNECTION_TIMEOUT             2000       //2 seconds
  #define P2P_DEFAULT_INVOKE_TIMEOUT                      60*2*1000  //2 minutes
  #define P2P_DEFAULT_HANDSHAKE_INVOKE_TIMEOUT            5000       //5 seconds
-@@ -128,29 +151,49 @@
- #define P2P_SUPPORT_FLAG_FLUFFY_BLOCKS                  0x01
- #define P2P_SUPPORT_FLAGS                               P2P_SUPPORT_FLAG_FLUFFY_BLOCKS
+@@ -149,7 +159,7 @@
  
-+#define RPC_IP_FAILS_BEFORE_BLOCK                       3
-+
- #define ALLOW_DEBUG_COMMANDS
+ #define RPC_IP_FAILS_BEFORE_BLOCK                       3
  
 -#define CRYPTONOTE_NAME                         "bitmonero"
 +#define CRYPTONOTE_NAME                         "haven"
  #define CRYPTONOTE_POOLDATA_FILENAME            "poolstate.bin"
  #define CRYPTONOTE_BLOCKCHAINDATA_FILENAME      "data.mdb"
  #define CRYPTONOTE_BLOCKCHAINDATA_LOCK_FILENAME "lock.mdb"
- #define P2P_NET_DATA_FILENAME                   "p2pstate.bin"
-+#define RPC_PAYMENTS_DATA_FILENAME              "rpcpayments.bin"
- #define MINER_CONFIG_FILE_NAME                  "miner_conf.json"
+@@ -159,20 +169,31 @@
  
  #define THREAD_STACK_SIZE                       5 * 1024 * 1024
  
@@ -145,12 +123,12 @@ index 56b6a63b7..43a0bc0e5 100644
 +#define HF_VERSION_PER_BYTE_FEE                 5
 +#define HF_VERSION_SMALLER_BP                   5
 +#define HF_VERSION_LONG_TERM_BLOCK_WEIGHT       11
-+#define HF_VERSION_MIN_2_OUTPUTS                12
-+#define HF_VERSION_MIN_V2_COINBASE_TX           12
-+#define HF_VERSION_SAME_MIXIN                   12
-+#define HF_VERSION_REJECT_SIGS_IN_COINBASE      12
-+#define HF_VERSION_ENFORCE_MIN_AGE              12
-+#define HF_VERSION_EFFECTIVE_SHORT_TERM_MEDIAN_IN_PENALTY 12
+ #define HF_VERSION_MIN_2_OUTPUTS                12
+ #define HF_VERSION_MIN_V2_COINBASE_TX           12
+ #define HF_VERSION_SAME_MIXIN                   12
+ #define HF_VERSION_REJECT_SIGS_IN_COINBASE      12
+ #define HF_VERSION_ENFORCE_MIN_AGE              12
+ #define HF_VERSION_EFFECTIVE_SHORT_TERM_MEDIAN_IN_PENALTY 12
 +#define HF_VERSION_CLSAG                        13
 +#define HF_11_MIN_MIXIN_10                      11
 +#define HF_VERSION_OFFSHORE_PRICING             11
@@ -164,23 +142,18 @@ index 56b6a63b7..43a0bc0e5 100644
  
  #define PER_KB_FEE_QUANTIZATION_DECIMALS        8
  
--#define HASH_OF_HASHES_STEP                     256
-+#define HASH_OF_HASHES_STEP                     512
+@@ -189,6 +210,8 @@
  
- #define DEFAULT_TXPOOL_MAX_WEIGHT               648000000ull // 3 days at 300000, in bytes
- 
-@@ -161,6 +204,8 @@
- #define CRYPTONOTE_PRUNING_TIP_BLOCKS           5500 // the smaller, the more space saved
- //#define CRYPTONOTE_PRUNING_DEBUG_SPOOF_SEED
+ #define RPC_CREDITS_PER_HASH_SCALE ((float)(1<<24))
  
 +#define RPC_CREDITS_PER_HASH_SCALE ((float)(1<<24))
 +
  // New constants are intended to go here
  namespace config
  {
-@@ -170,45 +215,59 @@ namespace config
+@@ -197,16 +220,16 @@
+   uint64_t const DEFAULT_DUST_THRESHOLD = ((uint64_t)2000000000); // 2 * pow(10, 9)
    uint64_t const BASE_REWARD_CLAMP_THRESHOLD = ((uint64_t)100000000); // pow(10, 8)
-   std::string const P2P_REMOTE_DEBUG_TRUSTED_PUB_KEY = "0000000000000000000000000000000000000000000000000000000000000000";
  
 -  uint64_t const CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = 18;
 -  uint64_t const CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX = 19;
@@ -202,6 +175,11 @@ index 56b6a63b7..43a0bc0e5 100644
 +    } };
 +  std::string const GENESIS_TX = "023c01ff0001ffffffffffff07020bf6522f9152fa26cd1fc5c022b1a9e13dab697f3acf4b4d0ca6950a867a194321011d92826d0656958865a035264725799f39f6988faa97d532f972895de849496d00";
    uint32_t const GENESIS_NONCE = 10000;
+ 
+   // Hash domain separators
+@@ -220,33 +243,47 @@
+   const unsigned char HASH_KEY_MEMORY = 'k';
+   const unsigned char HASH_KEY_MULTISIG[] = {'M', 'u', 'l', 't' , 'i', 's', 'i', 'g', 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
  
 +  std::string const GOVERNANCE_WALLET_ADDRESS = "hvxy7YfeE8SdTrCmSqLB59WoQn3ZQun1aLX36X3eb1R7Fb26VuNpc235q4fguGUxfGKerywFPnweu15S8RB8DzTJ8Q4hGJCgvv";
 +  std::string const GOVERNANCE_WALLET_ADDRESS_MULTI = "hvxy3f2PhAhimkeLf617BsbVn6UTbofVcMzofXGsSNLoMFr2SrSxRJ9f52Am1QLVddKetXPKHoTLbBaLNT1kMU6Q3kYRc3t6pF";
@@ -229,14 +207,13 @@ index 56b6a63b7..43a0bc0e5 100644
 -        0x12 ,0x30, 0xF1, 0x71 , 0x61, 0x04 , 0x41, 0x61, 0x17, 0x31, 0x00, 0x82, 0x16, 0xA1, 0xA1, 0x11
 -      } }; // Bender's daydream
 -    std::string const GENESIS_TX = "013c01ff0001ffffffffffff03029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd08807121017767aafcde9be00dcfd098715ebcf7f410daebc582fda69d24a28e9d0bc890d1";
--    uint32_t const GENESIS_NONCE = 10001;
 +        0x05 ,0x39, 0xF1, 0x70 , 0x61, 0x04 , 0x41, 0x60, 0x17, 0x32, 0x00, 0x81, 0x16, 0xA1, TESTNET_VERSION, 0x11
 +      } };
 +    std::string const GENESIS_TX = "013c01ff0001ffffffffffff0f029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd0880712101168d0c4ca86fb55a4cf6a36d31431be1c53a3bd7411bb24e8832410289fa6f3b";
-+  uint32_t const GENESIS_NONCE = 10001;
+     uint32_t const GENESIS_NONCE = 10001;
 +
-+  std::string const GOVERNANCE_WALLET_ADDRESS = "hvta9gEeEpp8tWm4DK3gzZH5dsoAkbtwBL19EGnaYjApRoo8bXQg2GJPjBiji6NMbLDUUkfZw9Q4sh558r37Ucjb9ZHaDUns8N";
-+  std::string const GOVERNANCE_WALLET_ADDRESS_MULTI = "hvta9gEeEpp8tWm4DK3gzZH5dsoAkbtwBL19EGnaYjApRoo8bXQg2GJPjBiji6NMbLDUUkfZw9Q4sh558r37Ucjb9ZHaDUns8N";
++    std::string const GOVERNANCE_WALLET_ADDRESS = "hvta9gEeEpp8tWm4DK3gzZH5dsoAkbtwBL19EGnaYjApRoo8bXQg2GJPjBiji6NMbLDUUkfZw9Q4sh558r37Ucjb9ZHaDUns8N";
++    std::string const GOVERNANCE_WALLET_ADDRESS_MULTI = "hvta9gEeEpp8tWm4DK3gzZH5dsoAkbtwBL19EGnaYjApRoo8bXQg2GJPjBiji6NMbLDUUkfZw9Q4sh558r37Ucjb9ZHaDUns8N";
    }
  
    namespace stagenet

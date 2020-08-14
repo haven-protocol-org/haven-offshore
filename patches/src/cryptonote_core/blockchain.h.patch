@@ -1,7 +1,5 @@
-diff --git a/src/cryptonote_core/blockchain.h b/src/cryptonote_core/blockchain.h
-index 32ed96b5b..49760aa44 100644
---- a/src/cryptonote_core/blockchain.h
-+++ b/src/cryptonote_core/blockchain.h
+--- src/cryptonote_core/blockchain.h.orig	2020-08-14 16:26:34.149299600 +0200
++++ src/cryptonote_core/blockchain.h	2020-08-14 18:15:02.657386100 +0200
 @@ -57,6 +57,7 @@
  #include "checkpoints/checkpoints.h"
  #include "cryptonote_basic/hardfork.h"
@@ -10,7 +8,7 @@ index 32ed96b5b..49760aa44 100644
  
  namespace tools { class Notify; }
  
-@@ -574,8 +575,8 @@ namespace cryptonote
+@@ -577,8 +578,8 @@
       * @brief get dynamic per kB or byte fee for a given block weight
       *
       * The dynamic fee is based on the block weight in a past window, and
@@ -21,7 +19,7 @@ index 32ed96b5b..49760aa44 100644
       *
       * @param block_reward the current block reward
       * @param median_block_weight the median block weight in the past window
-@@ -589,8 +590,8 @@ namespace cryptonote
+@@ -592,8 +593,8 @@
       * @brief get dynamic per kB or byte fee estimate for the next few blocks
       *
       * The dynamic fee is based on the block weight in a past window, and
@@ -32,21 +30,21 @@ index 32ed96b5b..49760aa44 100644
       * This function calculates an estimate for a dynamic fee which will be
       * valid for the next grace_blocks
       *
-@@ -649,6 +650,13 @@ namespace cryptonote
-      */
+@@ -653,6 +654,13 @@
      uint64_t get_current_cumulative_block_weight_median() const;
  
-+    /**
+     /**
 +     * @brief gets the pricing record for the specified timestamp
 +     *
 +     * @return false if method failed to obtain pricing record from oracle, otherwise true
 +     */
 +    bool get_pricing_record(offshore::pricing_record& pr, uint64_t timestamp) const;
 +
-     /**
++    /**
       * @brief gets the difficulty of the block with a given height
       *
-@@ -1086,6 +1094,8 @@ namespace cryptonote
+      * @param i the height
+@@ -1090,6 +1098,8 @@
  
      HardFork *m_hardfork;
  
@@ -55,7 +53,7 @@ index 32ed96b5b..49760aa44 100644
      network_type m_nettype;
      bool m_offline;
      difficulty_type m_fixed_difficulty;
-@@ -1130,6 +1140,12 @@ namespace cryptonote
+@@ -1139,6 +1149,12 @@
      template<class visitor_t>
      inline bool scan_outputkeys_for_indexes(size_t tx_version, const txin_to_key& tx_in_to_key, visitor_t &vis, const crypto::hash &tx_prefix_hash, uint64_t* pmax_related_block_height = NULL) const;
  
@@ -68,18 +66,18 @@ index 32ed96b5b..49760aa44 100644
      /**
       * @brief collect output public keys of a transaction input set
       *
-@@ -1151,7 +1167,9 @@ namespace cryptonote
+@@ -1160,7 +1176,9 @@
       * @return false if any output is not yet unlocked, or is missing, otherwise true
       */
-     bool check_tx_input(size_t tx_version,const txin_to_key& txin, const crypto::hash& tx_prefix_hash, const std::vector<crypto::signature>& sig, const rct::rctSig &rct_signatures, std::vector<rct::ctkey> &output_keys, uint64_t* pmax_related_block_height);
+     bool check_tx_input(size_t tx_version,const txin_to_key& txin, const crypto::hash& tx_prefix_hash, const std::vector<crypto::signature>& sig, const rct::rctSig &rct_signatures, std::vector<rct::ctkey> &output_keys, uint64_t* pmax_related_block_height) const;
 -
 +    bool check_tx_input(size_t tx_version,const txin_offshore& txin, const crypto::hash& tx_prefix_hash, const std::vector<crypto::signature>& sig, const rct::rctSig &rct_signatures, std::vector<rct::ctkey> &output_keys, uint64_t* pmax_related_block_height);
 +    bool check_tx_input(size_t tx_version,const txin_onshore& txin, const crypto::hash& tx_prefix_hash, const std::vector<crypto::signature>& sig, const rct::rctSig &rct_signatures, std::vector<rct::ctkey> &output_keys, uint64_t* pmax_related_block_height);
-+    
++   
      /**
       * @brief validate a transaction's inputs and their keys
       *
-@@ -1282,7 +1300,10 @@ namespace cryptonote
+@@ -1294,7 +1312,10 @@
       *
       * @param b the block containing the miner transaction to be validated
       * @param cumulative_block_weight the block's weight
@@ -91,7 +89,7 @@ index 32ed96b5b..49760aa44 100644
       * @param base_reward return-by-reference the new block's generated coins
       * @param already_generated_coins the amount of currency generated prior to this block
       * @param partial_block_reward return-by-reference true if miner accepted only partial reward
-@@ -1290,7 +1311,7 @@ namespace cryptonote
+@@ -1302,7 +1323,7 @@
       *
       * @return false if anything is found wrong with the miner transaction, otherwise true
       */

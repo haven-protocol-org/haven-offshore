@@ -1,8 +1,6 @@
-diff --git a/src/cryptonote_core/cryptonote_core.cpp b/src/cryptonote_core/cryptonote_core.cpp
-index 13426230e..670403ef9 100644
---- a/src/cryptonote_core/cryptonote_core.cpp
-+++ b/src/cryptonote_core/cryptonote_core.cpp
-@@ -155,7 +155,7 @@ namespace cryptonote
+--- src/cryptonote_core/cryptonote_core.cpp.orig	2020-08-14 16:26:34.164300700 +0200
++++ src/cryptonote_core/cryptonote_core.cpp	2020-08-14 18:21:09.064750500 +0200
+@@ -166,7 +166,7 @@
    };
    static const command_line::arg_descriptor<std::string> arg_check_updates = {
      "check-updates"
@@ -11,7 +9,7 @@ index 13426230e..670403ef9 100644
    , "notify"
    };
    static const command_line::arg_descriptor<bool> arg_fluffy_blocks  = {
-@@ -472,8 +472,8 @@ namespace cryptonote
+@@ -486,8 +486,8 @@
        if (boost::filesystem::exists(old_files / "blockchain.bin"))
        {
          MWARNING("Found old-style blockchain.bin in " << old_files.string());
@@ -22,7 +20,7 @@ index 13426230e..670403ef9 100644
          MWARNING("convert your existing blockchain.bin to the new format. See README.md for instructions.");
          return false;
        }
-@@ -488,7 +488,14 @@ namespace cryptonote
+@@ -502,7 +502,14 @@
        return false;
      }
  
@@ -37,7 +35,7 @@ index 13426230e..670403ef9 100644
      MGINFO("Loading blockchain from folder " << folder.string() << " ...");
  
      const std::string filename = folder.string();
-@@ -769,11 +776,12 @@ namespace cryptonote
+@@ -806,7 +813,7 @@
      bad_semantics_txes_lock.unlock();
  
      uint8_t version = m_blockchain_storage.get_current_hard_fork_version();
@@ -46,12 +44,7 @@ index 13426230e..670403ef9 100644
      if (tx.version == 0 || tx.version > max_tx_version)
      {
        // v2 is the latest one we know
-       tvc.m_verifivation_failed = true;
-+      LOG_PRINT_L1("Wrong max transaction version, verifivation failed : tx.version = " << tx.version << " (max_tx_version = " << max_tx_version << ")");
-       return false;
-     }
- 
-@@ -827,6 +835,31 @@ namespace cryptonote
+@@ -865,6 +872,31 @@
      std::vector<const rct::rctSig*> rvv;
      for (size_t n = 0; n < tx_info.size(); ++n)
      {
@@ -83,7 +76,7 @@ index 13426230e..670403ef9 100644
        if (!check_tx_semantic(*tx_info[n].tx, keeped_by_block))
        {
          set_semantics_failed(tx_info[n].tx_hash);
-@@ -847,7 +880,7 @@ namespace cryptonote
+@@ -885,7 +917,7 @@
            tx_info[n].result = false;
            break;
          case rct::RCTTypeSimple:
@@ -92,7 +85,7 @@ index 13426230e..670403ef9 100644
            {
              MERROR_VER("rct signature semantics check failed");
              set_semantics_failed(tx_info[n].tx_hash);
-@@ -868,6 +901,7 @@ namespace cryptonote
+@@ -906,6 +938,7 @@
            break;
          case rct::RCTTypeBulletproof:
          case rct::RCTTypeBulletproof2:
@@ -100,7 +93,7 @@ index 13426230e..670403ef9 100644
            if (!is_canonical_bulletproof_layout(rv.p.bulletproofs))
            {
              MERROR_VER("Bulletproof does not have canonical form");
-@@ -886,18 +920,43 @@ namespace cryptonote
+@@ -924,18 +957,43 @@
            break;
        }
      }
@@ -149,7 +142,7 @@ index 13426230e..670403ef9 100644
          {
            set_semantics_failed(tx_info[n].tx_hash);
            tx_info[n].tvc.m_verifivation_failed = true;
-@@ -1167,11 +1226,26 @@ namespace cryptonote
+@@ -1196,11 +1254,26 @@
    bool core::check_tx_inputs_keyimages_diff(const transaction& tx) const
    {
      std::unordered_set<crypto::key_image> ki;
@@ -181,7 +174,7 @@ index 13426230e..670403ef9 100644
      }
      return true;
    }
-@@ -1179,14 +1253,28 @@ namespace cryptonote
+@@ -1208,14 +1281,28 @@
    bool core::check_tx_inputs_ring_members_diff(const transaction& tx) const
    {
      const uint8_t version = m_blockchain_storage.get_current_hard_fork_version();
@@ -218,7 +211,7 @@ index 13426230e..670403ef9 100644
        }
      }
      return true;
-@@ -1195,11 +1283,29 @@ namespace cryptonote
+@@ -1224,11 +1311,29 @@
    bool core::check_tx_inputs_keyimages_domain(const transaction& tx) const
    {
      std::unordered_set<crypto::key_image> ki;
@@ -253,7 +246,7 @@ index 13426230e..670403ef9 100644
      }
      return true;
    }
-@@ -1587,7 +1693,7 @@ namespace cryptonote
+@@ -1640,7 +1745,7 @@
      {
        std::string main_message;
        if (m_offline)
@@ -262,21 +255,23 @@ index 13426230e..670403ef9 100644
        else
          main_message = "The daemon will start synchronizing with the network. This may take a long time to complete.";
        MGINFO_YELLOW(ENDL << "**********************************************************************" << ENDL
-@@ -1844,7 +1950,7 @@ namespace cryptonote
+@@ -1872,7 +1977,7 @@
      const time_t now = time(NULL);
-     const std::vector<time_t> timestamps = m_blockchain_storage.get_last_block_timestamps(60);
+     const std::vector<time_t> timestamps = m_blockchain_storage.get_last_block_timestamps(max_blocks_checked);
  
 -    static const unsigned int seconds[] = { 5400, 3600, 1800, 1200, 600 };
 +    static const unsigned int seconds[] = { 5400, 1800, 600 };
      for (size_t n = 0; n < sizeof(seconds)/sizeof(seconds[0]); ++n)
      {
        unsigned int b = 0;
-@@ -1854,7 +1960,7 @@ namespace cryptonote
+@@ -1882,8 +1987,8 @@
        MDEBUG("blocks in the last " << seconds[n] / 60 << " minutes: " << b << " (probability " << p << ")");
        if (p < threshold)
        {
--        MWARNING("There were " << b << " blocks in the last " << seconds[n] / 60 << " minutes, there might be large hash rate changes, or we might be partitioned, cut off from the Monero network or under attack. Or it could be just sheer bad luck.");
-+        MWARNING("There were " << b << " blocks in the last " << seconds[n] / 60 << " minutes, there might be large hash rate changes, or we might be partitioned, cut off from the Haven network or under attack. Or it could be just sheer bad luck.");
- 
+-        MWARNING("There were " << b << (b == max_blocks_checked ? " or more" : "") << " blocks in the last " << seconds[n] / 60 << " minutes, there might be large hash rate changes, or we might be partitioned, cut off from the Monero network or under attack, or your computer's time is off. Or it could be just sheer bad luck.");
+-
++        MWARNING("There were " << b << (b == max_blocks_checked ? " or more" : "") << " blocks in the last " << seconds[n] / 60 << " minutes, there might be large hash rate changes, or we might be partitioned, cut off from the Haven network or under attack, or your computer's time is off. Or it could be just sheer bad luck.");
++        
          std::shared_ptr<tools::Notify> block_rate_notify = m_block_rate_notify;
          if (block_rate_notify)
+         {
