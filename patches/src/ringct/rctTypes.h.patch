@@ -1,8 +1,6 @@
-diff --git a/src/ringct/rctTypes.h b/src/ringct/rctTypes.h
-index f8729b872..7a29506eb 100644
---- a/src/ringct/rctTypes.h
-+++ b/src/ringct/rctTypes.h
-@@ -110,9 +110,14 @@ namespace rct {
+--- ringct/rctTypes.h.orig	2020-08-14 16:26:34.806449700 +0200
++++ ringct/rctTypes.h	2020-08-14 19:39:37.162655600 +0200
+@@ -113,9 +113,14 @@
  
      struct multisig_out {
          std::vector<key> c; // for all inputs
@@ -17,7 +15,7 @@ index f8729b872..7a29506eb 100644
          END_SERIALIZE()
      };
  
-@@ -160,6 +165,23 @@ namespace rct {
+@@ -163,6 +168,23 @@
              // FIELD(II) - not serialized, it can be reconstructed
          END_SERIALIZE()
      };
@@ -41,7 +39,7 @@ index f8729b872..7a29506eb 100644
      //contains the data for an Borromean sig
      // also contains the "Ci" values such that
      // \sum Ci = C
-@@ -231,6 +253,7 @@ namespace rct {
+@@ -234,6 +256,7 @@
        RCTTypeSimple = 2,
        RCTTypeBulletproof = 3,
        RCTTypeBulletproof2 = 4,
@@ -49,7 +47,7 @@ index f8729b872..7a29506eb 100644
      };
      enum RangeProofType { RangeProofBorromean, RangeProofBulletproof, RangeProofMultiOutputBulletproof, RangeProofPaddedBulletproof };
      struct RCTConfig {
-@@ -245,7 +268,11 @@ namespace rct {
+@@ -248,7 +271,11 @@
          keyV pseudoOuts; //C - for simple rct
          std::vector<ecdhTuple> ecdhInfo;
          ctkeyV outPk;
@@ -61,7 +59,7 @@ index f8729b872..7a29506eb 100644
  
          template<bool W, template <bool> class Archive>
          bool serialize_rctsig_base(Archive<W> &ar, size_t inputs, size_t outputs)
-@@ -253,9 +280,19 @@ namespace rct {
+@@ -256,9 +283,19 @@
            FIELD(type)
            if (type == RCTTypeNull)
              return ar.stream().good();
@@ -82,7 +80,7 @@ index f8729b872..7a29506eb 100644
            // inputs/outputs not saved, only here for serialization help
            // FIELD(message) - not serialized, it can be reconstructed
            // FIELD(mixRing) - not serialized, it can be reconstructed
-@@ -282,7 +319,7 @@ namespace rct {
+@@ -285,7 +322,7 @@
              return false;
            for (size_t i = 0; i < outputs; ++i)
            {
@@ -91,42 +89,37 @@ index f8729b872..7a29506eb 100644
              {
                ar.begin_object();
                if (!typename Archive<W>::is_saving())
-@@ -312,26 +349,45 @@ namespace rct {
+@@ -315,6 +352,21 @@
                ar.delimit_array();
            }
            ar.end_array();
--          return ar.stream().good();
--        }
-+
 +          if (type == RCTTypeCLSAG)
 +          {
-+	    ar.tag("outPk_usd");
-+	    ar.begin_array();
-+	    PREPARE_CUSTOM_VECTOR_SERIALIZATION(outputs, outPk_usd);
-+	    if (outPk_usd.size() != outputs)
-+	      return false;
-+	    for (size_t i = 0; i < outputs; ++i)
-+	    {
-+	      FIELDS(outPk_usd[i].mask)
-+	      if (outputs - i > 1)
-+		ar.delimit_array();
-+	    }
-+	    ar.end_array();
-+	  }
-+	  
-+	  return ar.stream().good();
-+	}
++            ar.tag("outPk_usd");
++            ar.begin_array();
++            PREPARE_CUSTOM_VECTOR_SERIALIZATION(outputs, outPk_usd);
++            if (outPk_usd.size() != outputs)
++              return false;
++            for (size_t i = 0; i < outputs; ++i)
++            {
++              FIELDS(outPk_usd[i].mask)
++              if (outputs - i > 1)
++          ar.delimit_array();
++            }
++            ar.end_array();
++          }
+           return ar.stream().good();
+         }
      };
-     struct rctSigPrunable {
+@@ -322,6 +374,7 @@
          std::vector<rangeSig> rangeSigs;
          std::vector<Bulletproof> bulletproofs;
          std::vector<mgSig> MGs; // simple rct has N, full has 1
 +        std::vector<clsag> CLSAGs;
          keyV pseudoOuts; //C - for simple rct
  
-+        // when changing this function, update cryptonote::get_pruned_transaction_weight
-         template<bool W, template <bool> class Archive>
-         bool serialize_rctsig_prunable(Archive<W> &ar, uint8_t type, size_t inputs, size_t outputs, size_t mixin)
+         // when changing this function, update cryptonote::get_pruned_transaction_weight
+@@ -330,12 +383,12 @@
          {
            if (type == RCTTypeNull)
              return ar.stream().good();
@@ -138,11 +131,11 @@ index f8729b872..7a29506eb 100644
            {
              uint32_t nbp = bulletproofs.size();
 -            if (type == RCTTypeBulletproof2)
-+            if (type == RCTTypeBulletproof2 || type == RCTTypeCLSAG)
++           if (type == RCTTypeBulletproof2 || type == RCTTypeCLSAG)
                VARINT_FIELD(nbp)
              else
                FIELD(nbp)
-@@ -366,55 +422,98 @@ namespace rct {
+@@ -370,55 +423,98 @@
              ar.end_array();
            }
  
@@ -274,7 +267,7 @@ index f8729b872..7a29506eb 100644
            {
              ar.tag("pseudoOuts");
              ar.begin_array();
-@@ -438,12 +537,12 @@ namespace rct {
+@@ -442,12 +538,12 @@
  
          keyV& get_pseudo_outs()
          {
@@ -289,7 +282,7 @@ index f8729b872..7a29506eb 100644
          }
      };
  
-@@ -605,6 +704,7 @@ VARIANT_TAG(debug_archive, rct::rctSig, "rct::rctSig");
+@@ -609,6 +705,7 @@
  VARIANT_TAG(debug_archive, rct::Bulletproof, "rct::bulletproof");
  VARIANT_TAG(debug_archive, rct::multisig_kLRki, "rct::multisig_kLRki");
  VARIANT_TAG(debug_archive, rct::multisig_out, "rct::multisig_out");
@@ -297,7 +290,7 @@ index f8729b872..7a29506eb 100644
  
  VARIANT_TAG(binary_archive, rct::key, 0x90);
  VARIANT_TAG(binary_archive, rct::key64, 0x91);
-@@ -621,6 +721,7 @@ VARIANT_TAG(binary_archive, rct::rctSig, 0x9b);
+@@ -625,6 +722,7 @@
  VARIANT_TAG(binary_archive, rct::Bulletproof, 0x9c);
  VARIANT_TAG(binary_archive, rct::multisig_kLRki, 0x9d);
  VARIANT_TAG(binary_archive, rct::multisig_out, 0x9e);
@@ -305,7 +298,7 @@ index f8729b872..7a29506eb 100644
  
  VARIANT_TAG(json_archive, rct::key, "rct_key");
  VARIANT_TAG(json_archive, rct::key64, "rct_key64");
-@@ -637,5 +738,6 @@ VARIANT_TAG(json_archive, rct::rctSig, "rct_rctSig");
+@@ -641,5 +739,6 @@
  VARIANT_TAG(json_archive, rct::Bulletproof, "rct_bulletproof");
  VARIANT_TAG(json_archive, rct::multisig_kLRki, "rct_multisig_kLR");
  VARIANT_TAG(json_archive, rct::multisig_out, "rct_multisig_out");

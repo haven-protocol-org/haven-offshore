@@ -1,15 +1,6 @@
---- monero/src/daemon/command_parser_executor.cpp	2019-12-20 13:52:25.288151367 +0000
-+++ monero-offshore/src/daemon/command_parser_executor.cpp	2019-11-27 08:35:56.000826759 +0000
-@@ -758,7 +758,7 @@ bool t_command_parser_executor::pop_bloc
- 
- bool t_command_parser_executor::version(const std::vector<std::string>& args)
- {
--  std::cout << "Monero '" << MONERO_RELEASE_NAME << "' (v" << MONERO_VERSION_FULL << ")" << std::endl;
-+  std::cout << "Haven '" << MONERO_RELEASE_NAME << "' (v" << MONERO_VERSION_FULL << ")" << std::endl;
-   return true;
- }
- 
-@@ -768,10 +768,10 @@ bool t_command_parser_executor::prune_bl
+--- daemon/command_parser_executor.cpp.orig	2020-08-14 16:26:34.313300000 +0200
++++ daemon/command_parser_executor.cpp	2020-08-14 16:26:49.581615600 +0200
+@@ -824,10 +824,10 @@
  
    if (args.empty() || args[0] != "confirm")
    {
