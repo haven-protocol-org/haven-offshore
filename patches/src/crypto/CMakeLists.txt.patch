@@ -1,10 +1,11 @@
---- monero/src/crypto/CMakeLists.txt	2019-12-20 13:52:25.268151102 +0000
-+++ monero-offshore/src/crypto/CMakeLists.txt	2019-11-27 08:35:55.832825003 +0000
-@@ -45,13 +45,9 @@ set(crypto_sources
+--- src/crypto/CMakeLists.txt.orig	2020-08-14 16:26:33.249146700 +0200
++++ src/crypto/CMakeLists.txt	2020-08-14 17:00:17.782199200 +0200
+@@ -45,14 +45,9 @@
    oaes_lib.c
    random.c
    skein.c
 -  slow-hash.c
+-  rx-slow-hash.c
 -  CryptonightR_JIT.c
 -  tree-hash.c)
 -
@@ -15,9 +16,9 @@
 +  cn_slow_hash_soft.cpp
 +  cn_slow_hash_hard_intel.cpp)
  
- set(crypto_headers)
+ include_directories(${RANDOMX_INCLUDE})
  
-@@ -74,8 +70,7 @@ set(crypto_private_headers
+@@ -77,8 +72,7 @@
    random.h
    skein.h
    skein_port.h
@@ -27,7 +28,7 @@
  
  monero_private_headers(cncrypto
    ${crypto_private_headers})
-@@ -110,5 +105,3 @@ if (ANDROID OR IOS)
+@@ -114,5 +108,3 @@
    endif()
  endif()
  

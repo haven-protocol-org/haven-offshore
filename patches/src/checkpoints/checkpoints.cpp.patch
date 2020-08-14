@@ -1,6 +1,6 @@
---- monero/src/checkpoints/checkpoints.cpp	2019-12-20 13:52:25.268151102 +0000
-+++ monero-offshore/src/checkpoints/checkpoints.cpp	2019-11-27 08:35:55.968826424 +0000
-@@ -159,57 +159,6 @@ namespace cryptonote
+--- src/checkpoints/checkpoints.cpp.orig	2020-08-14 16:26:33.126144200 +0200
++++ src/checkpoints/checkpoints.cpp	2020-08-14 16:55:46.003063800 +0200
+@@ -159,62 +159,6 @@
  
    bool checkpoints::init_default_checkpoints(network_type nettype)
    {
@@ -55,10 +55,15 @@
 -    ADD_CHECKPOINT(1668900, "ac2dcaf3d2f58ffcf8391639f0f1ebafcb8eac43c49479c7c37f611868d07568");
 -    ADD_CHECKPOINT(1775600, "1c6e01c661dc22cab939e79ec6a5272190624ce8356d2f7b958e4f9a57fdb05e");
 -    ADD_CHECKPOINT(1856000, "9b57f17f29c71a3acd8a7904b93c41fa6eb8d2b7c73936ce4f1702d14880ba29");
+-    ADD_CHECKPOINT(1958000, "98a5d6e51afdf3146e0eefb10a66e8648d8d4d5c2742be8835e976ba217c9bb2");
+-    ADD_CHECKPOINT(2046000, "5e867f0b8baefed9244a681df97fc885d8ab36c3dfcd24c7a3abf3b8ac8b8314");
+-    ADD_CHECKPOINT(2092500, "c4e00820c9c7989b49153d5e90ae095a18a11d990e82fcc3be54e6ed785472b5");
+-    ADD_CHECKPOINT(2125000, "a8e49c62792a2aa56ba62603fe015303647e2c19203c56999c7f6f2498cd3e6d");
+-    ADD_CHECKPOINT(2153000, "05952ed32f92647c44f91b222cc95cc8fb6f04cefd59b76ef30884fec957797e");
      return true;
    }
  
-@@ -254,22 +203,13 @@ namespace cryptonote
+@@ -259,22 +203,13 @@
      std::vector<std::string> records;
  
      // All four MoneroPulse domains have DNSSEC on and valid
