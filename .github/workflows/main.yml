@@ -95,8 +95,6 @@ jobs:
         path: monero/build/release/bin/
   build-macos:
     env:
-      BOOST_DIR: "/usr/local/Cellar/boost@1.60/1.60.0"
-      Boost_INCLUDE_DIR: "/usr/local/Cellar/boost@1.60/1.60.0/lib"
       CMAKE_OSX_DEPLOYMENT_TARGET: 10.13
       OSX_MIN_VERSION: 10.13
       DEVELOPER_DIR: /Applications/Xcode_10.3.app/Contents/Developer
@@ -107,7 +105,7 @@ jobs:
         submodules: recursive
     - name: Install dependencies
       run: |
-        brew update && brew install boost@1.60 hidapi zmq libpgm miniupnpc ldns expat libunwind-headers protobuf pkgconfig
+        brew update && brew install boost hidapi zmq libpgm miniupnpc ldns expat libunwind-headers protobuf pkgconfig
         wget https://raw.githubusercontent.com/zeromq/cppzmq/v4.3.0/zmq.hpp -O /usr/local/include/zmq.hpp
     - name: build Haven
       run: |
