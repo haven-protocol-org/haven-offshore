@@ -1,10 +1,10 @@
---- serialization/json_object.h.orig	2020-08-14 16:26:50.464663800 +0200
-+++ serialization/json_object.h	2020-08-14 19:56:24.400676800 +0200
+--- serialization/json_object.h.orig	2020-08-16 10:10:22.784956600 +0200
++++ serialization/json_object.h	2020-08-16 10:16:43.753867100 +0200
 @@ -193,6 +193,9 @@
  
  // end integers
  
-+void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const offshore::pricing_record& pricing_record)
++void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const offshore::pricing_record& pricing_record);
 +void fromJsonValue(const rapidjson::Value& val, offshore::pricing_record& pricing_record);
 +
  void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const cryptonote::transaction& tx);
@@ -14,10 +14,10 @@
  void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const cryptonote::txin_to_key& txin);
  void fromJsonValue(const rapidjson::Value& val, cryptonote::txin_to_key& txin);
  
-+void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const cryptonote::txin_offshore& txin)
++void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const cryptonote::txin_offshore& txin);
 +void fromJsonValue(const rapidjson::Value& val, cryptonote::txin_offshore& txin);
 +
-+void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const cryptonote::txin_onshore& txin)
++void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const cryptonote::txin_onshore& txin);
 +void fromJsonValue(const rapidjson::Value& val, cryptonote::txin_onshore& txin);
 +
  void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const cryptonote::txout_target_v& txout);
@@ -27,7 +27,7 @@
  void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const cryptonote::txout_to_key& txout);
  void fromJsonValue(const rapidjson::Value& val, cryptonote::txout_to_key& txout);
  
-+void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const cryptonote::txout_offshore& txout)
++void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const cryptonote::txout_offshore& txout);
 +void fromJsonValue(const rapidjson::Value& val, cryptonote::txout_offshore& txout);
 +
  void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const cryptonote::tx_out& txout);

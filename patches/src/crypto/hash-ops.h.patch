@@ -1,0 +1,11 @@
+--- crypto/hash-ops.h	2020-08-16 10:13:50.475117900 +0200
++++ crypto/hash-ops.h.xhv	2020-08-16 10:14:03.239837500 +0200
+@@ -88,7 +88,7 @@
+ 
+ void tree_hash(const char (*hashes)[HASH_SIZE], size_t count, char *root_hash);
+ 
+-#define RX_BLOCK_VERSION	12
++#define RX_BLOCK_VERSION	1000
+ void rx_slow_hash_allocate_state(void);
+ void rx_slow_hash_free_state(void);
+ uint64_t rx_seedheight(const uint64_t height);

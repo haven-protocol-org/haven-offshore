@@ -1,5 +1,5 @@
---- src/cryptonote_core/cryptonote_tx_utils.h.orig	2020-08-14 16:26:34.186299100 +0200
-+++ src/cryptonote_core/cryptonote_tx_utils.h	2020-08-14 18:37:25.839015700 +0200
+--- cryptonote_core/cryptonote_tx_utils.h.orig	2020-08-14 22:01:38.094306600 +0200
++++ cryptonote_core/cryptonote_tx_utils.h	2020-08-14 22:02:23.652621400 +0200
 @@ -37,8 +37,15 @@
  namespace cryptonote
  {
@@ -17,11 +17,7 @@
    struct tx_source_entry
    {
      typedef std::pair<uint64_t, rct::ctkey> output_entry;
-@@ -49,10 +56,15 @@
-     std::vector<crypto::public_key> real_out_additional_tx_keys; //incoming real tx additional public keys
-     size_t real_output_in_tx_index;     //index in transaction outputs vector
-     uint64_t amount;                    //money
-+    uint64_t amount_usd;                //money
+@@ -52,7 +59,11 @@
      bool rct;                           //true if the output is rct
      rct::key mask;                      //ringct amount mask
      rct::multisig_kLRki multisig_kLRki; //multisig info
@@ -34,7 +30,7 @@
      void push_output(uint64_t idx, const crypto::public_key &k, uint64_t amount) { outputs.push_back(std::make_pair(idx, rct::ctkey({rct::pk2rct(k), rct::zeroCommit(amount)}))); }
  
      BEGIN_SERIALIZE_OBJECT()
-@@ -68,6 +80,12 @@
+@@ -68,6 +79,12 @@
  
        if (real_output >= outputs.size())
          return false;
@@ -47,7 +43,12 @@
      END_SERIALIZE()
    };
  
-@@ -79,10 +97,12 @@
+@@ -75,14 +92,17 @@
+   {
+     std::string original;
+     uint64_t amount;                    //money
++    uint64_t amount_usd;                //money
+     account_public_address addr;        //destination address
      bool is_subaddress;
      bool is_integrated;
  
