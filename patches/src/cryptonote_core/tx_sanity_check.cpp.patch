@@ -1,6 +1,17 @@
---- monero/src/cryptonote_core/tx_sanity_check.cpp	2020-02-28 09:40:42.994621565 +0000
-+++ monero-offshore/src/cryptonote_core/tx_sanity_check.cpp	2020-02-27 11:07:02.000000000 +0000
-@@ -54,20 +54,48 @@ bool tx_sanity_check(Blockchain &blockch
+diff --git a/src/cryptonote_core/tx_sanity_check.cpp b/src/cryptonote_core/tx_sanity_check.cpp
+index e99982def..e649af7c7 100644
+--- a/src/cryptonote_core/tx_sanity_check.cpp
++++ b/src/cryptonote_core/tx_sanity_check.cpp
+@@ -39,7 +39,7 @@
+ namespace cryptonote
+ {
+ 
+-bool tx_sanity_check(const cryptonote::blobdata &tx_blob, uint64_t rct_outs_available)
++bool tx_sanity_check(Blockchain &blockchain, const cryptonote::blobdata &tx_blob, uint64_t rct_outs_available)
+ {
+   cryptonote::transaction tx;
+ 
+@@ -54,20 +54,48 @@ bool tx_sanity_check(const cryptonote::blobdata &tx_blob, uint64_t rct_outs_avai
      MERROR("Transaction is coinbase");
      return false;
    }
@@ -56,4 +67,4 @@
 +    }
    }
  
-   if (n_indices <= 10)
+   return tx_sanity_check(rct_indices, n_indices, rct_outs_available);
