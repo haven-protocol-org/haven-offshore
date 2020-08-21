@@ -1,6 +1,17 @@
---- crypto/hash-ops.h	2020-08-16 10:13:50.475117900 +0200
-+++ crypto/hash-ops.h.xhv	2020-08-16 10:14:03.239837500 +0200
-@@ -88,7 +88,7 @@
+diff --git a/src/crypto/hash-ops.h b/src/crypto/hash-ops.h
+index d117bb640..3255bc480 100644
+--- a/src/crypto/hash-ops.h
++++ b/src/crypto/hash-ops.h
+@@ -79,7 +79,7 @@ enum {
+ };
+ 
+ void cn_fast_hash(const void *data, size_t length, char *hash);
+-void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int prehashed, uint64_t height);
++void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int prehashed);
+ 
+ void hash_extra_blake(const void *data, size_t length, char *hash);
+ void hash_extra_groestl(const void *data, size_t length, char *hash);
+@@ -88,7 +88,7 @@ void hash_extra_skein(const void *data, size_t length, char *hash);
  
  void tree_hash(const char (*hashes)[HASH_SIZE], size_t count, char *root_hash);
  
