@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/tx_sanity_check.cpp b/src/cryptonote_core/tx_sanity_check.cpp
-index e99982def..e649af7c7 100644
+index e99982def..12bd16ed2 100644
 --- a/src/cryptonote_core/tx_sanity_check.cpp
 +++ b/src/cryptonote_core/tx_sanity_check.cpp
 @@ -39,7 +39,7 @@
@@ -7,23 +7,22 @@ index e99982def..e649af7c7 100644
  {
  
 -bool tx_sanity_check(const cryptonote::blobdata &tx_blob, uint64_t rct_outs_available)
-+bool tx_sanity_check(Blockchain &blockchain, const cryptonote::blobdata &tx_blob, uint64_t rct_outs_available)
++bool tx_sanity_check(const cryptonote::blobdata &tx_blob, uint64_t rct_outs_available, uint64_t current_height)
  {
    cryptonote::transaction tx;
  
-@@ -54,20 +54,48 @@ bool tx_sanity_check(const cryptonote::blobdata &tx_blob, uint64_t rct_outs_avai
+@@ -54,20 +54,47 @@ bool tx_sanity_check(const cryptonote::blobdata &tx_blob, uint64_t rct_outs_avai
      MERROR("Transaction is coinbase");
      return false;
    }
 +
-+  if ((tx.version >= OFFSHORE_TRANSACTION_VERSION) && (tx.pricing_record_height > 0)) {
++   if ((tx.version >= OFFSHORE_TRANSACTION_VERSION) && (tx.pricing_record_height > 0)) {
 +    // Validate that pricing record is not too old
-+    uint64_t current_height = blockchain.get_current_blockchain_height();
 +    if ((current_height - PRICING_RECORD_VALID_BLOCKS) > tx.pricing_record_height) {
 +      MERROR("Offshore transaction references a pricing record that is too old - rejected");
 +      return false;
 +    }
-+  }
++  } 
 +  
    std::set<uint64_t> rct_indices;
    size_t n_indices = 0;
