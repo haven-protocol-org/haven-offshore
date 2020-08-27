@@ -1,5 +1,5 @@
 diff --git a/src/wallet/wallet_rpc_server.cpp b/src/wallet/wallet_rpc_server.cpp
-index 0e2a34470..00ae4e117 100644
+index 0e2a34470..fbb3a6896 100644
 --- a/src/wallet/wallet_rpc_server.cpp
 +++ b/src/wallet/wallet_rpc_server.cpp
 @@ -285,7 +285,7 @@ namespace tools
@@ -410,7 +410,17 @@ index 0e2a34470..00ae4e117 100644
      }
      catch (const std::exception &e)
      {
-@@ -3378,6 +3627,9 @@ namespace tools
+@@ -3027,8 +3276,7 @@ namespace tools
+     cryptonote::COMMAND_RPC_GET_HEIGHT::response hres;
+     hres.height = 0;
+     bool r = wal->invoke_http_json("/getheight", hreq, hres);
+-    if (r)
+-      wal->set_refresh_from_block_height(hres.height);
++    wal->set_refresh_from_block_height(hres.height);
+     crypto::secret_key dummy_key;
+     try {
+       wal->generate(wallet_file, req.password, dummy_key, false, false);
+@@ -3378,6 +3626,9 @@ namespace tools
        }
      }
  
@@ -420,7 +430,7 @@ index 0e2a34470..00ae4e117 100644
      try
      {
        if (!req.spendkey.empty())
-@@ -3442,6 +3694,12 @@ namespace tools
+@@ -3442,6 +3693,12 @@ namespace tools
      }
  
      // early check for mandatory fields
