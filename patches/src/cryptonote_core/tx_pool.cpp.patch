@@ -363,8 +363,8 @@
 +        if(have_tx_keyimg_as_spent(tokey_in.k_image, txid))
 +          return true;
 +      }
-     return false;
 +    }
+     return false;
    }
    //---------------------------------------------------------------------------------
    bool tx_memory_pool::have_tx_keyimg_as_spent(const crypto::key_image& key_im, const crypto::hash& txid) const
