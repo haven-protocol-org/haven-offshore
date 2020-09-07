@@ -1,5 +1,5 @@
 diff --git a/src/wallet/wallet2.cpp b/src/wallet/wallet2.cpp
-index c3ba34260..e122995f5 100644
+index c3ba34260..c2d043580 100644
 --- a/src/wallet/wallet2.cpp
 +++ b/src/wallet/wallet2.cpp
 @@ -29,6 +29,7 @@
@@ -513,7 +513,7 @@ index c3ba34260..e122995f5 100644
              {
                td.m_mask = rct::identity();
                td.m_rct = true;
-@@ -2251,6 +2512,174 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
+@@ -2251,9 +2512,177 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
          }
        }
      }
@@ -687,7 +687,11 @@ index c3ba34260..e122995f5 100644
 +    }
    }
  
-   THROW_WALLET_EXCEPTION_IF(tx_money_got_in_outs.size() != tx_amounts_individual_outs.size(), error::wallet_internal_error, "Inconsistent size of output arrays");
+-  THROW_WALLET_EXCEPTION_IF(tx_money_got_in_outs.size() != tx_amounts_individual_outs.size(), error::wallet_internal_error, "Inconsistent size of output arrays");
++  THROW_WALLET_EXCEPTION_IF((tx_money_got_in_outs.size() + tx_money_got_in_offshore_outs.size()) != tx_amounts_individual_outs.size(), error::wallet_internal_error, "Inconsistent size of output arrays");
+ 
+   uint64_t tx_money_spent_in_ins = 0;
+   // The line below is equivalent to "boost::optional<uint32_t> subaddr_account;", but avoids the GCC warning: ‘*((void*)& subaddr_account +4)’ may be used uninitialized in this function
 @@ -2263,70 +2692,186 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
    // check all outputs for spending (compare key images)
    for(auto& in: tx.vin)
