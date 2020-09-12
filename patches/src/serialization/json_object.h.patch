@@ -1,6 +1,8 @@
---- serialization/json_object.h.orig	2020-08-16 10:10:22.784956600 +0200
-+++ serialization/json_object.h	2020-08-16 10:16:43.753867100 +0200
-@@ -193,6 +193,9 @@
+diff --git a/src/serialization/json_object.h b/src/serialization/json_object.h
+index 2a9b63b08..3ad023878 100644
+--- a/src/serialization/json_object.h
++++ b/src/serialization/json_object.h
+@@ -193,6 +193,9 @@ void fromJsonValue(const rapidjson::Value& val, long& i);
  
  // end integers
  
@@ -10,7 +12,7 @@
  void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const cryptonote::transaction& tx);
  void fromJsonValue(const rapidjson::Value& val, cryptonote::transaction& tx);
  
-@@ -214,6 +217,12 @@
+@@ -214,6 +217,12 @@ void fromJsonValue(const rapidjson::Value& val, cryptonote::txin_to_scripthash&
  void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const cryptonote::txin_to_key& txin);
  void fromJsonValue(const rapidjson::Value& val, cryptonote::txin_to_key& txin);
  
@@ -23,7 +25,7 @@
  void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const cryptonote::txout_target_v& txout);
  void fromJsonValue(const rapidjson::Value& val, cryptonote::txout_target_v& txout);
  
-@@ -226,6 +235,9 @@
+@@ -226,6 +235,9 @@ void fromJsonValue(const rapidjson::Value& val, cryptonote::txout_to_scripthash&
  void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const cryptonote::txout_to_key& txout);
  void fromJsonValue(const rapidjson::Value& val, cryptonote::txout_to_key& txout);
  
