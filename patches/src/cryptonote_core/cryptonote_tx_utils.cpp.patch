@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/cryptonote_tx_utils.cpp b/src/cryptonote_core/cryptonote_tx_utils.cpp
-index 3dd29dd1b..051055121 100644
+index 3dd29dd1b..54a7a84a3 100644
 --- a/src/cryptonote_core/cryptonote_tx_utils.cpp
 +++ b/src/cryptonote_core/cryptonote_tx_utils.cpp
 @@ -75,8 +75,75 @@ namespace cryptonote
@@ -88,9 +88,11 @@ index 3dd29dd1b..051055121 100644
      txin_gen in;
      in.height = height;
  
-@@ -105,66 +174,136 @@ namespace cryptonote
+@@ -103,68 +172,137 @@ namespace cryptonote
+     LOG_PRINT_L1("Creating block template: reward " << block_reward <<
+       ", fee " << fee);
  #endif
-     block_reward += fee;
+-    block_reward += fee;
  
 -    // from hard fork 2, we cut out the low significant digits. This makes the tx smaller, and
 -    // keeps the paid amount almost the same. The unpaid remainder gets pushed back to the
@@ -272,7 +274,7 @@ index 3dd29dd1b..051055121 100644
  
      //lock
      tx.unlock_time = height + CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW;
-@@ -199,7 +338,84 @@ namespace cryptonote
+@@ -199,7 +337,84 @@ namespace cryptonote
      return addr.m_view_public_key;
    }
    //---------------------------------------------------------------
@@ -358,7 +360,7 @@ index 3dd29dd1b..051055121 100644
    {
      hw::device &hwdev = sender_account_keys.get_device();
  
-@@ -217,95 +433,136 @@ namespace cryptonote
+@@ -217,95 +432,136 @@ namespace cryptonote
        msout->c.clear();
      }
  
@@ -570,7 +572,7 @@ index 3dd29dd1b..051055121 100644
      //fill inputs
      int idx = -1;
      for(const tx_source_entry& src_entr:  sources)
-@@ -317,6 +574,7 @@ namespace cryptonote
+@@ -317,6 +573,7 @@ namespace cryptonote
          return false;
        }
        summary_inputs_money += src_entr.amount;
@@ -578,7 +580,7 @@ index 3dd29dd1b..051055121 100644
  
        //key_derivation recv_derivation;
        in_contexts.push_back(input_generation_context_data());
-@@ -341,16 +599,48 @@ namespace cryptonote
+@@ -341,16 +598,48 @@ namespace cryptonote
        }
  
        //put key image into tx input
@@ -637,7 +639,7 @@ index 3dd29dd1b..051055121 100644
      }
  
      if (shuffle_outs)
-@@ -363,9 +653,19 @@ namespace cryptonote
+@@ -363,9 +652,19 @@ namespace cryptonote
      for (size_t n = 0; n < sources.size(); ++n)
        ins_order[n] = n;
      std::sort(ins_order.begin(), ins_order.end(), [&](const size_t i0, const size_t i1) {
@@ -660,7 +662,7 @@ index 3dd29dd1b..051055121 100644
      });
      tools::apply_permutation(ins_order, [&] (size_t i0, size_t i1) {
        std::swap(tx.vin[i0], tx.vin[i1]);
-@@ -400,7 +700,12 @@ namespace cryptonote
+@@ -400,7 +699,12 @@ namespace cryptonote
      if (need_additional_txkeys)
        CHECK_AND_ASSERT_MES(destinations.size() == additional_tx_keys.size(), false, "Wrong amount of additional tx keys");
  
@@ -674,7 +676,7 @@ index 3dd29dd1b..051055121 100644
      //fill outputs
      size_t output_index = 0;
      for(const tx_destination_entry& dst_entr: destinations)
-@@ -408,19 +713,65 @@ namespace cryptonote
+@@ -408,19 +712,65 @@ namespace cryptonote
        CHECK_AND_ASSERT_MES(dst_entr.amount > 0 || tx.version > 1, false, "Destination with wrong amount: " << dst_entr.amount);
        crypto::public_key out_eph_public_key;
  
@@ -746,7 +748,7 @@ index 3dd29dd1b..051055121 100644
      }
      CHECK_AND_ASSERT_MES(additional_tx_public_keys.size() == additional_tx_keys.size(), false, "Internal error creating additional public keys");
  
-@@ -435,16 +786,57 @@ namespace cryptonote
+@@ -435,16 +785,57 @@ namespace cryptonote
        add_additional_tx_pub_keys_to_extra(tx.extra, additional_tx_public_keys);
      }
  
@@ -810,7 +812,7 @@ index 3dd29dd1b..051055121 100644
      // check for watch only wallet
      bool zero_secret_key = true;
      for (size_t i = 0; i < sizeof(sender_account_keys.m_spend_secret_key); ++i)
-@@ -518,26 +910,38 @@ namespace cryptonote
+@@ -518,26 +909,38 @@ namespace cryptonote
          }
        }
  
@@ -857,7 +859,7 @@ index 3dd29dd1b..051055121 100644
          // inPk: (public key, commitment)
          // will be done when filling in mixRing
          if (msout)
-@@ -545,13 +949,7 @@ namespace cryptonote
+@@ -545,13 +948,7 @@ namespace cryptonote
            kLRki.push_back(sources[i].multisig_kLRki);
          }
        }
@@ -872,7 +874,7 @@ index 3dd29dd1b..051055121 100644
        if (use_simple_rct)
        {
          // mixRing indexing is done the other way round for simple
-@@ -577,26 +975,85 @@ namespace cryptonote
+@@ -577,26 +974,85 @@ namespace cryptonote
        }
  
        // fee
@@ -968,7 +970,7 @@ index 3dd29dd1b..051055121 100644
  
        CHECK_AND_ASSERT_MES(tx.vout.size() == outSk.size(), false, "outSk size does not match vout");
  
-@@ -608,7 +1065,7 @@ namespace cryptonote
+@@ -608,7 +1064,7 @@ namespace cryptonote
      return true;
    }
    //---------------------------------------------------------------
@@ -977,7 +979,7 @@ index 3dd29dd1b..051055121 100644
    {
      hw::device &hwdev = sender_account_keys.get_device();
      hwdev.open_tx(tx_key);
-@@ -626,7 +1083,7 @@ namespace cryptonote
+@@ -626,7 +1082,7 @@ namespace cryptonote
            additional_tx_keys.push_back(keypair::generate(sender_account_keys.get_device()).sec);
        }
  
@@ -986,7 +988,7 @@ index 3dd29dd1b..051055121 100644
        hwdev.close_tx();
        return r;
      } catch(...) {
-@@ -640,22 +1097,31 @@ namespace cryptonote
+@@ -640,22 +1096,31 @@ namespace cryptonote
       std::unordered_map<crypto::public_key, cryptonote::subaddress_index> subaddresses;
       subaddresses[sender_account_keys.m_account_address.m_spend_public_key] = {0,0};
       crypto::secret_key tx_key;
@@ -1020,7 +1022,7 @@ index 3dd29dd1b..051055121 100644
      CHECK_AND_ASSERT_MES(r, false, "failed to parse coinbase tx from hard coded blob");
      r = parse_and_validate_tx_from_blob(tx_bl, bl.miner_tx);
      CHECK_AND_ASSERT_MES(r, false, "failed to parse coinbase tx from hard coded blob");
-@@ -678,33 +1144,22 @@ namespace cryptonote
+@@ -678,33 +1143,22 @@ namespace cryptonote
  
    bool get_block_longhash(const Blockchain *pbc, const block& b, crypto::hash& res, const uint64_t height, const int miners)
    {
