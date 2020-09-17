@@ -1,6 +1,8 @@
---- src/hardforks/hardforks.cpp.orig	2020-08-14 17:37:12.937000000 +0200
-+++ src/hardforks/hardforks.cpp	2020-08-14 17:39:05.666648200 +0200
-@@ -33,82 +33,42 @@
+diff --git a/src/hardforks/hardforks.cpp b/src/hardforks/hardforks.cpp
+index 7ad09dbef..5b2cf8fe9 100644
+--- a/src/hardforks/hardforks.cpp
++++ b/src/hardforks/hardforks.cpp
+@@ -33,82 +33,44 @@
  
  const hardfork_t mainnet_hard_forks[] = {
    // version 1 from the start of the blockchain
@@ -78,7 +80,8 @@
 +  { 5, 100, 0, 1552980800 },
 +  { 11, 150, 0, 1593613842 },
 +  { 13, 160, 0, 1593615042 },
-+  { 14, 250, 0, 1593616242 }
++  { 14, 250, 0, 1593616242 },
++  { 15, 275, 0, 1593616242 }
  };
  const size_t num_testnet_hard_forks = sizeof(testnet_hard_forks) / sizeof(testnet_hard_forks[0]);
 -const uint64_t testnet_hard_fork_version_1_till = 624633;
@@ -107,7 +110,8 @@
 +  { 5, 100, 0, 1552980800 },
 +  { 11, 125, 0, 1593613842 },
 +  { 13, 135, 0, 1593615042 },
-+  { 14, 150, 0, 1593616242 }
++  { 14, 150, 0, 1593616242 },
++  { 15, 175, 0, 1593616242 }
  };
  const size_t num_stagenet_hard_forks = sizeof(stagenet_hard_forks) / sizeof(stagenet_hard_forks[0]);
 +const uint64_t stagenet_hard_fork_version_1_till = 24;

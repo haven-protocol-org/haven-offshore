@@ -1,5 +1,5 @@
 diff --git a/src/wallet/wallet2.cpp b/src/wallet/wallet2.cpp
-index c3ba34260..97442a03e 100644
+index c3ba34260..6d74d5d4f 100644
 --- a/src/wallet/wallet2.cpp
 +++ b/src/wallet/wallet2.cpp
 @@ -29,6 +29,7 @@
@@ -1051,10 +1051,7 @@ index c3ba34260..97442a03e 100644
 +    tx_extra_nonce extra_nonce;
 +    crypto::hash payment_id = null_hash;
 +    if (find_tx_extra_field_by_type(tx_extra_fields, extra_nonce))
-     {
--      sub_change += i->second;
--      tx_amounts_individual_outs.erase(i->first);
--      i = tx_money_got_in_outs.erase(i);
++    {
 +      crypto::hash8 payment_id8 = null_hash8;
 +      if(get_encrypted_payment_id_from_tx_extra_nonce(extra_nonce.nonce, payment_id8))
 +      {
@@ -1086,12 +1083,13 @@ index c3ba34260..97442a03e 100644
 +        LOG_PRINT_L2("Found unencrypted payment ID: " << payment_id);
 +        MWARNING("Found unencrypted payment ID: these are bad for privacy, consider using subaddresses instead");
 +      }
-     }
--    else
--      ++i;
++    }
 +    bool all_same = true;
 +    for (const auto& i : tx_money_got_in_outs)
-+    {
+     {
+-      sub_change += i->second;
+-      tx_amounts_individual_outs.erase(i->first);
+-      i = tx_money_got_in_outs.erase(i);
 +      payment_details payment;
 +      payment.m_tx_hash      = txid;
 +      payment.m_fee          = fee;
@@ -1113,7 +1111,9 @@ index c3ba34260..97442a03e 100644
 +      else
 +        m_payments.emplace(payment_id, payment);
 +      LOG_PRINT_L2("Payment found in " << (pool ? "pool" : "block") << ": " << payment_id << " / " << payment.m_tx_hash << " / " << payment.m_amount);
-+    }
+     }
+-    else
+-      ++i;
 +
 +    // if it's a pool tx and we already had it, don't notify again
 +    if (pool && all_same)
@@ -1949,7 +1949,9 @@ index c3ba34260..97442a03e 100644
 +  tx_extra_offshore offshore_data;
 +  if (ptx.tx.extra.size()) {
 +    bOffshoreTx = get_offshore_from_tx_extra(ptx.tx.extra, offshore_data);
-+  }
+   }
+-  add_unconfirmed_tx(ptx.tx, amount_in, dests, payment_id, ptx.change_dts.amount, ptx.construction_data.subaddr_account, ptx.construction_data.subaddr_indices);
+-  if (store_tx_info() && ptx.tx_key != crypto::null_skey)
 +
 +  bool offshore = false;
 +  bool onshore = false;
@@ -1964,9 +1966,7 @@ index c3ba34260..97442a03e 100644
 +    } else {
 +      offshore = true;
 +    }
-   }
--  add_unconfirmed_tx(ptx.tx, amount_in, dests, payment_id, ptx.change_dts.amount, ptx.construction_data.subaddr_account, ptx.construction_data.subaddr_indices);
--  if (store_tx_info() && ptx.tx_key != crypto::null_skey)
++  }
 +  add_unconfirmed_tx(ptx.tx, amount_in, dests, payment_id, (offshore_to_offshore || onshore) ? ptx.change_dts.amount_usd : ptx.change_dts.amount, ptx.construction_data.subaddr_account, ptx.construction_data.subaddr_indices);
 +   if (store_tx_info() && ptx.tx_key != crypto::null_skey)
    {
@@ -2000,9 +2000,9 @@ index c3ba34260..97442a03e 100644
 +    offshore::pricing_record pr;
 +    bool b = get_pricing_record(pr, current_height);
 +    THROW_WALLET_EXCEPTION_IF(!b, error::wallet_internal_error, "Failed to get pricing record");
-+    bool use_offshore_fees_v2 = use_fork_rules(HF_VERSION_OFFSHORE_FEES_V2, 0);
++    uint32_t fees_version = use_fork_rules(HF_VERSION_OFFSHORE_FEES_V3, 0) ? 3 : use_fork_rules(HF_VERSION_OFFSHORE_FEES_V2, 0) ? 2 : 1;
 +    bool use_offshore_tx_version = use_fork_rules(HF_VERSION_OFFSHORE_FULL, 0);
-+    bool r = cryptonote::construct_tx_and_get_tx_key(m_account.get_keys(), m_subaddresses, sd.sources, sd.splitted_dsts, sd.change_dts.addr, sd.extra, ptx.tx, sd.unlock_time, tx_key, additional_tx_keys, current_height, pr, use_offshore_fees_v2, use_offshore_tx_version, sd.use_rct, rct_config, m_multisig ? &msout : NULL);
++    bool r = cryptonote::construct_tx_and_get_tx_key(m_account.get_keys(), m_subaddresses, sd.sources, sd.splitted_dsts, sd.change_dts.addr, sd.extra, ptx.tx, sd.unlock_time, tx_key, additional_tx_keys, current_height, pr, fees_version, use_offshore_tx_version, sd.use_rct, rct_config, m_multisig ? &msout : NULL);
      THROW_WALLET_EXCEPTION_IF(!r, error::tx_not_constructed, sd.sources, sd.splitted_dsts, sd.unlock_time, m_nettype);
      // we don't test tx size, because we don't know the current limit, due to not having a blockchain,
      // and it's a bit pointless to fail there anyway, since it'd be a (good) guess only. We sign anyway,
@@ -2250,9 +2250,9 @@ index c3ba34260..97442a03e 100644
 +  offshore::pricing_record pr;
 +  bool b = get_pricing_record(pr, current_height);
 +  THROW_WALLET_EXCEPTION_IF(!b, error::wallet_internal_error, "Failed to get pricing record");
-+  bool use_offshore_fees_v2 = use_fork_rules(HF_VERSION_OFFSHORE_FEES_V2, 0);
++  uint32_t fees_version = use_fork_rules(HF_VERSION_OFFSHORE_FEES_V3, 0) ? 3 : use_fork_rules(HF_VERSION_OFFSHORE_FEES_V2, 0) ? 2 : 1;
 +  bool use_offshore_tx_version = use_fork_rules(HF_VERSION_OFFSHORE_FULL, 0);
-+  bool r = cryptonote::construct_tx_and_get_tx_key(m_account.get_keys(), m_subaddresses, sources, splitted_dsts, change_dts.addr, extra, tx, unlock_time, tx_key, additional_tx_keys, current_height, pr, use_offshore_fees_v2, use_offshore_tx_version, false, {}, m_multisig ? &msout : NULL);
++  bool r = cryptonote::construct_tx_and_get_tx_key(m_account.get_keys(), m_subaddresses, sources, splitted_dsts, change_dts.addr, extra, tx, unlock_time, tx_key, additional_tx_keys, current_height, pr, fees_version, use_offshore_tx_version, false, {}, m_multisig ? &msout : NULL);
    LOG_PRINT_L2("constructed tx, r="<<r);
    THROW_WALLET_EXCEPTION_IF(!r, error::tx_not_constructed, sources, splitted_dsts, unlock_time, m_nettype);
    THROW_WALLET_EXCEPTION_IF(upper_transaction_weight_limit <= get_transaction_weight(tx), error::tx_too_big, tx, upper_transaction_weight_limit);
@@ -2426,9 +2426,9 @@ index c3ba34260..97442a03e 100644
 +    bool b = get_pricing_record(pr, current_height);
 +    THROW_WALLET_EXCEPTION_IF(!b, error::wallet_internal_error, "Failed to get pricing record");
 +  }
-+  bool use_offshore_fees_v2 = use_fork_rules(HF_VERSION_OFFSHORE_FEES_V2, 0);
++  uint32_t fees_version = use_fork_rules(HF_VERSION_OFFSHORE_FEES_V3, 0) ? 3 : use_fork_rules(HF_VERSION_OFFSHORE_FEES_V2, 0) ? 2 : 1;
 +  bool use_offshore_tx_version = use_fork_rules(HF_VERSION_OFFSHORE_FULL, 0);
-+  bool r = cryptonote::construct_tx_and_get_tx_key(m_account.get_keys(), m_subaddresses, sources, splitted_dsts, change_dts.addr, extra, tx, unlock_time, tx_key, additional_tx_keys, current_height, pr, use_offshore_fees_v2, use_offshore_tx_version, true, rct_config, m_multisig ? &msout : NULL);
++  bool r = cryptonote::construct_tx_and_get_tx_key(m_account.get_keys(), m_subaddresses, sources, splitted_dsts, change_dts.addr, extra, tx, unlock_time, tx_key, additional_tx_keys, current_height, pr, fees_version, use_offshore_tx_version, true, rct_config, m_multisig ? &msout : NULL);
    LOG_PRINT_L2("constructed tx, r="<<r);
    THROW_WALLET_EXCEPTION_IF(!r, error::tx_not_constructed, sources, dsts, unlock_time, m_nettype);
    THROW_WALLET_EXCEPTION_IF(upper_transaction_weight_limit <= get_transaction_weight(tx), error::tx_too_big, tx, upper_transaction_weight_limit);
@@ -3895,9 +3895,7 @@ index c3ba34260..97442a03e 100644
 -  }
 -
 -  CHECK_AND_ASSERT_THROW_MES(info.size() + 1 <= m_multisig_signers.size() && info.size() + 1 >= m_multisig_threshold, "Wrong number of multisig sources");
-+    THROW_WALLET_EXCEPTION_IF(i.size() != (std::stoull(str_onshore_count) + stoull(str_offshore_count)),
-+			      error::wallet_internal_error, "Multisig info contains incorrect number of entries");
- 
+-
 -  std::vector<std::vector<rct::key>> k;
 -  auto wiper = epee::misc_utils::create_scope_leave_handler([&](){for (auto &v: k) memwipe(v.data(), v.size() * sizeof(v[0]));});
 -  k.reserve(m_transfers.size());
@@ -3909,7 +3907,9 @@ index c3ba34260..97442a03e 100644
 -  for (const auto &pi: info)
 -    if (pi.size() < n_outputs)
 -      n_outputs = pi.size();
--
++    THROW_WALLET_EXCEPTION_IF(i.size() != (std::stoull(str_onshore_count) + stoull(str_offshore_count)),
++			      error::wallet_internal_error, "Multisig info contains incorrect number of entries");
+ 
 -  if (n_outputs == 0)
 -    return 0;
 + // Split i into offshore and onshore components
@@ -4072,7 +4072,7 @@ index c3ba34260..97442a03e 100644
  }
  //----------------------------------------------------------------------------------------------------
  mms::multisig_wallet_state wallet2::get_multisig_wallet_state() const
-@@ -13842,6 +15377,119 @@ uint64_t wallet2::get_bytes_received() const
+@@ -13842,6 +15377,230 @@ uint64_t wallet2::get_bytes_received() const
  {
    return m_http_client->get_bytes_received();
  }
@@ -4086,7 +4086,62 @@ index c3ba34260..97442a03e 100644
 +    amount_usd += dt.amount_usd;
 +  }
 +
-+  if (use_fork_rules(HF_VERSION_OFFSHORE_FEES_V2, 0)) {
++  if (use_fork_rules(HF_VERSION_OFFSHORE_FEES_V3, 0)) {
++
++    // Get the latest pricing records from the top block
++    cryptonote::COMMAND_RPC_GET_LAST_BLOCK_HEADER::request req_last = AUTO_VAL_INIT(req_last);
++    cryptonote::COMMAND_RPC_GET_LAST_BLOCK_HEADER::response res_last = AUTO_VAL_INIT(res_last);
++    bool r = invoke_http_json_rpc("/json_rpc", "get_last_block_header", req_last, res_last);
++    THROW_WALLET_EXCEPTION_IF(!r, tools::error::wallet_internal_error, "failed to get last block header");
++    THROW_WALLET_EXCEPTION_IF(res_last.status == CORE_RPC_STATUS_BUSY, error::daemon_busy, "get_offshore_fee");
++    THROW_WALLET_EXCEPTION_IF(res_last.status != CORE_RPC_STATUS_OK, tools::error::wallet_generic_rpc_error, "get_offshore_fee", res_last.status);
++
++    // Get the delta
++    uint64_t pricing_average = res_last.block_header.pricing_record.unused1;
++
++    // abs() implementation for uint64_t's
++    uint64_t delta = (pricing_average > res_last.block_header.pricing_record.xUSD)
++      ? pricing_average - res_last.block_header.pricing_record.xUSD
++      : res_last.block_header.pricing_record.xUSD - pricing_average;
++
++    // Estimate the fee components
++    boost::multiprecision::uint128_t conversion_fee = (amount>0 ? amount : amount_usd) / 500;
++    conversion_fee *= priority;
++    boost::multiprecision::uint128_t conversion_extra = delta;
++    conversion_extra *= (amount>0 ? amount : amount_usd);
++    uint64_t speed_fee = 0;
++    uint64_t speculation_fee = 0;
++    switch (priority) {
++    case 4:
++      conversion_extra *= 110;
++      conversion_extra /= (100 * 1000000000000);
++      conversion_fee += conversion_extra;
++      speed_fee = (amount>0 ? amount : amount_usd) / 20;
++      break;
++    case 3:
++      conversion_extra /= 1000000000000;
++      conversion_fee += conversion_extra;
++      speed_fee = (amount>0 ? amount : amount_usd) / 50;
++      break;
++    case 2:
++      conversion_extra *= 75;
++      conversion_extra /= (100 * 1000000000000);
++      conversion_fee += conversion_extra;
++      speed_fee = 0;
++      break;
++    case 1:
++    default:
++      conversion_extra *= 25;
++      conversion_extra /= (100 * 1000000000000);
++      conversion_fee += conversion_extra;
++      speed_fee = 0;
++      break;
++    }
++
++    // Return the fee
++    return (uint64_t)conversion_fee + speed_fee + speculation_fee;
++
++  } else if (use_fork_rules(HF_VERSION_OFFSHORE_FEES_V2, 0)) {
 +
 +    uint64_t fee_estimate = (amount > 0) ? amount : amount_usd;
 +    switch(priority) {
@@ -4108,6 +4163,7 @@ index c3ba34260..97442a03e 100644
 +    return fee_estimate;
 +
 +  } else {
++    
 +    // Get the latest pricing records from the top block
 +    cryptonote::COMMAND_RPC_GET_LAST_BLOCK_HEADER::request req_last = AUTO_VAL_INIT(req_last);
 +    cryptonote::COMMAND_RPC_GET_LAST_BLOCK_HEADER::response res_last = AUTO_VAL_INIT(res_last);
@@ -4142,7 +4198,62 @@ index c3ba34260..97442a03e 100644
 +    amount_usd += dt.amount_usd;
 +  }
 +
-+  if (use_fork_rules(HF_VERSION_OFFSHORE_FEES_V2, 0)) {
++  if (use_fork_rules(HF_VERSION_OFFSHORE_FEES_V3, 0)) {
++
++    // Get the latest pricing records from the top block
++    cryptonote::COMMAND_RPC_GET_LAST_BLOCK_HEADER::request req_last = AUTO_VAL_INIT(req_last);
++    cryptonote::COMMAND_RPC_GET_LAST_BLOCK_HEADER::response res_last = AUTO_VAL_INIT(res_last);
++    bool r = invoke_http_json_rpc("/json_rpc", "get_last_block_header", req_last, res_last);
++    THROW_WALLET_EXCEPTION_IF(!r, tools::error::wallet_internal_error, "failed to get last block header");
++    THROW_WALLET_EXCEPTION_IF(res_last.status == CORE_RPC_STATUS_BUSY, error::daemon_busy, "get_offshore_fee");
++    THROW_WALLET_EXCEPTION_IF(res_last.status != CORE_RPC_STATUS_OK, tools::error::wallet_generic_rpc_error, "get_offshore_fee", res_last.status);
++
++    // Get the delta
++    uint64_t pricing_average = res_last.block_header.pricing_record.unused1;
++
++    // abs() implementation for uint64_t's
++    uint64_t delta = (pricing_average > res_last.block_header.pricing_record.xUSD)
++      ? pricing_average - res_last.block_header.pricing_record.xUSD
++      : res_last.block_header.pricing_record.xUSD - pricing_average;
++
++    // Estimate the fee components
++    boost::multiprecision::uint128_t conversion_fee = amount_usd / 500;
++    conversion_fee *= priority;
++    boost::multiprecision::uint128_t conversion_extra = delta;
++    conversion_extra *= amount_usd;
++    uint64_t speed_fee = 0;
++    uint64_t speculation_fee = 0;
++    switch (priority) {
++    case 4:
++      conversion_extra *= 110;
++      conversion_extra /= (100 * 1000000000000);
++      conversion_fee += conversion_extra;
++      speed_fee = amount_usd / 20;
++      break;
++    case 3:
++      conversion_extra /= 1000000000000;
++      conversion_fee += conversion_extra;
++      speed_fee = amount_usd / 50;
++      break;
++    case 2:
++      conversion_extra *= 75;
++      conversion_extra /= (100 * 1000000000000);
++      conversion_fee += conversion_extra;
++      speed_fee = 0;
++      break;
++    case 1:
++    default:
++      conversion_extra *= 25;
++      conversion_extra /= (100 * 1000000000000);
++      conversion_fee += conversion_extra;
++      speed_fee = 0;
++      break;
++    }
++
++    // Return the fee
++    return (uint64_t)conversion_fee + speed_fee + speculation_fee;
++
++  } else if (use_fork_rules(HF_VERSION_OFFSHORE_FEES_V2, 0)) {
 +
 +    uint64_t fee_estimate = amount_usd;
 +    switch(priority) {
@@ -4192,7 +4303,7 @@ index c3ba34260..97442a03e 100644
  //----------------------------------------------------------------------------------------------------
  std::vector<cryptonote::public_node> wallet2::get_public_nodes(bool white_only)
  {
-@@ -13876,8 +15524,9 @@ std::pair<size_t, uint64_t> wallet2::estimate_tx_size_and_weight(bool use_rct, i
+@@ -13876,8 +15635,9 @@ std::pair<size_t, uint64_t> wallet2::estimate_tx_size_and_weight(bool use_rct, i
      n_outputs = 2; // extra dummy output
  
    const bool bulletproof = use_fork_rules(get_bulletproof_fork(), 0);
