@@ -1,5 +1,18 @@
---- monero/src/checkpoints/checkpoints.cpp	2019-12-20 13:52:25.268151102 +0000
-+++ monero-offshore/src/checkpoints/checkpoints.cpp	2019-11-27 08:35:55.968826424 +0000
+diff --git a/src/checkpoints/checkpoints.cpp b/src/checkpoints/checkpoints.cpp
+index 11bbe2e24..9374bcdf0 100644
+--- a/src/checkpoints/checkpoints.cpp
++++ b/src/checkpoints/checkpoints.cpp
+@@ -135,8 +135,8 @@ namespace cryptonote
+   {
+     std::map< uint64_t, crypto::hash >::const_iterator highest = 
+         std::max_element( m_points.begin(), m_points.end(),
+-                         ( boost::bind(&std::map< uint64_t, crypto::hash >::value_type::first, _1) < 
+-                           boost::bind(&std::map< uint64_t, crypto::hash >::value_type::first, _2 ) ) );
++			  ( boost::bind(&std::map< uint64_t, crypto::hash >::value_type::first, boost::placeholders::_1) < 
++			    boost::bind(&std::map< uint64_t, crypto::hash >::value_type::first, boost::placeholders::_2 ) ) );
+     return highest->first;
+   }
+   //---------------------------------------------------------------------------
 @@ -159,57 +159,6 @@ namespace cryptonote
  
    bool checkpoints::init_default_checkpoints(network_type nettype)

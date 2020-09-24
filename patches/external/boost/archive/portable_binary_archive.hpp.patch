@@ -1,0 +1,13 @@
+diff --git a/external/boost/archive/portable_binary_archive.hpp b/external/boost/archive/portable_binary_archive.hpp
+index e940c5b9e..7ae01a225 100644
+--- a/external/boost/archive/portable_binary_archive.hpp
++++ b/external/boost/archive/portable_binary_archive.hpp
+@@ -22,7 +22,7 @@
+ #endif
+ 
+ #include <boost/archive/basic_archive.hpp>
+-#include <boost/detail/endian.hpp>
++#include <boost/predef/other/endian.h>
+ 
+ #include <boost/archive/impl/archive_serializer_map.ipp>
+ 
