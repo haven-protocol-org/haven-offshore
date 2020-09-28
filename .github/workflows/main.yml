@@ -98,7 +98,6 @@ jobs:
       CMAKE_OSX_DEPLOYMENT_TARGET: 10.13
       OSX_MIN_VERSION: 10.13
       OPENSSL_ROOT_DIR: /usr/local/opt/openssl@1.1
-      DEVELOPER_DIR: /Applications/Xcode_10.3.app/Contents/Developer
       LDFLAGS: "-L/usr/local/opt/openssl@1.1/lib"
       CPPFLAGS: "-I/usr/local/opt/openssl@1.1/include"
       DEVELOPER_DIR: /Applications/Xcode_10.3.app/Contents/Developer
