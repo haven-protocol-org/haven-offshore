@@ -110,7 +110,7 @@ jobs:
       run: |
         brew update
         brew uninstall openssl
-        brew uninstall libsodium
+        brew uninstall --ignore-dependencies  libsodium 
         rm -rf /usr/local/etc/openssl
         brew reinstall openssl@1.1
         brew --prefix openssl
