@@ -1,5 +1,5 @@
 diff --git a/src/wallet/wallet2.cpp b/src/wallet/wallet2.cpp
-index c3ba34260..3c549698b 100644
+index c3ba34260..2563bcbc0 100644
 --- a/src/wallet/wallet2.cpp
 +++ b/src/wallet/wallet2.cpp
 @@ -29,6 +29,7 @@
@@ -1051,7 +1051,10 @@ index c3ba34260..3c549698b 100644
 +    tx_extra_nonce extra_nonce;
 +    crypto::hash payment_id = null_hash;
 +    if (find_tx_extra_field_by_type(tx_extra_fields, extra_nonce))
-+    {
+     {
+-      sub_change += i->second;
+-      tx_amounts_individual_outs.erase(i->first);
+-      i = tx_money_got_in_outs.erase(i);
 +      crypto::hash8 payment_id8 = null_hash8;
 +      if(get_encrypted_payment_id_from_tx_extra_nonce(extra_nonce.nonce, payment_id8))
 +      {
@@ -1083,13 +1086,12 @@ index c3ba34260..3c549698b 100644
 +        LOG_PRINT_L2("Found unencrypted payment ID: " << payment_id);
 +        MWARNING("Found unencrypted payment ID: these are bad for privacy, consider using subaddresses instead");
 +      }
-+    }
+     }
+-    else
+-      ++i;
 +    bool all_same = true;
 +    for (const auto& i : tx_money_got_in_outs)
-     {
--      sub_change += i->second;
--      tx_amounts_individual_outs.erase(i->first);
--      i = tx_money_got_in_outs.erase(i);
++    {
 +      payment_details payment;
 +      payment.m_tx_hash      = txid;
 +      payment.m_fee          = fee;
@@ -1111,9 +1113,7 @@ index c3ba34260..3c549698b 100644
 +      else
 +        m_payments.emplace(payment_id, payment);
 +      LOG_PRINT_L2("Payment found in " << (pool ? "pool" : "block") << ": " << payment_id << " / " << payment.m_tx_hash << " / " << payment.m_amount);
-     }
--    else
--      ++i;
++    }
 +
 +    // if it's a pool tx and we already had it, don't notify again
 +    if (pool && all_same)
@@ -1199,7 +1199,7 @@ index c3ba34260..3c549698b 100644
 +    if (tx.version == 1)
 +      entry.first->second.m_amount_out = get_outs_money_amount(tx);
 +    else
-+      entry.first->second.m_amount_out = spent - tx.rct_signatures.txnFee;
++      entry.first->second.m_amount_out = spent - tx.rct_signatures.txnFee - tx.rct_signatures.txnOffshoreFee;
 +    entry.first->second.m_change = received;
 +
 +    std::vector<tx_extra_field> tx_extra_fields;
@@ -1241,6 +1241,15 @@ index c3ba34260..3c549698b 100644
    // fill with the info we know, some info might already be there
    if (entry.second)
    {
+@@ -2499,7 +3247,7 @@ void wallet2::process_outgoing(const crypto::hash &txid, const cryptonote::trans
+     if (tx.version == 1)
+       entry.first->second.m_amount_out = get_outs_money_amount(tx);
+     else
+-      entry.first->second.m_amount_out = spent - tx.rct_signatures.txnFee;
++      entry.first->second.m_amount_out = spent - tx.rct_signatures.txnFee_usd - tx.rct_signatures.txnOffshoreFee_usd;
+     entry.first->second.m_change = received;
+ 
+     std::vector<tx_extra_field> tx_extra_fields;
 @@ -2517,16 +3265,27 @@ void wallet2::process_outgoing(const crypto::hash &txid, const cryptonote::trans
    entry.first->second.m_rings.clear();
    for (const auto &in: tx.vin)
