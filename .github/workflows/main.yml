@@ -118,7 +118,7 @@ jobs:
         wget https://raw.githubusercontent.com/zeromq/cppzmq/v4.3.0/zmq.hpp -O /usr/local/include/zmq.hpp
     - name: build Haven
       run: |
-        ./build-haven.sh release-static -j3
+        ./build-haven.sh release -j3
         chmod +x monero/build/release/bin/*
     - name: Upload artifact
       uses: actions/upload-artifact@v2
