@@ -304,10 +304,17 @@ namespace offshore
     // LAND AHOY!!!
     
     // Grab the public key and make it usable
-    BIO* bio = BIO_new_mem_buf(public_key, (int)sizeof(public_key));
-    assert(bio != NULL);
-    EVP_PKEY* pubkey = PEM_read_bio_PUBKEY(bio, NULL, NULL, NULL);
-    BIO_free(bio);
+    //BIO* bio = BIO_new_mem_buf(public_key, (int)sizeof(public_key));
+    //assert(bio != NULL);
+    //EVP_PKEY* pubkey = PEM_read_bio_PUBKEY(bio, NULL, NULL, NULL);
+    //BIO_free(bio);
+    FILE* fp = fopen("public.pem", "r");
+    if (!fp) {
+      // Failed to open the public key file
+      return false;
+    }
+    EVP_PKEY* pubkey = PEM_read_PUBKEY(fp, NULL, NULL, NULL);
+    fclose(fp);
     assert(pubkey != NULL);
 
     // Create a verify digest from the message
