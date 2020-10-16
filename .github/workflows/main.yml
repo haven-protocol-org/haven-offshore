@@ -109,7 +109,12 @@ jobs:
     - name: Install dependencies
       run: |
         brew update
-        brew install boost hidapi zmq libpgm miniupnpc ldns openssl expat libunwind-headers protobuf pkgconfig
+        brew uninstall openssl
+        brew uninstall --ignore-dependencies  libsodium 
+        rm -rf /usr/local/etc/openssl
+        brew reinstall openssl@1.1
+        brew --prefix openssl
+        brew install boost hidapi zmq libpgm miniupnpc ldns expat libunwind-headers protobuf pkgconfig
         wget https://raw.githubusercontent.com/zeromq/cppzmq/v4.3.0/zmq.hpp -O /usr/local/include/zmq.hpp
     - name: build Haven
       run: |
