@@ -138,8 +138,8 @@ jobs:
       run: msys2do pacman -S --noconfirm mingw-w64-x86_64-toolchain make mingw-w64-x86_64-cmake mingw-w64-x86_64-openssl mingw-w64-x86_64-zeromq mingw-w64-x86_64-libsodium mingw-w64-x86_64-hidapi mingw-w64-x86_64-libusb git patch
     - name: install boost 1.69 & icu 62
       run: |
-        msys2do wget http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-boost-1.69.0-2-any.pkg.tar.xz
-        msys2do wget http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-icu-62.1-1-any.pkg.tar.xz
+        msys2do wget http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-boost-1.72.0-1-any.pkg.tar.xz
+        msys2do wget http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-icu-65.1-1-any.pkg.tar.xz
         msys2do pacman -U --noconfirm *.tar.xz
     - name: build Haven
       run: msys2do ./build-haven.sh release-static-win64
