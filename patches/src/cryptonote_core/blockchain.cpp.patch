@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/blockchain.cpp b/src/cryptonote_core/blockchain.cpp
-index c6942a037..2bc1aac49 100644
+index c6942a037..494915779 100644
 --- a/src/cryptonote_core/blockchain.cpp
 +++ b/src/cryptonote_core/blockchain.cpp
 @@ -56,6 +56,17 @@
@@ -704,12 +704,12 @@ index c6942a037..2bc1aac49 100644
 +    
 +    // Attempt to get the public key for signature verifications
 +    http_client.set_server("keys.havenprotocol.org:443", boost::none, epee::net_utils::ssl_support_t::e_ssl_support_autodetect);
-+    std::string url = "/ec_public.pem";
++    std::string url = "/get_public_key.php";
 +    r = epee::net_utils::invoke_http_json(url, req_key, res_key, http_client, std::chrono::seconds(10), "GET");
 +    if (r) {
 +
 +      // Create key from the returned string if possible
-+      BIO* bio = BIO_new_mem_buf(res_key.str_ec_public_key.c_str(), (int)sizeof(public_key));
++      BIO* bio = BIO_new_mem_buf(res_key.str_ec_public_key.c_str(), res_key.str_ec_public_key.size());
 +      if (bio) {
 +	m_oracle_public_key = PEM_read_bio_PUBKEY(bio, NULL, NULL, NULL);
 +	BIO_free(bio);
@@ -745,7 +745,7 @@ index c6942a037..2bc1aac49 100644
 +    if (m_hardfork->get_current_version() >= HF_VERSION_OFFSHORE_FULL) {
 +
 +      // Verify the signature
-+      if (res.pr.verifySignature()) {
++      if (res.pr.verifySignature(m_oracle_public_key)) {
 +	pr = res.pr;
 +      } else {
 +	LOG_PRINT_L0("Failed to verify signature of pricing record from Oracle - returning empty PR");
@@ -1569,7 +1569,7 @@ index c6942a037..2bc1aac49 100644
 +    
 +    TIME_MEASURE_START(pricing_record);
 +    
-+    if (!bl.pricing_record.verifySignature()) {
++    if (!bl.pricing_record.verifySignature(m_oracle_public_key)) {
 +      MERROR_VER("Block with id: " << id << std::endl << "has invalid pricing record signature: " << std::hex << bl.pricing_record.signature);
 +      bvc.m_verifivation_failed = true;
 +      goto leave;
