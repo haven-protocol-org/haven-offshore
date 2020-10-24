@@ -135,7 +135,11 @@ jobs:
       with:
         update: true
     - name: Install Haven dependencies
-      run: msys2do pacman -S --noconfirm mingw-w64-x86_64-toolchain make mingw-w64-x86_64-boost mingw-w64-x86_64-icu mingw-w64-x86_64-cmake mingw-w64-x86_64-openssl mingw-w64-x86_64-zeromq mingw-w64-x86_64-libsodium mingw-w64-x86_64-hidapi mingw-w64-x86_64-libusb git patch
+      run: msys2do pacman -S --noconfirm mingw-w64-x86_64-toolchain make mingw-w64-x86_64-icu mingw-w64-x86_64-cmake mingw-w64-x86_64-openssl mingw-w64-x86_64-zeromq mingw-w64-x86_64-libsodium mingw-w64-x86_64-hidapi mingw-w64-x86_64-libusb git patch
+    - name: install boost
+      run: |
+        msys2do wget http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-boost-1.71.0-3-any.pkg.tar.xz
+        msys2do pacman -U --noconfirm *.tar.xz
     - name: build Haven
       run: msys2do ./build-haven.sh release-static-win64
     - name: Upload artifact
