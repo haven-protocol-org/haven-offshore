@@ -108,6 +108,8 @@ jobs:
         submodules: recursive
     - name: Install dependencies
       run: |
+        rm -rf "$(brew --repo homebrew/core)"
+        brew tap homebrew/core
         brew update --verbose
         brew uninstall openssl
         brew uninstall --ignore-dependencies  libsodium 
