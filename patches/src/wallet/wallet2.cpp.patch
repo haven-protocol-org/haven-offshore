@@ -1,5 +1,5 @@
 diff --git a/src/wallet/wallet2.cpp b/src/wallet/wallet2.cpp
-index c3ba34260..063d0c0ca 100644
+index c3ba34260..48ad791c3 100644
 --- a/src/wallet/wallet2.cpp
 +++ b/src/wallet/wallet2.cpp
 @@ -29,6 +29,7 @@
@@ -2337,10 +2337,10 @@ index c3ba34260..063d0c0ca 100644
 -    const transfer_details& td = m_transfers[idx];
 -    src.amount = td.amount();
 +    const transfer_details& td = specific_transfers[idx];
-+    bool b = get_pricing_record(src.pr, td.m_block_height);
-+    THROW_WALLET_EXCEPTION_IF(!b, error::wallet_internal_error, "Failed to get pricing record");
 +    if (use_offshore_outputs) {
 +      // onshore or offshore_to_offshore
++      bool b = get_pricing_record(src.pr, td.m_block_height);
++      THROW_WALLET_EXCEPTION_IF(!b, error::wallet_internal_error, "Failed to get pricing record");
 +      src.amount = 0;
 +      src.amount_usd = td.amount();
 +      src.mask_usd = td.m_mask;
