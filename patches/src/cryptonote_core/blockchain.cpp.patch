@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/blockchain.cpp b/src/cryptonote_core/blockchain.cpp
-index c6942a037..d5ecb9695 100644
+index c6942a037..ecdf7d7bd 100644
 --- a/src/cryptonote_core/blockchain.cpp
 +++ b/src/cryptonote_core/blockchain.cpp
 @@ -56,6 +56,17 @@
@@ -722,7 +722,7 @@ index c6942a037..d5ecb9695 100644
 +  
 +  std::array<std::string, 3> oracle_urls = {{"oracle.havenprotocol.org:443", "oracle2.havenprotocol.org:443", "oracle3.havenprotocol.org:443"}};
 +  std::shuffle(oracle_urls.begin(), oracle_urls.end(), std::default_random_engine(crypto::rand<unsigned>()));
-+  if (m_hardfork->get_current_version() >= HF_VERSION_OFFSHORE_FEES_V3) {   
++  if (m_hardfork->get_current_version() >= HF_VERSION_OFFSHORE_FEES_V3) {
 +    if ((m_nettype == TESTNET) || (m_nettype == STAGENET)) {
 +      // Attempt BAND - if no connection, failover to our established Oracle system
 +      oracle_urls = {{"feeds.haven.bandprotocol.com:443", "oracle2.havenprotocol.org:443", "oracle3.havenprotocol.org:443"}};
@@ -1565,7 +1565,7 @@ index c6942a037..d5ecb9695 100644
      {
        MERROR("Failed to remove txid " << txid << " from the pool");
        res = false;
-@@ -3796,6 +4761,20 @@ leave:
+@@ -3796,6 +4761,47 @@ leave:
    }
  
    TIME_MEASURE_FINISH(t2);
@@ -1573,7 +1573,34 @@ index c6942a037..d5ecb9695 100644
 +  if (m_hardfork->get_current_version() >= HF_VERSION_OFFSHORE_PRICING) {
 +    
 +    TIME_MEASURE_START(pricing_record);
-+    
++
++    // Do we have a public key for verification yet?
++    if (!m_oracle_public_key) {
++
++      if (m_hardfork->get_current_version() >= HF_VERSION_OFFSHORE_FEES_V3) {
++      
++	bool r = false;
++
++	epee::net_utils::http::http_simple_client http_client;
++	COMMAND_RPC_GET_PUBLIC_KEY::request req_key = AUTO_VAL_INIT(req_key);
++	COMMAND_RPC_GET_PUBLIC_KEY::response res_key = AUTO_VAL_INIT(res_key);
++      
++	// Attempt to get the public key for signature verifications
++	http_client.set_server("keys.havenprotocol.org:443", boost::none, epee::net_utils::ssl_support_t::e_ssl_support_autodetect);
++	std::string url = "/get_public_key.php";
++	r = epee::net_utils::invoke_http_json(url, req_key, res_key, http_client, std::chrono::seconds(10), "GET");
++	if (r) {
++	
++	  // Create key from the returned string if possible
++	  BIO* bio = BIO_new_mem_buf(res_key.str_ec_public_key.c_str(), res_key.str_ec_public_key.size());
++	  if (bio) {
++	    m_oracle_public_key = PEM_read_bio_PUBKEY(bio, NULL, NULL, NULL);
++	    BIO_free(bio);
++	  }
++	}
++      }
++    }
++
 +    if (!bl.pricing_record.verifySignature(m_oracle_public_key)) {
 +      MERROR_VER("Block with id: " << id << std::endl << "has invalid pricing record signature: " << std::hex << bl.pricing_record.signature);
 +      bvc.m_verifivation_failed = true;
@@ -1586,7 +1613,7 @@ index c6942a037..d5ecb9695 100644
    //check proof of work
    TIME_MEASURE_START(target_calculating_time);
  
-@@ -3898,7 +4877,10 @@ leave:
+@@ -3898,7 +4904,10 @@ leave:
    std::vector<std::pair<transaction, blobdata>> txs;
    key_images_container keys;
  
@@ -1598,7 +1625,7 @@ index c6942a037..d5ecb9695 100644
    uint64_t t_checktx = 0;
    uint64_t t_exists = 0;
    uint64_t t_pool = 0;
-@@ -3919,6 +4901,9 @@ leave:
+@@ -3919,6 +4928,9 @@ leave:
      blobdata txblob;
      size_t tx_weight = 0;
      uint64_t fee = 0;
@@ -1608,7 +1635,7 @@ index c6942a037..d5ecb9695 100644
      bool relayed = false, do_not_relay = false, double_spend_seen = false, pruned = false;
      TIME_MEASURE_START(aa);
  
-@@ -3936,7 +4921,7 @@ leave:
+@@ -3936,7 +4948,7 @@ leave:
      TIME_MEASURE_START(bb);
  
      // get transaction with hash <tx_id> from tx_pool
@@ -1617,7 +1644,7 @@ index c6942a037..d5ecb9695 100644
      {
        MERROR_VER("Block with id: " << id  << " has at least one unknown transaction with id: " << tx_id);
        bvc.m_verifivation_failed = true;
-@@ -4011,7 +4996,10 @@ leave:
+@@ -4011,7 +5023,10 @@ leave:
  #endif
      TIME_MEASURE_FINISH(cc);
      t_checktx += cc;
@@ -1629,7 +1656,7 @@ index c6942a037..d5ecb9695 100644
      cumulative_block_weight += tx_weight;
    }
  
-@@ -4031,7 +5019,7 @@ leave:
+@@ -4031,7 +5046,7 @@ leave:
    TIME_MEASURE_START(vmt);
    uint64_t base_reward = 0;
    uint64_t already_generated_coins = blockchain_height ? m_db->get_block_already_generated_coins(blockchain_height - 1) : 0;
@@ -1638,7 +1665,7 @@ index c6942a037..d5ecb9695 100644
    {
      MERROR_VER("Block with id: " << id << " has incorrect miner transaction");
      bvc.m_verifivation_failed = true;
-@@ -4102,7 +5090,7 @@ leave:
+@@ -4102,7 +5117,7 @@ leave:
      return false;
    }
  
@@ -1647,7 +1674,7 @@ index c6942a037..d5ecb9695 100644
    if(m_show_time_stats)
    {
      MINFO("Height: " << new_height << " coinbase weight: " << coinbase_weight << " cumm: "
-@@ -4377,7 +5365,6 @@ void Blockchain::set_enforce_dns_checkpoints(bool enforce_checkpoints)
+@@ -4377,7 +5392,6 @@ void Blockchain::set_enforce_dns_checkpoints(bool enforce_checkpoints)
  void Blockchain::block_longhash_worker(uint64_t height, const epee::span<const block> &blocks, std::unordered_map<crypto::hash, crypto::hash> &map) const
  {
    TIME_MEASURE_START(t);
@@ -1655,7 +1682,7 @@ index c6942a037..d5ecb9695 100644
  
    for (const auto & block : blocks)
    {
-@@ -4388,7 +5375,6 @@ void Blockchain::block_longhash_worker(uint64_t height, const epee::span<const b
+@@ -4388,7 +5402,6 @@ void Blockchain::block_longhash_worker(uint64_t height, const epee::span<const b
      map.emplace(id, pow);
    }
  
@@ -1663,7 +1690,7 @@ index c6942a037..d5ecb9695 100644
    TIME_MEASURE_FINISH(t);
  }
  
-@@ -4833,14 +5819,36 @@ bool Blockchain::prepare_handle_incoming_blocks(const std::vector<block_complete
+@@ -4833,14 +5846,36 @@ bool Blockchain::prepare_handle_incoming_blocks(const std::vector<block_complete
        // get all amounts from tx.vin(s)
        for (const auto &txin : tx.vin)
        {
@@ -1708,7 +1735,7 @@ index c6942a037..d5ecb9695 100644
        }
  
        // sort and remove duplicate amounts from amounts list
-@@ -4861,12 +5869,27 @@ bool Blockchain::prepare_handle_incoming_blocks(const std::vector<block_complete
+@@ -4861,12 +5896,27 @@ bool Blockchain::prepare_handle_incoming_blocks(const std::vector<block_complete
        // add new absolute_offsets to offset_map
        for (const auto &txin : tx.vin)
        {
@@ -1742,7 +1769,7 @@ index c6942a037..d5ecb9695 100644
        }
      }
      ++block_index;
-@@ -4926,33 +5949,93 @@ bool Blockchain::prepare_handle_incoming_blocks(const std::vector<block_complete
+@@ -4926,33 +5976,93 @@ bool Blockchain::prepare_handle_incoming_blocks(const std::vector<block_complete
  
        for (const auto &txin : tx.vin)
        {
@@ -1863,7 +1890,7 @@ index c6942a037..d5ecb9695 100644
        }
      }
    }
-@@ -5122,7 +6205,7 @@ void Blockchain::cancel()
+@@ -5122,7 +6232,7 @@ void Blockchain::cancel()
  }
  
  #if defined(PER_BLOCK_CHECKPOINT)
@@ -1872,7 +1899,7 @@ index c6942a037..d5ecb9695 100644
  void Blockchain::load_compiled_in_block_hashes(const GetCheckpointsCallback& get_checkpoints)
  {
    if (get_checkpoints == nullptr || !m_fast_sync)
-@@ -5199,14 +6282,14 @@ void Blockchain::load_compiled_in_block_hashes(const GetCheckpointsCallback& get
+@@ -5199,14 +6309,14 @@ void Blockchain::load_compiled_in_block_hashes(const GetCheckpointsCallback& get
          m_tx_pool.get_transactions(txs, true);
  
          size_t tx_weight;
