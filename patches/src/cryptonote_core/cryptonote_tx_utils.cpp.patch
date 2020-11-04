@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/cryptonote_tx_utils.cpp b/src/cryptonote_core/cryptonote_tx_utils.cpp
-index 3dd29dd1b..0fd45384e 100644
+index 3dd29dd1b..7b56cc1fc 100644
 --- a/src/cryptonote_core/cryptonote_tx_utils.cpp
 +++ b/src/cryptonote_core/cryptonote_tx_utils.cpp
 @@ -75,8 +75,75 @@ namespace cryptonote
@@ -274,7 +274,7 @@ index 3dd29dd1b..0fd45384e 100644
  
      //lock
      tx.unlock_time = height + CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW;
-@@ -199,7 +337,296 @@ namespace cryptonote
+@@ -199,7 +337,303 @@ namespace cryptonote
      return addr.m_view_public_key;
    }
    //---------------------------------------------------------------
@@ -317,22 +317,25 @@ index 3dd29dd1b..0fd45384e 100644
 +      switch (priority) {
 +      case 4:
 +	conversion_extra *= 110;
-+	conversion_extra /= (100 * 1000000000000);
++	conversion_extra /= 100;
++	conversion_extra /= pr.unused1;
 +	conversion_fee += conversion_extra;
 +	break;
 +      case 3:
-+	conversion_extra /= 1000000000000;
++	conversion_extra /= pr.unused1;
 +	conversion_fee += conversion_extra;
 +	break;
 +      case 2:
 +	conversion_extra *= 75;
-+	conversion_extra /= (100 * 1000000000000);
++	conversion_extra /= 100;
++	conversion_extra /= pr.unused1;
 +	conversion_fee += conversion_extra;
 +	break;
 +      case 1:
 +      default:
 +	conversion_extra *= 25;
-+	conversion_extra /= (100 * 1000000000000);
++	conversion_extra /= 100;
++	conversion_extra /= pr.unused1;
 +	conversion_fee += conversion_extra;
 +	break;
 +      }
@@ -517,23 +520,27 @@ index 3dd29dd1b..0fd45384e 100644
 +	    if (pr.unused1 < src.pr.unused1) {
 +	      // current exchange rate less than when the input was created - how old is it?
 +
++	      boost::multiprecision::uint128_t ma_diff = (src.pr.unused1 - pr.unused1);
++	      ma_diff *= src.amount_usd;
++	      ma_diff /= 1000000000000;
++	      
 +	      // Check the age of the input
 +	      uint64_t age = current_height - src.height;
 +	      if (priority == 4) {
 +		if (age < (30 * 24)) {
 +		  // Calculate the speculation fee
-+		  speculation_fee = (src.pr.unused1 - pr.unused1) * src.amount_usd / 2;
++		  speculation_fee += (uint64_t)ma_diff / 2;
 +		} else if (age < (30 * 48)) {
 +		  // Calculate the speculation fee
-+		  speculation_fee = ((src.pr.unused1 - pr.unused1) * src.amount_usd * 4) / 10;
++		  speculation_fee += ((uint64_t)ma_diff * 4) / 10;
 +		} else if (age < (30 * 120)) {
 +		  // Calculate the speculation fee
-+		  speculation_fee = (src.pr.unused1 - pr.unused1) * src.amount_usd / 10;
++		  speculation_fee += (uint64_t)ma_diff / 10;
 +		}
 +	      } else if (priority == 3) {
 +		if (age < (30 * 120)) {
 +		  // Calculate the speculation fee
-+		  speculation_fee = (src.pr.unused1 - pr.unused1) * src.amount_usd / 10;
++		  speculation_fee += (uint64_t)ma_diff / 10;
 +		}
 +	      }
 +	    }
@@ -572,7 +579,7 @@ index 3dd29dd1b..0fd45384e 100644
    {
      hw::device &hwdev = sender_account_keys.get_device();
  
-@@ -217,95 +644,136 @@ namespace cryptonote
+@@ -217,95 +651,136 @@ namespace cryptonote
        msout->c.clear();
      }
  
@@ -784,7 +791,7 @@ index 3dd29dd1b..0fd45384e 100644
      //fill inputs
      int idx = -1;
      for(const tx_source_entry& src_entr:  sources)
-@@ -317,6 +785,7 @@ namespace cryptonote
+@@ -317,6 +792,7 @@ namespace cryptonote
          return false;
        }
        summary_inputs_money += src_entr.amount;
@@ -792,7 +799,7 @@ index 3dd29dd1b..0fd45384e 100644
  
        //key_derivation recv_derivation;
        in_contexts.push_back(input_generation_context_data());
-@@ -341,16 +810,48 @@ namespace cryptonote
+@@ -341,16 +817,48 @@ namespace cryptonote
        }
  
        //put key image into tx input
@@ -851,7 +858,7 @@ index 3dd29dd1b..0fd45384e 100644
      }
  
      if (shuffle_outs)
-@@ -363,9 +864,19 @@ namespace cryptonote
+@@ -363,9 +871,19 @@ namespace cryptonote
      for (size_t n = 0; n < sources.size(); ++n)
        ins_order[n] = n;
      std::sort(ins_order.begin(), ins_order.end(), [&](const size_t i0, const size_t i1) {
@@ -874,7 +881,7 @@ index 3dd29dd1b..0fd45384e 100644
      });
      tools::apply_permutation(ins_order, [&] (size_t i0, size_t i1) {
        std::swap(tx.vin[i0], tx.vin[i1]);
-@@ -400,7 +911,12 @@ namespace cryptonote
+@@ -400,7 +918,12 @@ namespace cryptonote
      if (need_additional_txkeys)
        CHECK_AND_ASSERT_MES(destinations.size() == additional_tx_keys.size(), false, "Wrong amount of additional tx keys");
  
@@ -888,7 +895,7 @@ index 3dd29dd1b..0fd45384e 100644
      //fill outputs
      size_t output_index = 0;
      for(const tx_destination_entry& dst_entr: destinations)
-@@ -408,19 +924,65 @@ namespace cryptonote
+@@ -408,19 +931,65 @@ namespace cryptonote
        CHECK_AND_ASSERT_MES(dst_entr.amount > 0 || tx.version > 1, false, "Destination with wrong amount: " << dst_entr.amount);
        crypto::public_key out_eph_public_key;
  
@@ -960,7 +967,7 @@ index 3dd29dd1b..0fd45384e 100644
      }
      CHECK_AND_ASSERT_MES(additional_tx_public_keys.size() == additional_tx_keys.size(), false, "Internal error creating additional public keys");
  
-@@ -435,16 +997,57 @@ namespace cryptonote
+@@ -435,16 +1004,57 @@ namespace cryptonote
        add_additional_tx_pub_keys_to_extra(tx.extra, additional_tx_public_keys);
      }
  
@@ -1024,7 +1031,7 @@ index 3dd29dd1b..0fd45384e 100644
      // check for watch only wallet
      bool zero_secret_key = true;
      for (size_t i = 0; i < sizeof(sender_account_keys.m_spend_secret_key); ++i)
-@@ -518,26 +1121,38 @@ namespace cryptonote
+@@ -518,26 +1128,38 @@ namespace cryptonote
          }
        }
  
@@ -1071,7 +1078,7 @@ index 3dd29dd1b..0fd45384e 100644
          // inPk: (public key, commitment)
          // will be done when filling in mixRing
          if (msout)
-@@ -545,13 +1160,7 @@ namespace cryptonote
+@@ -545,13 +1167,7 @@ namespace cryptonote
            kLRki.push_back(sources[i].multisig_kLRki);
          }
        }
@@ -1086,7 +1093,7 @@ index 3dd29dd1b..0fd45384e 100644
        if (use_simple_rct)
        {
          // mixRing indexing is done the other way round for simple
-@@ -577,26 +1186,85 @@ namespace cryptonote
+@@ -577,26 +1193,85 @@ namespace cryptonote
        }
  
        // fee
@@ -1182,7 +1189,7 @@ index 3dd29dd1b..0fd45384e 100644
  
        CHECK_AND_ASSERT_MES(tx.vout.size() == outSk.size(), false, "outSk size does not match vout");
  
-@@ -608,7 +1276,7 @@ namespace cryptonote
+@@ -608,7 +1283,7 @@ namespace cryptonote
      return true;
    }
    //---------------------------------------------------------------
@@ -1191,7 +1198,7 @@ index 3dd29dd1b..0fd45384e 100644
    {
      hw::device &hwdev = sender_account_keys.get_device();
      hwdev.open_tx(tx_key);
-@@ -626,7 +1294,7 @@ namespace cryptonote
+@@ -626,7 +1301,7 @@ namespace cryptonote
            additional_tx_keys.push_back(keypair::generate(sender_account_keys.get_device()).sec);
        }
  
@@ -1200,7 +1207,7 @@ index 3dd29dd1b..0fd45384e 100644
        hwdev.close_tx();
        return r;
      } catch(...) {
-@@ -640,22 +1308,31 @@ namespace cryptonote
+@@ -640,22 +1315,31 @@ namespace cryptonote
       std::unordered_map<crypto::public_key, cryptonote::subaddress_index> subaddresses;
       subaddresses[sender_account_keys.m_account_address.m_spend_public_key] = {0,0};
       crypto::secret_key tx_key;
@@ -1234,7 +1241,7 @@ index 3dd29dd1b..0fd45384e 100644
      CHECK_AND_ASSERT_MES(r, false, "failed to parse coinbase tx from hard coded blob");
      r = parse_and_validate_tx_from_blob(tx_bl, bl.miner_tx);
      CHECK_AND_ASSERT_MES(r, false, "failed to parse coinbase tx from hard coded blob");
-@@ -678,33 +1355,22 @@ namespace cryptonote
+@@ -678,33 +1362,22 @@ namespace cryptonote
  
    bool get_block_longhash(const Blockchain *pbc, const block& b, crypto::hash& res, const uint64_t height, const int miners)
    {

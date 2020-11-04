@@ -1,5 +1,5 @@
 diff --git a/src/wallet/wallet2.cpp b/src/wallet/wallet2.cpp
-index c3ba34260..48ad791c3 100644
+index c3ba34260..53beb48e1 100644
 --- a/src/wallet/wallet2.cpp
 +++ b/src/wallet/wallet2.cpp
 @@ -29,6 +29,7 @@
@@ -4095,7 +4095,7 @@ index c3ba34260..48ad791c3 100644
  }
  //----------------------------------------------------------------------------------------------------
  mms::multisig_wallet_state wallet2::get_multisig_wallet_state() const
-@@ -13842,6 +15386,497 @@ uint64_t wallet2::get_bytes_received() const
+@@ -13842,6 +15386,504 @@ uint64_t wallet2::get_bytes_received() const
  {
    return m_http_client->get_bytes_received();
  }
@@ -4137,22 +4137,25 @@ index c3ba34260..48ad791c3 100644
 +    switch (priority) {
 +    case 4:
 +      conversion_extra *= 110;
-+      conversion_extra /= (100 * 1000000000000);
++      conversion_extra /= 100;
++      conversion_extra /= pricing_average;
 +      conversion_fee += conversion_extra;
 +      break;
 +    case 3:
-+      conversion_extra /= 1000000000000;
++      conversion_extra /= pricing_average;
 +      conversion_fee += conversion_extra;
 +      break;
 +    case 2:
 +      conversion_extra *= 75;
-+      conversion_extra /= (100 * 1000000000000);
++      conversion_extra /= 100;
++      conversion_extra /= pricing_average;
 +      conversion_fee += conversion_extra;
 +      break;
 +    case 1:
 +    default:
 +      conversion_extra *= 25;
-+      conversion_extra /= (100 * 1000000000000);
++      conversion_extra /= 100;
++      conversion_extra /= pricing_average;
 +      conversion_fee += conversion_extra;
 +      break;
 +    }
@@ -4292,25 +4295,25 @@ index c3ba34260..48ad791c3 100644
 +      conversion_extra *= 110;
 +      conversion_extra /= (100 * 1000000000000);
 +      conversion_fee += conversion_extra;
-+      speed_fee = amount_usd / 20;
++      //speed_fee = amount_usd / 20;
 +      break;
 +    case 3:
 +      conversion_extra /= 1000000000000;
 +      conversion_fee += conversion_extra;
-+      speed_fee = amount_usd / 50;
++      //speed_fee = amount_usd / 50;
 +      break;
 +    case 2:
 +      conversion_extra *= 75;
 +      conversion_extra /= (100 * 1000000000000);
 +      conversion_fee += conversion_extra;
-+      speed_fee = 0;
++      //speed_fee = 0;
 +      break;
 +    case 1:
 +    default:
 +      conversion_extra *= 25;
 +      conversion_extra /= (100 * 1000000000000);
 +      conversion_fee += conversion_extra;
-+      speed_fee = 0;
++      //speed_fee = 0;
 +      break;
 +    }
 +
@@ -4402,23 +4405,27 @@ index c3ba34260..48ad791c3 100644
 +	  if (pricing_average < blk.pricing_record.unused1) {
 +	    // current exchange rate less than when the input was created - how old is it?
 +
++	    boost::multiprecision::uint128_t ma_diff = (blk.pricing_record.unused1 - pricing_average);
++	    ma_diff *= src.amount();
++	    ma_diff /= 1000000000000;
++	      
 +	    // Check the age of the input
 +	    uint64_t age = current_height - src.m_block_height;
 +	    if (priority == 4) {
 +	      if (age < (30 * 24)) {
 +		// Calculate the speculation fee
-+		speculation_fee = (blk.pricing_record.unused1 - pricing_average) * src.amount() / 2;
++		speculation_fee += (uint64_t)ma_diff / 2;
 +	      } else if (age < (30 * 48)) {
 +		// Calculate the speculation fee
-+		speculation_fee = ((blk.pricing_record.unused1 - pricing_average) * src.amount() * 4) / 10;
++		speculation_fee += ((uint64_t)ma_diff * 4) / 10;
 +	      } else if (age < (30 * 120)) {
 +		// Calculate the speculation fee
-+		speculation_fee = (blk.pricing_record.unused1 - pricing_average) * src.amount() / 10;
++		speculation_fee += (uint64_t)ma_diff / 10;
 +	      }
 +	    } else if (priority == 3) {
 +	      if (age < (30 * 120)) {
 +		// Calculate the speculation fee
-+		speculation_fee = (blk.pricing_record.unused1 - pricing_average) * src.amount() / 10;
++		speculation_fee += (uint64_t)ma_diff / 10;
 +	      }
 +	    }
 +	  }
@@ -4593,7 +4600,7 @@ index c3ba34260..48ad791c3 100644
  //----------------------------------------------------------------------------------------------------
  std::vector<cryptonote::public_node> wallet2::get_public_nodes(bool white_only)
  {
-@@ -13876,8 +15911,9 @@ std::pair<size_t, uint64_t> wallet2::estimate_tx_size_and_weight(bool use_rct, i
+@@ -13876,8 +15918,9 @@ std::pair<size_t, uint64_t> wallet2::estimate_tx_size_and_weight(bool use_rct, i
      n_outputs = 2; // extra dummy output
  
    const bool bulletproof = use_fork_rules(get_bulletproof_fork(), 0);
