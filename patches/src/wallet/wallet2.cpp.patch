@@ -1,5 +1,5 @@
 diff --git a/src/wallet/wallet2.cpp b/src/wallet/wallet2.cpp
-index c3ba34260..53beb48e1 100644
+index c3ba34260..73a92b26b 100644
 --- a/src/wallet/wallet2.cpp
 +++ b/src/wallet/wallet2.cpp
 @@ -29,6 +29,7 @@
@@ -1462,6 +1462,15 @@ index c3ba34260..53beb48e1 100644
    return false;
  }
  
+@@ -5586,7 +6372,7 @@ void wallet2::load(const std::string& wallet_, const epee::wipeable_string& pass
+ 
+   //keys loaded ok!
+   //try to load wallet file. but even if we failed, it is not big problem
+-  if (use_fs && (!boost::filesystem::exists(m_wallet_file, e) || e))
++  if ((use_fs && (!boost::filesystem::exists(m_wallet_file, e) || e)) || (!use_fs && cache_buf.empty()))
+   {
+     LOG_PRINT_L0("file not found: " << m_wallet_file << ", starting with empty blockchain");
+     m_account_public_address = m_account.get_keys().m_account_address;
 @@ -5730,6 +6516,10 @@ void wallet2::trim_hashchain()
      if (td.m_block_height < height)
        height = td.m_block_height;
@@ -2736,7 +2745,7 @@ index c3ba34260..53beb48e1 100644
 -  std::map<uint32_t, uint64_t> balance_per_subaddr = balance_per_subaddress(subaddr_account, false);
 +  // Calculate the offshore fee
 +  std::vector<transfer_details> empty;
-+  uint64_t offshore_fee = (offshore) ? get_offshore_fee(dsts, priority, empty) : (onshore) ? get_onshore_fee(dsts, priority, empty) : 0;
++  uint64_t offshore_fee = (offshore) ? get_offshore_fee(dsts, priority, empty) : (onshore) ? get_onshore_fee(dsts, priority, empty) : (offshore_to_offshore) ? get_offshore_to_offshore_fee(dsts, 4, empty) : 0;
 +  
 +  std::map<uint32_t, std::pair<uint64_t, std::pair<uint64_t, uint64_t>>> unlocked_balance_per_subaddr ;
 +  std::map<uint32_t, uint64_t> balance_per_subaddr;
@@ -2958,7 +2967,7 @@ index c3ba34260..53beb48e1 100644
 +	fee_sources.push_back(specific_transfers[idx]);
 +      }
 +      for (const auto &o: tx.dsts) outputs += ((onshore || offshore_to_offshore) ? o.amount_usd : o.amount);
-+      offshore_fee = (offshore) ? get_offshore_fee(tx.dsts, priority, fee_sources) : (onshore) ? get_onshore_fee(tx.dsts, priority, fee_sources) : 0;
++      offshore_fee = (offshore) ? get_offshore_fee(tx.dsts, priority, fee_sources) : (onshore) ? get_onshore_fee(tx.dsts, priority, fee_sources) : (offshore_to_offshore) ? get_offshore_to_offshore_fee(tx.dsts, 4, fee_sources) : 0;
 +      needed_fee += offshore_fee;
  
 -      if (inputs < outputs)
@@ -3916,16 +3925,10 @@ index c3ba34260..53beb48e1 100644
      MINFO(boost::format("%u outputs found") % boost::lexical_cast<std::string>(i.size()));
 -    info.push_back(std::move(i));
 -  }
+-
+-  CHECK_AND_ASSERT_THROW_MES(info.size() + 1 <= m_multisig_signers.size() && info.size() + 1 >= m_multisig_threshold, "Wrong number of multisig sources");
 +    THROW_WALLET_EXCEPTION_IF(i.size() != (std::stoull(str_onshore_count) + stoull(str_offshore_count)),
 +			      error::wallet_internal_error, "Multisig info contains incorrect number of entries");
- 
--  CHECK_AND_ASSERT_THROW_MES(info.size() + 1 <= m_multisig_signers.size() && info.size() + 1 >= m_multisig_threshold, "Wrong number of multisig sources");
-+ // Split i into offshore and onshore components
-+    std::vector<tools::wallet2::multisig_info> i_offshore;
-+    i_offshore.insert(i_offshore.end(),
-+		      std::make_move_iterator(i.begin()+std::stoull(str_onshore_count)),
-+		      std::make_move_iterator(i.end()));
-+    i.erase(i.begin()+std::stoull(str_onshore_count), i.end());
  
 -  std::vector<std::vector<rct::key>> k;
 -  auto wiper = epee::misc_utils::create_scope_leave_handler([&](){for (auto &v: k) memwipe(v.data(), v.size() * sizeof(v[0]));});
@@ -3941,7 +3944,13 @@ index c3ba34260..53beb48e1 100644
 -
 -  if (n_outputs == 0)
 -    return 0;
--
++ // Split i into offshore and onshore components
++    std::vector<tools::wallet2::multisig_info> i_offshore;
++    i_offshore.insert(i_offshore.end(),
++		      std::make_move_iterator(i.begin()+std::stoull(str_onshore_count)),
++		      std::make_move_iterator(i.end()));
++    i.erase(i.begin()+std::stoull(str_onshore_count), i.end());
+ 
 -  // check signers are consistent
 -  for (const auto &pi: info)
 -  {
@@ -3956,16 +3965,16 @@ index c3ba34260..53beb48e1 100644
 -  // trim data we don't have info for from all participants
 -  for (auto &pi: info)
 -    pi.resize(n_outputs);
--
++  size_t n_outputs_global = 0;
++  std::vector<std::string> modes = {"onshore", "offshore"};
++  for (auto current_mode: modes) {
+ 
 -  // sort by signer
 -  if (!info.empty() && !info.front().empty())
 -  {
 -    std::sort(info.begin(), info.end(), [](const std::vector<tools::wallet2::multisig_info> &i0, const std::vector<tools::wallet2::multisig_info> &i1){ return memcmp(&i0[0].m_signer, &i1[0].m_signer, sizeof(i0[0].m_signer)); });
 -  }
-+  size_t n_outputs_global = 0;
-+  std::vector<std::string> modes = {"onshore", "offshore"};
-+  for (auto current_mode: modes) {
- 
+-
 -  // first pass to determine where to detach the blockchain
 -  for (size_t n = 0; n < n_outputs; ++n)
 -  {
@@ -4095,7 +4104,7 @@ index c3ba34260..53beb48e1 100644
  }
  //----------------------------------------------------------------------------------------------------
  mms::multisig_wallet_state wallet2::get_multisig_wallet_state() const
-@@ -13842,6 +15386,504 @@ uint64_t wallet2::get_bytes_received() const
+@@ -13842,6 +15386,575 @@ uint64_t wallet2::get_bytes_received() const
  {
    return m_http_client->get_bytes_received();
  }
@@ -4561,12 +4570,16 @@ index c3ba34260..53beb48e1 100644
 +      auto sources_copy = sources;
 +      std::sort(sources_copy.begin(), sources_copy.end(),
 +          [](const transfer_details &a, const transfer_details &b) { return a.m_block_height < b.m_block_height; });
++
++      // Create a vector of block heights to obtain pricing records for
++      std::vector<uint64_t> heights;
 +      
 +      // Determine the accurate speed fee and speculation_fee
 +      if (priority >= 3) {
 +	uint64_t running_total = 0;
-+	uint64_t target_total = amount_usd;// - ((dsts.back().amount > 0) ? dsts.back().amount : dsts.back().amount_usd);
++	uint64_t target_total = amount_usd;
 +	for (auto src: sources_copy) {
++	  heights.push_back(src.m_block_height);
 +	  uint64_t age = current_height - src.m_block_height;
 +	  uint64_t src_amount = src.amount();
 +	  if (running_total + src_amount <= target_total) {
@@ -4588,10 +4601,77 @@ index c3ba34260..53beb48e1 100644
 +	  running_total += src_amount;
 +	}
 +      }
++
++      // Only bother if we have some heights to use
++      if (heights.size()) {
++
++	// Prepare a request + response container
++	COMMAND_RPC_GET_BLOCKS_BY_HEIGHT::request req;
++	COMMAND_RPC_GET_BLOCKS_BY_HEIGHT::response res;
++	req.heights = heights;
++
++	bool r;
++	{
++	  const boost::lock_guard<boost::recursive_mutex> lock{m_daemon_rpc_mutex};
++	  req.client = get_client_signature();
++	  r = net_utils::invoke_http_bin("/getblocks_by_height.bin", req, res, *m_http_client, rpc_timeout);
++	}
++
++	if (!r || res.status != CORE_RPC_STATUS_OK) {
++	  std::ostringstream oss;
++	  oss << "failed to get blocks by heights: ";
++	  for (auto height : req.heights)
++	    oss << height << ' ';
++	  oss << endl << "reason: ";
++	  if (!r)
++	    oss << "possibly lost connection to daemon";
++	  else if (res.status == CORE_RPC_STATUS_BUSY)
++	    oss << "daemon is busy";
++	  else
++	    oss << get_rpc_status(res.status);
++	  throw std::runtime_error(oss.str());
++	}
++	int i=0;
++	for (auto src: sources_copy) {
++
++	  cryptonote::block blk;
++	  if (!parse_and_validate_block_from_blob(res.blocks[i++].block, blk))
++	    throw std::runtime_error("failed to parse blob at height " + std::to_string(req.heights[i]));
++
++	  // Got the block, which means we have the ppricing record as well - compute the difference in XHV prices to see if they made a notional profit
++	  if (pricing_average < blk.pricing_record.unused1) {
++	    // current exchange rate less than when the input was created - how old is it?
++
++	    boost::multiprecision::uint128_t ma_diff = (blk.pricing_record.unused1 - pricing_average);
++	    ma_diff *= src.amount();
++	    ma_diff /= 1000000000000;
++	      
++	    // Check the age of the input
++	    uint64_t age = current_height - src.m_block_height;
++	    if (priority == 4) {
++	      if (age < (30 * 24)) {
++		// Calculate the speculation fee
++		speculation_fee += (uint64_t)ma_diff / 2;
++	      } else if (age < (30 * 48)) {
++		// Calculate the speculation fee
++		speculation_fee += ((uint64_t)ma_diff * 4) / 10;
++	      } else if (age < (30 * 120)) {
++		// Calculate the speculation fee
++		speculation_fee += (uint64_t)ma_diff / 10;
++	      }
++	    } else if (priority == 3) {
++	      if (age < (30 * 120)) {
++		// Calculate the speculation fee
++		speculation_fee += (uint64_t)ma_diff / 10;
++	      }
++	    }
++	  }
++	}
++      }
 +    }
 +    
 +    // Return the fee
-+    return (uint64_t)conversion_fee + speed_fee + speculation_fee;
++    return speculation_fee;
 +  }
 +
 +  // No fee for offshore-to-offshore prior to v3
@@ -4600,7 +4680,7 @@ index c3ba34260..53beb48e1 100644
  //----------------------------------------------------------------------------------------------------
  std::vector<cryptonote::public_node> wallet2::get_public_nodes(bool white_only)
  {
-@@ -13876,8 +15918,9 @@ std::pair<size_t, uint64_t> wallet2::estimate_tx_size_and_weight(bool use_rct, i
+@@ -13876,8 +15989,9 @@ std::pair<size_t, uint64_t> wallet2::estimate_tx_size_and_weight(bool use_rct, i
      n_outputs = 2; // extra dummy output
  
    const bool bulletproof = use_fork_rules(get_bulletproof_fork(), 0);
