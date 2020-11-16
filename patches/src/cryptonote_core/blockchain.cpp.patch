@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/blockchain.cpp b/src/cryptonote_core/blockchain.cpp
-index c6942a037..ecdf7d7bd 100644
+index c6942a037..916ae0c41 100644
 --- a/src/cryptonote_core/blockchain.cpp
 +++ b/src/cryptonote_core/blockchain.cpp
 @@ -56,6 +56,17 @@
@@ -699,7 +699,7 @@ index c6942a037..ecdf7d7bd 100644
 +  // Do we have a public key for verification yet?
 +  if (!m_oracle_public_key) {
 +
-+    if (m_hardfork->get_current_version() >= HF_VERSION_OFFSHORE_FEES_V3) {
++    if (0/*m_hardfork->get_current_version() >= HF_VERSION_OFFSHORE_FEES_V3*/) {
 +      
 +      COMMAND_RPC_GET_PUBLIC_KEY::request req_key = AUTO_VAL_INIT(req_key);
 +      COMMAND_RPC_GET_PUBLIC_KEY::response res_key = AUTO_VAL_INIT(res_key);
@@ -722,7 +722,7 @@ index c6942a037..ecdf7d7bd 100644
 +  
 +  std::array<std::string, 3> oracle_urls = {{"oracle.havenprotocol.org:443", "oracle2.havenprotocol.org:443", "oracle3.havenprotocol.org:443"}};
 +  std::shuffle(oracle_urls.begin(), oracle_urls.end(), std::default_random_engine(crypto::rand<unsigned>()));
-+  if (m_hardfork->get_current_version() >= HF_VERSION_OFFSHORE_FEES_V3) {
++  if (0/*m_hardfork->get_current_version() >= HF_VERSION_OFFSHORE_FEES_V3*/) {
 +    if ((m_nettype == TESTNET) || (m_nettype == STAGENET)) {
 +      // Attempt BAND - if no connection, failover to our established Oracle system
 +      oracle_urls = {{"feeds.haven.bandprotocol.com:443", "oracle2.havenprotocol.org:443", "oracle3.havenprotocol.org:443"}};
@@ -1577,7 +1577,7 @@ index c6942a037..ecdf7d7bd 100644
 +    // Do we have a public key for verification yet?
 +    if (!m_oracle_public_key) {
 +
-+      if (m_hardfork->get_current_version() >= HF_VERSION_OFFSHORE_FEES_V3) {
++      if (0/*m_hardfork->get_current_version() >= HF_VERSION_OFFSHORE_FEES_V3*/) {
 +      
 +	bool r = false;
 +

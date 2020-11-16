@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/cryptonote_tx_utils.cpp b/src/cryptonote_core/cryptonote_tx_utils.cpp
-index 3dd29dd1b..392bc0435 100644
+index 3dd29dd1b..d5c52f7ce 100644
 --- a/src/cryptonote_core/cryptonote_tx_utils.cpp
 +++ b/src/cryptonote_core/cryptonote_tx_utils.cpp
 @@ -75,8 +75,75 @@ namespace cryptonote
@@ -294,7 +294,7 @@ index 3dd29dd1b..392bc0435 100644
 +      }
 +    }
 +
-+    if (fees_version == 3) {
++    if (0/*fees_version == 3*/) {
 +
 +      // Get the delta
 +      // abs() implementation for uint64_t's
@@ -425,7 +425,7 @@ index 3dd29dd1b..392bc0435 100644
 +      }
 +    }
 +
-+    if (fees_version == 3) {
++    if (0/*fees_version == 3*/) {
 +
 +      // Get the delta
 +      // abs() implementation for uint64_t's
@@ -603,7 +603,7 @@ index 3dd29dd1b..392bc0435 100644
 +      amount_usd += dt.amount_usd;
 +    }
 +
-+    if (fees_version == 3) {
++    if (0/*fees_version == 3*/) {
 +
 +      // Get the delta
 +      // abs() implementation for uint64_t's
