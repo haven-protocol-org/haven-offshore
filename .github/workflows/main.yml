@@ -95,32 +95,24 @@ jobs:
         path: monero/build/release/bin/
   build-macos:
     env:
-      CMAKE_OSX_DEPLOYMENT_TARGET: 10.13
-      OSX_MIN_VERSION: 10.13
-      OPENSSL_ROOT_DIR: /usr/local/opt/openssl@1.1
-      LDFLAGS: "-L/usr/local/opt/openssl@1.1/lib"
-      CPPFLAGS: "-I/usr/local/opt/openssl@1.1/include"
-      DEVELOPER_DIR: /Applications/Xcode_10.3.app/Contents/Developer
-    runs-on: macos-10.15
+      CMAKE_OSX_DEPLOYMENT_TARGET: 10.14
+      OSX_MIN_VERSION: 10.14
+    runs-on: macOS-latest
     steps:
     - uses: actions/checkout@v1
       with:
         submodules: recursive
-    - name: Install dependencies
+    - name: install dependencies
+      run: brew install hidapi zmq libpgm miniupnpc ldns expat libunwind-headers protobuf
+    - name: build boost
       run: |
-        brew uninstall openssl@1.0.2t
-        brew uninstall python@2.7.17
-        brew untap local/openssl
-        brew untap local/python2
-        brew update  --verbose
-        brew upgrade  --verbose
-        brew uninstall --ignore-dependencies  libsodium 
-        rm -rf /usr/local/etc/openssl
-        brew reinstall openssl@1.1
-        brew --prefix openssl
-        brew install boost hidapi zmq libpgm miniupnpc ldns expat libunwind-headers protobuf pkgconfig
-        wget https://raw.githubusercontent.com/zeromq/cppzmq/v4.3.0/zmq.hpp -O /usr/local/include/zmq.hpp
-    - name: build Haven
+        wget https://dl.bintray.com/boostorg/release/1.71.0/source/boost_1_71_0.tar.gz
+        tar -xzf boost_1_71_0.tar.gz
+        cd boost_1_71_0
+        ./bootstrap.sh 
+        ./b2
+        ./b2 install
+    - name: build
       run: |
         ./build-haven.sh release -j3
         chmod +x monero/build/release/bin/*
@@ -133,22 +125,24 @@ jobs:
     env:
       ACTIONS_ALLOW_UNSECURE_COMMANDS: true
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
     steps:
     - uses: actions/checkout@v1
       with:
         submodules: recursive
-    - uses: eine/setup-msys2@v0
+    - uses: eine/setup-msys2@v1
       with:
         update: true
-    - name: Install Haven dependencies
-      run: msys2do pacman -S --noconfirm mingw-w64-x86_64-toolchain make mingw-w64-x86_64-cmake mingw-w64-x86_64-openssl mingw-w64-x86_64-zeromq mingw-w64-x86_64-libsodium mingw-w64-x86_64-hidapi mingw-w64-x86_64-libusb git patch
-    - name: install boost
+        install: mingw-w64-x86_64-toolchain make mingw-w64-x86_64-cmake mingw-w64-x86_64-openssl mingw-w64-x86_64-zeromq mingw-w64-x86_64-libsodium mingw-w64-x86_64-hidapi mingw-w64-x86_64-protobuf-c mingw-w64-x86_64-libusb git
+    - name: install boost & icu
       run: |
-        msys2do wget http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-boost-1.71.0-3-any.pkg.tar.xz
-        msys2do wget http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-icu-65.1-1-any.pkg.tar.xz
-        msys2do pacman -U --noconfirm *.tar.xz
-    - name: build Haven
-      run: msys2do ./build-haven.sh release-static-win64
+        wget http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-boost-1.71.0-3-any.pkg.tar.xz
+        wget http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-icu-65.1-1-any.pkg.tar.xz
+        pacman -U --noconfirm *.tar.xz
+    - name: build
+      run: ./build-haven.sh release-static-win64 -j2
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
