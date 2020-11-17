@@ -613,12 +613,16 @@ index ffe38eedf..c82c4f894 100644
          }
          if (dust_in_fee != 0) prompt << boost::format(tr(", of which %s is dust from change")) % print_money(dust_in_fee);
          if (dust_not_in_fee != 0)  prompt << tr(".") << ENDL << boost::format(tr("A total of %s from dust change will be sent to dust address")) 
-@@ -6607,6 +6765,9 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
+@@ -6607,6 +6765,13 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
          {
            float days = locked_blocks / 720.0f;
            prompt << boost::format(tr(".\nThis transaction (including %s change) will unlock on block %llu, in approximately %s days (assuming 2 minutes per block)")) % cryptonote::print_money(change) % ((unsigned long long)unlock_block) % days;
 +	  if (offshore || onshore) {
-+	    prompt << tr("\n(Priority levels : low|unimportant=7200 blocks, normal=3600 blocks, medium|elevated=1440 blocks, high|priority=180 blocks)");
++           if (0/*m_wallet->use_fork_rules(HF_VERSION_OFFSHORE_FEES_V3, 0)*/) {
++	      prompt << tr("\n(Priority levels : low|unimportant=7200 blocks, normal=3600 blocks, medium|elevated=1440 blocks, high|priority=180 blocks)");
++           } else if (m_wallet->use_fork_rules(HF_VERSION_OFFSHORE_FEES_V2, 0)) {
++	      prompt << tr("\n(Priority levels : low|unimportant=5040 blocks, normal=1440 blocks, medium|elevated=720 blocks, high|priority=180 blocks)");
++           }
 +	  }
          }
          if (!process_ring_members(ptx_vector, prompt, m_wallet->print_ring_members()))

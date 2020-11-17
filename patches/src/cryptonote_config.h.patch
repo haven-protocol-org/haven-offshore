@@ -136,10 +136,10 @@ index 81dc15dee..011212370 100644
 +#define HF_VERSION_OFFSHORE_PRICING             11
 +#define HF_VERSION_OFFSHORE_FULL                13
 +#define HF_VERSION_OFFSHORE_FEES_V2             14
-+#define HF_VERSION_OFFSHORE_FEES_V3             15
++#define HF_VERSION_OFFSHORE_FEES_V3             16
 +
-+#define STAGENET_VERSION                        0x08
-+#define TESTNET_VERSION                         0x08
++#define STAGENET_VERSION                        0x09
++#define TESTNET_VERSION                         0x09
 +
 +#define OFFSHORE_PRICING_BLOCKS_TO_AVERAGE      30
  
