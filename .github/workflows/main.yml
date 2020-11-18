@@ -98,6 +98,9 @@ jobs:
       CMAKE_OSX_DEPLOYMENT_TARGET: 10.14
       OSX_MIN_VERSION: 10.14
       DEVELOPER_DIR: /Applications/Xcode_10.3.app/Contents/Developer
+      LDFLAGS: "-L/usr/local/opt/openssl@1.1/lib"
+      CPPFLAGS: "-I/usr/local/opt/openssl@1.1/include"
+      OPENSSL_ROOT_DIR: /usr/local/opt/openssl@1.1
     runs-on: macos-10.15
     steps:
     - uses: actions/checkout@v1
@@ -105,7 +108,12 @@ jobs:
         submodules: recursive
     - name: Install dependencies
       run: |
-        brew update && brew install boost hidapi zmq libpgm miniupnpc ldns expat libunwind-headers protobuf pkgconfig
+        brew update
+        brew uninstall openssl 
+        rm -rf /usr/local/etc/openssl
+        brew reinstall openssl@1.1
+        brew --prefix openssl
+        brew install boost hidapi zmq libpgm miniupnpc ldns expat libunwind-headers protobuf pkgconfig
         wget https://raw.githubusercontent.com/zeromq/cppzmq/v4.3.0/zmq.hpp -O /usr/local/include/zmq.hpp
     - name: build Haven
       run: |
