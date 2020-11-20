@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/tx_pool.cpp b/src/cryptonote_core/tx_pool.cpp
-index 696bc88d4..866652a16 100644
+index 696bc88d4..449192bbd 100644
 --- a/src/cryptonote_core/tx_pool.cpp
 +++ b/src/cryptonote_core/tx_pool.cpp
 @@ -107,8 +107,8 @@ namespace cryptonote
@@ -34,8 +34,8 @@ index 696bc88d4..866652a16 100644
 -    if (!kept_by_block && !m_blockchain.check_fee(tx_weight, fee))
 +    if (!kept_by_block &&
 +	((tx.version < OFFSHORE_TRANSACTION_VERSION) || (tx.pricing_record_height == 0)) &&
-+	!m_blockchain.check_fee(tx_weight, fee) &&
-+	!m_blockchain.check_fee(tx_weight, fee_usd))
++	(!fee || !m_blockchain.check_fee(tx_weight, fee)) &&
++	(!fee_usd || !m_blockchain.check_fee(tx_weight, fee_usd)))
      {
        tvc.m_verifivation_failed = true;
        tvc.m_fee_too_low = true;
@@ -507,7 +507,7 @@ index 696bc88d4..866652a16 100644
        }
        if (meta.pruned)
        {
-@@ -1388,7 +1625,10 @@ namespace cryptonote
+@@ -1388,7 +1627,10 @@ namespace cryptonote
            continue;
          }
          coinbase = block_reward + fee + meta.fee;
@@ -518,7 +518,7 @@ index 696bc88d4..866652a16 100644
          {
            LOG_PRINT_L2("  would decrease coinbase to " << print_money(coinbase));
            continue;
-@@ -1446,10 +1686,20 @@ namespace cryptonote
+@@ -1446,10 +1688,20 @@ namespace cryptonote
          LOG_PRINT_L2("  key images already seen");
          continue;
        }

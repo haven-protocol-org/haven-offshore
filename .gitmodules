@@ -1,0 +1,3 @@
+[submodule "haven-blockchain-explorer"]
+	path = haven-blockchain-explorer
+	url = https://github.com/haven-protocol-org/haven-blockchain-explorer
