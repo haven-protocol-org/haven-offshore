@@ -597,7 +597,7 @@ index ffe38eedf..c82c4f894 100644
 +	  prompt << boost::format(tr("Onshoring %s XHV by burning %s xUSD (plus conversion fee %s xUSD).  ")) % print_money(total_sent) % print_money(usd_estimate) % print_money(offshore_fee);
 +	} else if (offshore_to_offshore) {
 +	  total_sent = dsts.back().amount;
-+	  prompt << boost::format(tr("Sending %s xUSD (with speculation fee %s xUSD).  ")) % print_money(total_sent) % print_money(offshore_fee);
++	  prompt << boost::format(tr("Sending %s xUSD.  ")) % print_money(total_sent);
 +	} else {
 +	  prompt << boost::format(tr("Sending %s.  ")) % print_money(total_sent);
 +	}

@@ -2,7 +2,7 @@ diff --git a/src/hardforks/hardforks.cpp b/src/hardforks/hardforks.cpp
 index 7ad09dbef..5b2cf8fe9 100644
 --- a/src/hardforks/hardforks.cpp
 +++ b/src/hardforks/hardforks.cpp
-@@ -33,82 +33,44 @@
+@@ -33,82 +33,45 @@
  
  const hardfork_t mainnet_hard_forks[] = {
    // version 1 from the start of the blockchain
@@ -48,7 +48,8 @@ index 7ad09dbef..5b2cf8fe9 100644
 +  { 5, 356338, 0, 1561060800 },  // 20th June 2019 - 20:00 GMT
 +  { 11, 640640, 0, 1595253600 },  // 20th July 2020 - 15:00 GMT
 +  { 13, 640650, 0, 1595254800 },   // 20th July 2020 - 15:20 GMT
-+  { 14, 653565, 0, 1596555180 }   // 7th August 2020 - 15:30 GMT
++  { 14, 653565, 0, 1596555180 },   // 7th August 2020 - 15:30 GMT
++  { 15, 741957, 0, 1606217525 }   // Fork time is on or around 8th December 2020 at 14:30 GMT. Fork time finalised on 2020-11-24.
 + };
  const size_t num_mainnet_hard_forks = sizeof(mainnet_hard_forks) / sizeof(mainnet_hard_forks[0]);
 -const uint64_t mainnet_hard_fork_version_1_till = 1009826;
