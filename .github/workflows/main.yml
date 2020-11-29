@@ -24,7 +24,7 @@ jobs:
     - name: Install Haven dependencies
       run: |
         sudo apt update
-        sudo apt-get --no-install-recommends --yes install build-essential cmake pkg-config libboost-all-dev libssl-dev libunbound-dev libsodium-dev liblzma-dev libreadline6-dev libldns-dev libexpat1-dev doxygen graphviz libpgm-dev libudev-dev
+        sudo apt-get --no-install-recommends --yes install libcurl4-openssl-dev build-essential cmake pkg-config libboost-all-dev libssl-dev libunbound-dev libsodium-dev liblzma-dev libreadline6-dev libldns-dev libexpat1-dev doxygen graphviz libpgm-dev libudev-dev
     - name: Install libzmq
       run: |
         git clone https://github.com/zeromq/libzmq.git -b ${ZMQ_VERSION}
