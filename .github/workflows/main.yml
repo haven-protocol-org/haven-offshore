@@ -56,7 +56,9 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: Haven-Explorer-Linux-x64 (glibc 2.29)
-        path: haven-blockchain-explorer/onion-monero-blockchain-explorer/build/xmrblocks
+        path: |
+          haven-blockchain-explorer/onion-monero-blockchain-explorer/build/xmrblocks
+          haven-blockchain-explorer/onion-monero-blockchain-explorer/build/templates
   build-linux-glibc-2-27:
     env:
       ZMQ_VERSION: v4.3.1
