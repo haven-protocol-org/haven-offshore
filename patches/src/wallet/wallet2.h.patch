@@ -1,5 +1,5 @@
 diff --git a/src/wallet/wallet2.h b/src/wallet/wallet2.h
-index 3a14215b3..6bd088738 100644
+index 3a14215b3..a8e5747f3 100644
 --- a/src/wallet/wallet2.h
 +++ b/src/wallet/wallet2.h
 @@ -131,9 +131,9 @@ private:
@@ -214,6 +214,17 @@ index 3a14215b3..6bd088738 100644
      // Light wallet specific functions
      // fetch unspent outs from lw node and store in m_transfers
      void light_wallet_get_unspent_outs();
+@@ -1367,8 +1410,8 @@ private:
+     bool unblackball_output(const std::pair<uint64_t, uint64_t> &output);
+     bool is_output_blackballed(const std::pair<uint64_t, uint64_t> &output) const;
+ 
+-    void freeze(size_t idx);
+-    void thaw(size_t idx);
++    void freeze(size_t idx, bool use_offshore_outputs = false);
++    void thaw(size_t idx, bool use_offshore_outputs = false);
+     bool frozen(size_t idx) const;
+     void freeze(const crypto::key_image &ki);
+     void thaw(const crypto::key_image &ki);
 @@ -1431,7 +1474,7 @@ private:
      void process_new_transaction(const crypto::hash &txid, const cryptonote::transaction& tx, const std::vector<uint64_t> &o_indices, uint64_t height, uint8_t block_version, uint64_t ts, bool miner_tx, bool pool, bool double_spend_seen, const tx_cache_data &tx_cache_data, std::map<std::pair<uint64_t, uint64_t>, size_t> *output_tracker_cache = NULL);
      bool should_skip_block(const cryptonote::block &b, uint64_t height) const;
