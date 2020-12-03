@@ -24,7 +24,7 @@ jobs:
     - name: Install Haven dependencies
       run: |
         sudo apt update
-        sudo apt-get --no-install-recommends --yes install build-essential cmake pkg-config libboost-all-dev libssl-dev libunbound-dev libsodium-dev liblzma-dev libreadline6-dev libldns-dev libexpat1-dev doxygen graphviz libpgm-dev libudev-dev
+        sudo apt-get --no-install-recommends --yes install libcurl4-openssl-dev build-essential cmake pkg-config libboost-all-dev libssl-dev libunbound-dev libsodium-dev liblzma-dev libreadline6-dev libldns-dev libexpat1-dev doxygen graphviz libpgm-dev libudev-dev
     - name: Install libzmq
       run: |
         git clone https://github.com/zeromq/libzmq.git -b ${ZMQ_VERSION}
@@ -43,11 +43,22 @@ jobs:
       run: |
         ./build-haven.sh release-static -j3
         chmod +x monero/build/release/bin/*
-    - name: Upload artifact
+    - name: build haven explorer
+      run: |
+        cd haven-blockchain-explorer
+        ./build-block-explorer.sh -j3
+    - name: Upload Haven
       uses: actions/upload-artifact@v2
       with:
         name: Haven-Linux-x64 (glibc 2.29)
         path: monero/build/release/bin/
+    - name: Upload Haven Explorer
+      uses: actions/upload-artifact@v2
+      with:
+        name: Haven-Explorer-Linux-x64 (glibc 2.29)
+        path: |
+          haven-blockchain-explorer/onion-monero-blockchain-explorer/build/xmrblocks
+          haven-blockchain-explorer/onion-monero-blockchain-explorer/build/templates
   build-linux-glibc-2-27:
     env:
       ZMQ_VERSION: v4.3.1
