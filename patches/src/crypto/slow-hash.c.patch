@@ -1,6 +1,6 @@
---- monero/src/crypto/slow-hash.c	2019-12-20 13:52:25.272151155 +0000
-+++ monero-offshore/src/crypto/slow-hash.c	2019-11-27 08:35:55.840825086 +0000
-@@ -39,11 +39,6 @@
+--- src/crypto/slow-hash.c.orig	2020-08-14 16:26:33.942298200 +0200
++++ src/crypto/slow-hash.c	2020-08-14 17:06:41.336391600 +0200
+@@ -39,10 +39,6 @@
  #include "hash-ops.h"
  #include "oaes_lib.h"
  #include "variant2_int_sqrt.h"
@@ -8,11 +8,10 @@
 -#include "CryptonightR_JIT.h"
 -
 -#include <errno.h>
--#include <string.h>
  
  #define MEMORY         (1 << 21) // 2MB scratchpad
  #define ITER           (1 << 20)
-@@ -55,41 +50,6 @@
+@@ -54,41 +50,6 @@
  extern void aesb_single_round(const uint8_t *in, uint8_t *out, const uint8_t *expandedKey);
  extern void aesb_pseudo_round(const uint8_t *in, uint8_t *out, const uint8_t *expandedKey);
  
@@ -54,7 +53,7 @@
  #define VARIANT1_1(p) \
    do if (variant == 1) \
    { \
-@@ -156,74 +116,48 @@ static inline int use_v4_jit(void)
+@@ -155,74 +116,48 @@
  #define VARIANT2_SHUFFLE_ADD_SSE2(base_ptr, offset) \
    do if (variant >= 2) \
    { \
@@ -122,8 +121,7 @@
      uint64_t b0[2]; \
      memcpy_swap64le(b0, b, 2); \
 -    chunk2[0] = SWAP64LE(chunk1_old[0] + b0[0]); \
-+    chunk2[0] = SWAP64LE(SWAP64LE(chunk1_old[0]) + b0[0]); \
-     chunk2[1] = SWAP64LE(SWAP64LE(chunk1_old[1]) + b0[1]); \
+-    chunk2[1] = SWAP64LE(chunk1_old[1] + b0[1]); \
 -    if (variant >= 4) \
 -    { \
 -      uint64_t out_copy[2]; \
@@ -136,10 +134,12 @@
 -      out_copy[1] ^= chunk1_old[1]; \
 -      memcpy_swap64le(out, out_copy, 2); \
 -    } \
++    chunk2[0] = SWAP64LE(SWAP64LE(chunk1_old[0]) + b0[0]); \
++    chunk2[1] = SWAP64LE(SWAP64LE(chunk1_old[1]) + b0[1]); \
    } while (0)
  
  #define VARIANT2_INTEGER_MATH_DIVISION_STEP(b, ptr) \
-@@ -238,7 +172,7 @@ static inline int use_v4_jit(void)
+@@ -237,7 +172,7 @@
    const uint64_t sqrt_input = SWAP64LE(((uint64_t*)(ptr))[0]) + division_result
  
  #define VARIANT2_INTEGER_MATH_SSE2(b, ptr) \
@@ -148,7 +148,7 @@
    { \
      VARIANT2_INTEGER_MATH_DIVISION_STEP(b, ptr); \
      VARIANT2_INTEGER_MATH_SQRT_STEP_SSE2(); \
-@@ -248,7 +182,7 @@ static inline int use_v4_jit(void)
+@@ -247,7 +182,7 @@
  #if defined DBL_MANT_DIG && (DBL_MANT_DIG >= 50)
    // double precision floating point type has enough bits of precision on current platform
    #define VARIANT2_PORTABLE_INTEGER_MATH(b, ptr) \
@@ -157,7 +157,7 @@
      { \
        VARIANT2_INTEGER_MATH_DIVISION_STEP(b, ptr); \
        VARIANT2_INTEGER_MATH_SQRT_STEP_FP64(); \
-@@ -258,7 +192,7 @@ static inline int use_v4_jit(void)
+@@ -257,7 +192,7 @@
    // double precision floating point type is not good enough on current platform
    // fall back to the reference code (integer only)
    #define VARIANT2_PORTABLE_INTEGER_MATH(b, ptr) \
@@ -166,7 +166,7 @@
      { \
        VARIANT2_INTEGER_MATH_DIVISION_STEP(b, ptr); \
        VARIANT2_INTEGER_MATH_SQRT_STEP_REF(); \
-@@ -266,80 +200,18 @@ static inline int use_v4_jit(void)
+@@ -265,80 +200,18 @@
  #endif
  
  #define VARIANT2_2_PORTABLE() \
@@ -253,7 +253,7 @@
    } while (0)
  
  
-@@ -405,7 +277,7 @@ static inline int use_v4_jit(void)
+@@ -404,7 +277,7 @@
  
  #define pre_aes() \
    j = state_index(a); \
@@ -262,7 +262,7 @@
    _a = _mm_load_si128(R128(a)); \
  
  /*
-@@ -418,20 +290,19 @@ static inline int use_v4_jit(void)
+@@ -417,20 +290,19 @@
   * This code is based upon an optimized implementation by dga.
   */
  #define post_aes() \
@@ -289,7 +289,7 @@
    p[0] = a[0];  p[1] = a[1]; \
    a[0] ^= b[0]; a[1] ^= b[1]; \
    VARIANT1_2(p + 1); \
-@@ -458,9 +329,6 @@ union cn_slow_hash_state
+@@ -457,9 +329,6 @@
  
  THREADV uint8_t *hp_state = NULL;
  THREADV int hp_allocated = 0;
@@ -299,7 +299,7 @@
  
  #if defined(_MSC_VER)
  #define cpuid(info,x)    __cpuidex(info,x,0)
-@@ -756,10 +624,10 @@ void slow_hash_allocate_state(void)
+@@ -755,10 +624,10 @@
  #if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || \
    defined(__DragonFly__) || defined(__NetBSD__)
      hp_state = mmap(0, MEMORY, PROT_READ | PROT_WRITE,
@@ -312,7 +312,7 @@
  #endif
      if(hp_state == MAP_FAILED)
          hp_state = NULL;
-@@ -770,35 +638,6 @@ void slow_hash_allocate_state(void)
+@@ -769,35 +638,6 @@
          hp_allocated = 0;
          hp_state = (uint8_t *) malloc(MEMORY);
      }
@@ -348,7 +348,7 @@
  }
  
  /**
-@@ -821,22 +660,8 @@ void slow_hash_free_state(void)
+@@ -820,22 +660,8 @@
  #endif
      }
  
@@ -371,7 +371,7 @@
  }
  
  /**
-@@ -869,7 +694,7 @@ void slow_hash_free_state(void)
+@@ -868,7 +694,7 @@
   * @param length the length in bytes of the data
   * @param hash a pointer to a buffer in which the final 256 bit hash will be stored
   */
@@ -380,18 +380,17 @@
  {
      RDATA_ALIGN16 uint8_t expandedKey[240];  /* These buffers are aligned to use later with SSE functions */
  
-@@ -895,10 +720,6 @@ void cn_slow_hash(const void *data, size
+@@ -894,9 +720,6 @@
      if(hp_state == NULL)
-         slow_hash_allocate_state();
+         cn_slow_hash_allocate_state();
  
 -    // locals to avoid constant TLS dereferencing
 -    uint8_t *local_hp_state = hp_state;
--    v4_random_math_JIT_func local_hp_jitfunc = hp_jitfunc;
 -
      /* CryptoNight Step 1:  Use Keccak1600 to initialize the 'state' (and 'text') buffers from the data. */
      if (prehashed) {
          memcpy(&state.hs, data, length);
-@@ -909,7 +730,6 @@ void cn_slow_hash(const void *data, size
+@@ -907,7 +730,6 @@
  
      VARIANT1_INIT64();
      VARIANT2_INIT64();
@@ -399,7 +398,7 @@
  
      /* CryptoNight Step 2:  Iteratively encrypt the results from Keccak to fill
       * the 2MB large random access buffer.
-@@ -921,7 +741,7 @@ void cn_slow_hash(const void *data, size
+@@ -919,7 +741,7 @@
          for(i = 0; i < MEMORY / INIT_SIZE_BYTE; i++)
          {
              aes_pseudo_round(text, text, expandedKey, INIT_SIZE_BLK);
@@ -408,7 +407,7 @@
          }
      }
      else
-@@ -933,7 +753,7 @@ void cn_slow_hash(const void *data, size
+@@ -931,7 +753,7 @@
              for(j = 0; j < INIT_SIZE_BLK; j++)
                  aesb_pseudo_round(&text[AES_BLOCK_SIZE * j], &text[AES_BLOCK_SIZE * j], aes_ctx->key->exp_data);
  
@@ -417,7 +416,7 @@
          }
      }
  
-@@ -981,7 +801,7 @@ void cn_slow_hash(const void *data, size
+@@ -979,7 +801,7 @@
          for(i = 0; i < MEMORY / INIT_SIZE_BYTE; i++)
          {
              // add the xor to the pseudo round
@@ -426,7 +425,7 @@
          }
      }
      else
-@@ -991,7 +811,7 @@ void cn_slow_hash(const void *data, size
+@@ -989,7 +811,7 @@
          {
              for(j = 0; j < INIT_SIZE_BLK; j++)
              {
@@ -435,7 +434,7 @@
                  aesb_pseudo_round(&text[AES_BLOCK_SIZE * j], &text[AES_BLOCK_SIZE * j], aes_ctx->key->exp_data);
              }
          }
-@@ -1035,8 +855,6 @@ void slow_hash_free_state(void)
+@@ -1033,8 +855,6 @@
  
  #define U64(x) ((uint64_t *) (x))
  
@@ -444,7 +443,7 @@
  STATIC INLINE void xor64(uint64_t *a, const uint64_t b)
  {
      *a ^= b;
-@@ -1071,24 +889,23 @@ union cn_slow_hash_state
+@@ -1069,24 +889,23 @@
  
  #define pre_aes() \
    j = state_index(a); \
@@ -476,7 +475,7 @@
    p[0] = a[0];  p[1] = a[1]; \
    a[0] ^= b[0]; a[1] ^= b[1]; \
    VARIANT1_2(p + 1); \
-@@ -1246,14 +1063,14 @@ STATIC INLINE void aligned_free(void *pt
+@@ -1244,14 +1063,14 @@
  }
  #endif /* FORCE_USE_HEAP */
  
@@ -494,7 +493,7 @@
  #endif
  
      uint8_t text[INIT_SIZE_BYTE];
-@@ -1283,7 +1100,6 @@ void cn_slow_hash(const void *data, size
+@@ -1281,7 +1100,6 @@
  
      VARIANT1_INIT64();
      VARIANT2_INIT64();
@@ -502,7 +501,7 @@
  
      /* CryptoNight Step 2:  Iteratively encrypt the results from Keccak to fill
       * the 2MB large random access buffer.
-@@ -1293,7 +1109,7 @@ void cn_slow_hash(const void *data, size
+@@ -1291,7 +1109,7 @@
      for(i = 0; i < MEMORY / INIT_SIZE_BYTE; i++)
      {
          aes_pseudo_round(text, text, expandedKey, INIT_SIZE_BLK);
@@ -511,7 +510,7 @@
      }
  
      U64(a)[0] = U64(&state.k[0])[0] ^ U64(&state.k[32])[0];
-@@ -1328,7 +1144,7 @@ void cn_slow_hash(const void *data, size
+@@ -1326,7 +1144,7 @@
      for(i = 0; i < MEMORY / INIT_SIZE_BYTE; i++)
      {
          // add the xor to the pseudo round
@@ -520,7 +519,7 @@
      }
  
      /* CryptoNight Step 5:  Apply Keccak to the state again, and then
-@@ -1343,7 +1159,7 @@ void cn_slow_hash(const void *data, size
+@@ -1341,7 +1159,7 @@
      extra_hashes[state.hs.b[0] & 3](&state, 200, hash);
  
  #ifdef FORCE_USE_HEAP
@@ -529,7 +528,7 @@
  #endif
  }
  #else /* aarch64 && crypto */
-@@ -1462,11 +1278,10 @@ STATIC INLINE void xor_blocks(uint8_t* a
+@@ -1460,11 +1278,10 @@
    U64(a)[1] ^= U64(b)[1];
  }
  
@@ -542,7 +541,7 @@
      uint8_t b[AES_BLOCK_SIZE * 2];
      uint8_t c[AES_BLOCK_SIZE];
      uint8_t c1[AES_BLOCK_SIZE];
-@@ -1502,7 +1317,6 @@ void cn_slow_hash(const void *data, size
+@@ -1500,7 +1317,6 @@
  
      VARIANT1_INIT64();
      VARIANT2_INIT64();
@@ -550,7 +549,7 @@
  
      // use aligned data
      memcpy(expandedKey, aes_ctx->key->exp_data, aes_ctx->key->exp_data_len);
-@@ -1526,10 +1340,10 @@ void cn_slow_hash(const void *data, size
+@@ -1524,10 +1340,10 @@
        // Iteration 1
        j = state_index(a);
        p = &long_state[j];
@@ -564,7 +563,7 @@
        xor_blocks(p, b);
        VARIANT1_1(p);
  
-@@ -1538,15 +1352,13 @@ void cn_slow_hash(const void *data, size
+@@ -1536,15 +1352,13 @@
        p = &long_state[j];
        copy_block(c, p);
  
@@ -584,7 +583,7 @@
        VARIANT1_2(U64(c) + 1);
        copy_block(p, c);
  
-@@ -1554,7 +1366,6 @@ void cn_slow_hash(const void *data, size
+@@ -1552,7 +1366,6 @@
          copy_block(b + AES_BLOCK_SIZE, b);
        }
        copy_block(b, c1);
@@ -592,16 +591,16 @@
      }
  
      memcpy(text, state.init, INIT_SIZE_BYTE);
-@@ -1582,8 +1393,6 @@ void cn_slow_hash(const void *data, size
+@@ -1580,8 +1393,6 @@
  #else
  // Portable implementation as a fallback
  
 -#define hp_jitfunc ((v4_random_math_JIT_func)NULL)
 -
- void slow_hash_allocate_state(void)
+ void cn_slow_hash_allocate_state(void)
  {
    // Do nothing, this is just to maintain compatibility with the upgraded slow-hash.c
-@@ -1667,7 +1476,7 @@ union cn_slow_hash_state {
+@@ -1665,7 +1476,7 @@
  };
  #pragma pack(pop)
  
@@ -610,7 +609,7 @@
  #ifndef FORCE_USE_HEAP
    uint8_t long_state[MEMORY];
  #else
-@@ -1677,7 +1486,6 @@ void cn_slow_hash(const void *data, size
+@@ -1675,7 +1486,6 @@
    union cn_slow_hash_state state;
    uint8_t text[INIT_SIZE_BYTE];
    uint8_t a[AES_BLOCK_SIZE];
@@ -618,7 +617,7 @@
    uint8_t b[AES_BLOCK_SIZE * 2];
    uint8_t c1[AES_BLOCK_SIZE];
    uint8_t c2[AES_BLOCK_SIZE];
-@@ -1697,7 +1505,6 @@ void cn_slow_hash(const void *data, size
+@@ -1695,7 +1505,6 @@
  
    VARIANT1_PORTABLE_INIT();
    VARIANT2_PORTABLE_INIT();
@@ -626,7 +625,7 @@
  
    oaes_key_import_data(aes_ctx, aes_key, AES_KEY_SIZE);
    for (i = 0; i < MEMORY / INIT_SIZE_BYTE; i++) {
-@@ -1721,7 +1528,7 @@ void cn_slow_hash(const void *data, size
+@@ -1719,7 +1528,7 @@
      j = e2i(a, MEMORY / AES_BLOCK_SIZE) * AES_BLOCK_SIZE;
      copy_block(c1, &long_state[j]);
      aesb_single_round(c1, c1, a);
@@ -635,7 +634,7 @@
      copy_block(&long_state[j], c1);
      xor_blocks(&long_state[j], b);
      assert(j == e2i(a, MEMORY / AES_BLOCK_SIZE) * AES_BLOCK_SIZE);
-@@ -1729,22 +1536,22 @@ void cn_slow_hash(const void *data, size
+@@ -1727,22 +1536,22 @@
      /* Iteration 2 */
      j = e2i(c1, MEMORY / AES_BLOCK_SIZE) * AES_BLOCK_SIZE;
      copy_block(c2, &long_state[j]);

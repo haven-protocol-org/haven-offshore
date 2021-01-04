@@ -24,7 +24,7 @@ jobs:
     - name: Install Haven dependencies
       run: |
         sudo apt update
-        sudo apt-get --no-install-recommends --yes install build-essential cmake pkg-config libboost-all-dev libssl-dev libunbound-dev libsodium-dev liblzma-dev libreadline6-dev libldns-dev libexpat1-dev doxygen graphviz libpgm-dev libudev-dev
+        sudo apt-get --no-install-recommends --yes install libcurl4-openssl-dev build-essential cmake pkg-config libboost-all-dev libssl-dev libunbound-dev libsodium-dev liblzma-dev libreadline6-dev libldns-dev libexpat1-dev doxygen graphviz libpgm-dev libudev-dev
     - name: Install libzmq
       run: |
         git clone https://github.com/zeromq/libzmq.git -b ${ZMQ_VERSION}
@@ -43,11 +43,22 @@ jobs:
       run: |
         ./build-haven.sh release-static -j3
         chmod +x monero/build/release/bin/*
-    - name: Upload artifact
+    - name: build haven explorer
+      run: |
+        cd haven-blockchain-explorer
+        ./build-block-explorer.sh -j3
+    - name: Upload Haven
       uses: actions/upload-artifact@v2
       with:
         name: Haven-Linux-x64 (glibc 2.29)
         path: monero/build/release/bin/
+    - name: Upload Haven Explorer
+      uses: actions/upload-artifact@v2
+      with:
+        name: Haven-Explorer-Linux-x64 (glibc 2.29)
+        path: |
+          haven-blockchain-explorer/onion-monero-blockchain-explorer/build/xmrblocks
+          haven-blockchain-explorer/onion-monero-blockchain-explorer/build/templates
   build-linux-glibc-2-27:
     env:
       ZMQ_VERSION: v4.3.1
@@ -97,27 +108,24 @@ jobs:
     env:
       CMAKE_OSX_DEPLOYMENT_TARGET: 10.14
       OSX_MIN_VERSION: 10.14
-      DEVELOPER_DIR: /Applications/Xcode_10.3.app/Contents/Developer
-      LDFLAGS: "-L/usr/local/opt/openssl@1.1/lib"
-      CPPFLAGS: "-I/usr/local/opt/openssl@1.1/include"
-      OPENSSL_ROOT_DIR: /usr/local/opt/openssl@1.1
-    runs-on: macos-10.15
+    runs-on: macOS-latest
     steps:
     - uses: actions/checkout@v1
       with:
         submodules: recursive
-    - name: Install dependencies
+    - name: install dependencies
+      run: brew install hidapi zmq libpgm miniupnpc ldns expat libunwind-headers protobuf
+    - name: build boost
       run: |
-        brew update
-        brew uninstall openssl 
-        rm -rf /usr/local/etc/openssl
-        brew reinstall openssl@1.1
-        brew --prefix openssl
-        brew install boost hidapi zmq libpgm miniupnpc ldns expat libunwind-headers protobuf pkgconfig
-        wget https://raw.githubusercontent.com/zeromq/cppzmq/v4.3.0/zmq.hpp -O /usr/local/include/zmq.hpp
-    - name: build Haven
+        wget https://dl.bintray.com/boostorg/release/1.71.0/source/boost_1_71_0.tar.gz
+        tar -xzf boost_1_71_0.tar.gz
+        cd boost_1_71_0
+        ./bootstrap.sh 
+        ./b2
+        ./b2 install
+    - name: build
       run: |
-        ./build-haven.sh release-static -j3
+        ./build-haven.sh release -j3
         chmod +x monero/build/release/bin/*
     - name: Upload artifact
       uses: actions/upload-artifact@v2
@@ -125,6 +133,8 @@ jobs:
         name: Haven-MacOS-10.14-and-later
         path: monero/build/release/bin/
   build-windows:
+    env:
+      ACTIONS_ALLOW_UNSECURE_COMMANDS: true
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v1
@@ -135,10 +145,10 @@ jobs:
         update: true
     - name: Install Haven dependencies
       run: msys2do pacman -S --noconfirm mingw-w64-x86_64-toolchain make mingw-w64-x86_64-cmake mingw-w64-x86_64-openssl mingw-w64-x86_64-zeromq mingw-w64-x86_64-libsodium mingw-w64-x86_64-hidapi mingw-w64-x86_64-libusb git patch
-    - name: install boost 1.69 & icu 62
+    - name: install boost
       run: |
-        msys2do wget http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-boost-1.69.0-2-any.pkg.tar.xz
-        msys2do wget http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-icu-62.1-1-any.pkg.tar.xz
+        msys2do wget http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-boost-1.71.0-3-any.pkg.tar.xz
+        msys2do wget http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-icu-65.1-1-any.pkg.tar.xz
         msys2do pacman -U --noconfirm *.tar.xz
     - name: build Haven
       run: msys2do ./build-haven.sh release-static-win64

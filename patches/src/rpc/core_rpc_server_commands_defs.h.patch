@@ -1,9 +1,12 @@
---- monero/src/rpc/core_rpc_server_commands_defs.h	2020-05-28 17:21:37.255696286 +0100
-+++ monero-offshore/src/rpc/core_rpc_server_commands_defs.h	2020-04-08 14:55:48.000000000 +0100
-@@ -864,6 +864,28 @@ namespace cryptonote
+diff --git a/src/rpc/core_rpc_server_commands_defs.h b/src/rpc/core_rpc_server_commands_defs.h
+index a3c187c24..8d7c2c855 100644
+--- a/src/rpc/core_rpc_server_commands_defs.h
++++ b/src/rpc/core_rpc_server_commands_defs.h
+@@ -833,6 +833,50 @@ namespace cryptonote
+     typedef epee::misc_utils::struct_init<response_t> response;
    };
  
-   //-----------------------------------------------
++  //-----------------------------------------------
 +  struct COMMAND_RPC_GET_PRICING_RECORD
 +  {
 +    struct request_t
@@ -26,10 +29,31 @@
 +  };
 +
 +  //-----------------------------------------------
++  struct COMMAND_RPC_GET_PUBLIC_KEY
++  {
++    struct request_t
++    {
++      BEGIN_KV_SERIALIZE_MAP()
++      END_KV_SERIALIZE_MAP()
++    };
++    typedef epee::misc_utils::struct_init<request_t> request;
++    
++
++    struct response_t
++    {
++      std::string str_ec_public_key;
++      
++      BEGIN_KV_SERIALIZE_MAP()
++      KV_SERIALIZE(str_ec_public_key)
++      END_KV_SERIALIZE_MAP()
++    };
++    typedef epee::misc_utils::struct_init<response_t> response;
++  };
++
+   //-----------------------------------------------
    struct COMMAND_RPC_SAVE_BC
    {
-     struct request_t
-@@ -1014,6 +1036,7 @@ namespace cryptonote
+@@ -985,6 +1029,7 @@ namespace cryptonote
        uint64_t timestamp;
        std::string prev_hash;
        uint32_t nonce;
@@ -37,7 +61,7 @@
        bool orphan_status;
        uint64_t height;
        uint64_t depth;
-@@ -1038,6 +1061,7 @@ namespace cryptonote
+@@ -1009,6 +1054,7 @@ namespace cryptonote
          KV_SERIALIZE(timestamp)
          KV_SERIALIZE(prev_hash)
          KV_SERIALIZE(nonce)
@@ -45,7 +69,7 @@
          KV_SERIALIZE(orphan_status)
          KV_SERIALIZE(height)
          KV_SERIALIZE(depth)
-@@ -1899,6 +1923,42 @@ namespace cryptonote
+@@ -1927,6 +1973,42 @@ namespace cryptonote
      typedef epee::misc_utils::struct_init<response_t> response;
    };
  
@@ -87,4 +111,4 @@
 +  
    struct COMMAND_RPC_GET_OUTPUT_HISTOGRAM
    {
-     struct request_t
+     struct request_t: public rpc_access_request_base

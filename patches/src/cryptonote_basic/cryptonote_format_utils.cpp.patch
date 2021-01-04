@@ -1,8 +1,6 @@
-diff --git a/src/cryptonote_basic/cryptonote_format_utils.cpp b/src/cryptonote_basic/cryptonote_format_utils.cpp
-index 7d7de416d..b38b0275b 100644
---- a/src/cryptonote_basic/cryptonote_format_utils.cpp
-+++ b/src/cryptonote_basic/cryptonote_format_utils.cpp
-@@ -135,12 +135,32 @@ namespace cryptonote
+--- cryptonote_basic/cryptonote_format_utils.cpp.orig	2020-08-14 16:26:34.005299100 +0200
++++ cryptonote_basic/cryptonote_format_utils.cpp	2020-08-14 16:26:48.802578900 +0200
+@@ -169,12 +169,32 @@
        }
        for (size_t n = 0; n < tx.rct_signatures.outPk.size(); ++n)
        {
@@ -38,7 +36,7 @@ index 7d7de416d..b38b0275b 100644
        }
  
        if (!base_only)
-@@ -168,7 +188,11 @@ namespace cryptonote
+@@ -202,7 +222,11 @@
            CHECK_AND_ASSERT_MES(n_amounts == rv.outPk.size(), false, "Internal error filling out V");
            rv.p.bulletproofs[0].V.resize(n_amounts);
            for (size_t i = 0; i < n_amounts; ++i)
@@ -51,7 +49,7 @@ index 7d7de416d..b38b0275b 100644
          }
        }
      }
-@@ -435,8 +459,8 @@ namespace cryptonote
+@@ -503,8 +527,8 @@
      uint64_t amount_out = 0;
      for(auto& in: tx.vin)
      {
@@ -62,7 +60,7 @@ index 7d7de416d..b38b0275b 100644
      }
      for(auto& o: tx.vout)
        amount_out += o.amount;
-@@ -519,7 +543,7 @@ namespace cryptonote
+@@ -587,7 +611,7 @@
        bool r = ::do_serialize(ar, field);
        if (!r)
        {
@@ -71,7 +69,7 @@ index 7d7de416d..b38b0275b 100644
          if (!allow_partial)
            return false;
          break;
-@@ -533,7 +557,7 @@ namespace cryptonote
+@@ -601,7 +625,7 @@
      }
      if (!::serialization::check_stream_state(ar))
      {
@@ -80,7 +78,7 @@ index 7d7de416d..b38b0275b 100644
        if (!allow_partial)
          return false;
      }
-@@ -549,6 +573,7 @@ namespace cryptonote
+@@ -617,6 +641,7 @@
      if (!pick<tx_extra_merge_mining_tag>(nar, tx_extra_fields, TX_EXTRA_MERGE_MINING_TAG)) return false;
      if (!pick<tx_extra_mysterious_minergate>(nar, tx_extra_fields, TX_EXTRA_MYSTERIOUS_MINERGATE_TAG)) return false;
      if (!pick<tx_extra_padding>(nar, tx_extra_fields, TX_EXTRA_TAG_PADDING)) return false;
@@ -88,7 +86,7 @@ index 7d7de416d..b38b0275b 100644
  
      // if not empty, someone added a new type and did not add a case above
      if (!tx_extra_fields.empty())
-@@ -589,6 +614,13 @@ namespace cryptonote
+@@ -657,6 +682,13 @@
      return get_tx_pub_key_from_extra(tx.extra, pk_index);
    }
    //---------------------------------------------------------------
@@ -102,7 +100,7 @@ index 7d7de416d..b38b0275b 100644
    bool add_tx_pub_key_to_extra(transaction& tx, const crypto::public_key& tx_pub_key)
    {
      return add_tx_pub_key_to_extra(tx.extra, tx_pub_key);
-@@ -657,6 +689,18 @@ namespace cryptonote
+@@ -725,6 +757,18 @@
      return true;
    }
    //---------------------------------------------------------------
@@ -121,7 +119,7 @@ index 7d7de416d..b38b0275b 100644
    bool remove_field_from_tx_extra(std::vector<uint8_t>& tx_extra, const std::type_info &type)
    {
      if (tx_extra.empty())
-@@ -746,10 +790,9 @@ namespace cryptonote
+@@ -814,10 +858,9 @@
    {
      for(const auto& in: tx.vin)
      {
@@ -135,7 +133,7 @@ index 7d7de416d..b38b0275b 100644
      }
      return true;
    }
-@@ -758,17 +801,18 @@ namespace cryptonote
+@@ -826,17 +869,18 @@
    {
      for(const tx_out& out: tx.vout)
      {
@@ -159,7 +157,7 @@ index 7d7de416d..b38b0275b 100644
      }
      return true;
    }
-@@ -781,12 +825,32 @@ namespace cryptonote
+@@ -849,12 +893,32 @@
    bool check_inputs_overflow(const transaction& tx)
    {
      uint64_t money = 0;
@@ -198,7 +196,7 @@ index 7d7de416d..b38b0275b 100644
      }
      return true;
    }
-@@ -928,15 +992,15 @@ namespace cryptonote
+@@ -996,15 +1060,15 @@
      switch (decimal_point)
      {
        case 12:
@@ -219,7 +217,7 @@ index 7d7de416d..b38b0275b 100644
        default:
          ASSERT_MES_AND_THROW("Invalid decimal point specification: " << decimal_point);
      }
-@@ -956,6 +1020,20 @@ namespace cryptonote
+@@ -1038,6 +1102,20 @@
      return s;
    }
    //---------------------------------------------------------------
@@ -240,7 +238,7 @@ index 7d7de416d..b38b0275b 100644
    crypto::hash get_blob_hash(const blobdata& blob)
    {
      crypto::hash h = null_hash;
-@@ -1000,7 +1078,11 @@ namespace cryptonote
+@@ -1082,7 +1160,11 @@
        binary_archive<true> ba(ss);
        const size_t inputs = t.vin.size();
        const size_t outputs = t.vout.size();
@@ -253,39 +251,7 @@ index 7d7de416d..b38b0275b 100644
        bool r = tt.rct_signatures.p.serialize_rctsig_prunable(ba, t.rct_signatures.type, inputs, outputs, mixin);
        CHECK_AND_ASSERT_MES(r, false, "Failed to serialize rct signatures prunable");
        cryptonote::get_blob_hash(ss.str(), res);
-@@ -1220,16 +1302,23 @@ namespace cryptonote
-   //---------------------------------------------------------------
-   bool get_block_longhash(const block& b, crypto::hash& res, uint64_t height)
-   {
--    // block 202612 bug workaround
--    if (height == 202612)
-+    block b_local = b; //workaround to avoid const errors with do_serialize
-+    blobdata bd = get_block_hashing_blob(b);
-+    cn_pow_hash_v3 ctx;
-+    if(b_local.major_version >= CRYPTONOTE_V3_POW_BLOCK_VERSION)
-     {
--      static const std::string longhash_202612 = "84f64766475d51837ac9efbef1926486e58563c95a19fef4aec3254f03000000";
--      string_tools::hex_to_pod(longhash_202612, res);
--      return true;
-+      ctx.hash(bd.data(), bd.size(), res.data);
-+    }
-+    else if(b_local.major_version == CRYPTONOTE_V2_POW_BLOCK_VERSION)
-+    {
-+      cn_pow_hash_v2 ctx_v2 = cn_pow_hash_v2::make_borrowed_v2(ctx);
-+      ctx_v2.hash(bd.data(), bd.size(), res.data);
-+    }
-+    else
-+    {
-+      cn_pow_hash_v1 ctx_v1 = cn_pow_hash_v1::make_borrowed_v1(ctx);
-+      ctx_v1.hash(bd.data(), bd.size(), res.data);
-     }
--    blobdata bd = get_block_hashing_blob(b);
--    const int cn_variant = b.major_version >= 7 ? b.major_version - 6 : 0;
--    crypto::cn_slow_hash(bd.data(), bd.size(), res, cn_variant, height);
-     return true;
-   }
-   //---------------------------------------------------------------
-@@ -1352,7 +1441,8 @@ namespace cryptonote
+@@ -1421,7 +1503,8 @@
    crypto::secret_key encrypt_key(crypto::secret_key key, const epee::wipeable_string &passphrase)
    {
      crypto::hash hash;
@@ -295,7 +261,7 @@ index 7d7de416d..b38b0275b 100644
      sc_add((unsigned char*)key.data, (const unsigned char*)key.data, (const unsigned char*)hash.data);
      return key;
    }
-@@ -1360,7 +1450,8 @@ namespace cryptonote
+@@ -1429,7 +1512,8 @@
    crypto::secret_key decrypt_key(crypto::secret_key key, const epee::wipeable_string &passphrase)
    {
      crypto::hash hash;

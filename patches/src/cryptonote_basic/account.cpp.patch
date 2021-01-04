@@ -1,9 +1,9 @@
---- monero/src/cryptonote_basic/account.cpp	2019-12-20 13:52:25.272151155 +0000
-+++ monero-offshore/src/cryptonote_basic/account.cpp	2019-11-27 08:35:55.900825714 +0000
-@@ -70,7 +70,7 @@ DISABLE_VS_WARNINGS(4244 4345)
+--- src/cryptonote_basic/account.cpp.orig	2020-08-14 16:26:48.686582400 +0200
++++ src/cryptonote_basic/account.cpp	2020-08-14 17:09:50.454471600 +0200
+@@ -68,7 +68,7 @@
      epee::mlocked<tools::scrubbed_arr<char, sizeof(base_key)+1>> data;
      memcpy(data.data(), &base_key, sizeof(base_key));
-     data[sizeof(base_key)] = KEYS_ENCRYPTION_SALT;
+     data[sizeof(base_key)] = config::HASH_KEY_MEMORY;
 -    crypto::generate_chacha_key(data.data(), sizeof(data), key, 1);
 +    crypto::generate_chacha_key(data.data(), sizeof(data), key, HAVEN_CHACHA_ROUNDS);
    }

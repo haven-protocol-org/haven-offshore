@@ -1,8 +1,17 @@
 diff --git a/src/rpc/core_rpc_server.cpp b/src/rpc/core_rpc_server.cpp
-index b6836e63..ddfc7ae1 100644
+index 30b6190ab..a7526a48c 100644
 --- a/src/rpc/core_rpc_server.cpp
 +++ b/src/rpc/core_rpc_server.cpp
-@@ -1428,6 +1428,8 @@ namespace cryptonote
+@@ -1134,7 +1134,7 @@ namespace cryptonote
+       return true;
+     }
+ 
+-    if (req.do_sanity_checks && !cryptonote::tx_sanity_check(tx_blob, m_core.get_blockchain_storage().get_num_mature_outputs(0)))
++    if (req.do_sanity_checks && !cryptonote::tx_sanity_check(tx_blob, m_core.get_blockchain_storage().get_num_mature_outputs(0), m_core.get_current_blockchain_height()))
+     {
+       res.status = "Failed";
+       res.reason = "Sanity check failed";
+@@ -1919,6 +1919,8 @@ namespace cryptonote
      response.timestamp = blk.timestamp;
      response.prev_hash = string_tools::pod_to_hex(blk.prev_id);
      response.nonce = blk.nonce;
@@ -11,7 +20,7 @@ index b6836e63..ddfc7ae1 100644
      response.orphan_status = orphan_status;
      response.height = height;
      response.depth = m_core.get_current_blockchain_height() - height - 1;
-@@ -1937,6 +1939,19 @@ namespace cryptonote
+@@ -2560,6 +2562,19 @@ namespace cryptonote
      return true;
    }
    //------------------------------------------------------------------------------------------------------------------------------
@@ -30,4 +39,17 @@ index b6836e63..ddfc7ae1 100644
 +  //------------------------------------------------------------------------------------------------------------------------------
    bool core_rpc_server::on_get_base_fee_estimate(const COMMAND_RPC_GET_BASE_FEE_ESTIMATE::request& req, COMMAND_RPC_GET_BASE_FEE_ESTIMATE::response& res, epee::json_rpc::error& error_resp, const connection_context *ctx)
    {
-     PERF_TIMER(on_get_base_fee_estimate);
+     RPC_TRACKER(get_base_fee_estimate);
+@@ -2691,6 +2706,12 @@ namespace cryptonote
+       return true;
+     }
+ 
++    // HERE BE DRAGONS!!!
++    // Haven does not support the update mechanism as yet
++    res.status = "Haven Daemon does not support update method yet";
++    return true;
++    // LAND AHOY!!!
++    
+     static const char software[] = "monero";
+ #ifdef BUILD_TAG
+     static const char buildtag[] = BOOST_PP_STRINGIZE(BUILD_TAG);

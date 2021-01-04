@@ -1,8 +1,6 @@
-diff --git a/src/cryptonote_core/tx_pool.h b/src/cryptonote_core/tx_pool.h
-index 877f2b82f..eb109aded 100644
---- a/src/cryptonote_core/tx_pool.h
-+++ b/src/cryptonote_core/tx_pool.h
-@@ -136,13 +136,16 @@ namespace cryptonote
+--- cryptonote_core/tx_pool.h.orig	2020-08-14 16:26:34.210300500 +0200
++++ cryptonote_core/tx_pool.h	2020-08-14 19:06:29.837887300 +0200
+@@ -139,6 +139,9 @@
       * @param txblob return-by-reference the transaction as a blob
       * @param tx_weight return-by-reference the transaction's weight
       * @param fee the transaction fee
@@ -12,15 +10,18 @@ index 877f2b82f..eb109aded 100644
       * @param relayed return-by-reference was transaction relayed to us by the network?
       * @param do_not_relay return-by-reference is transaction not to be relayed to the network?
       * @param double_spend_seen return-by-reference was a double spend seen for that transaction?
+@@ -146,8 +149,8 @@
       *
       * @return true unless the transaction cannot be found in the pool
       */
--    bool take_tx(const crypto::hash &id, transaction &tx, cryptonote::blobdata &txblob, size_t& tx_weight, uint64_t& fee, bool &relayed, bool &do_not_relay, bool &double_spend_seen);
-+    bool take_tx(const crypto::hash &id, transaction &tx, cryptonote::blobdata &txblob, size_t& tx_weight, uint64_t& fee, uint64_t& fee_usd, uint64_t& offshore_fee, uint64_t& offshore_fee_usd, bool &relayed, bool &do_not_relay, bool &double_spend_seen);
- 
+-    bool take_tx(const crypto::hash &id, transaction &tx, cryptonote::blobdata &txblob, size_t& tx_weight, uint64_t& fee, bool &relayed, bool &do_not_relay, bool &double_spend_seen, bool &pruned);
+-
++    bool take_tx(const crypto::hash &id, transaction &tx, cryptonote::blobdata &txblob, size_t& tx_weight, uint64_t& fee, uint64_t& fee_usd, uint64_t& offshore_fee, uint64_t& offshore_fee_usd, bool &relayed, bool &do_not_relay, bool &double_spend_seen, bool &pruned);
++ 
      /**
       * @brief checks if the pool has a transaction with the given hash
-@@ -224,12 +227,15 @@ namespace cryptonote
+      *
+@@ -230,12 +233,15 @@
       * @param already_generated_coins the current total number of coins "minted"
       * @param total_weight return-by-reference the total weight of the new block
       * @param fee return-by-reference the total of fees from the included transactions
