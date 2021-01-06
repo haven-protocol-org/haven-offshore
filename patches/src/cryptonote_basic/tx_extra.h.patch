@@ -1,8 +1,16 @@
 diff --git a/src/cryptonote_basic/tx_extra.h b/src/cryptonote_basic/tx_extra.h
-index ecb4c6040..94a0866b2 100644
+index ecb4c6040..e3b1ee744 100644
 --- a/src/cryptonote_basic/tx_extra.h
 +++ b/src/cryptonote_basic/tx_extra.h
-@@ -41,6 +41,9 @@
+@@ -33,6 +33,7 @@
+ 
+ #define TX_EXTRA_PADDING_MAX_COUNT          255
+ #define TX_EXTRA_NONCE_MAX_COUNT            255
++#define TX_EXTRA_MEMO_MAX_COUNT             255
+ 
+ #define TX_EXTRA_TAG_PADDING                0x00
+ #define TX_EXTRA_TAG_PUBKEY                 0x01
+@@ -41,6 +42,9 @@
  #define TX_EXTRA_TAG_ADDITIONAL_PUBKEYS     0x04
  #define TX_EXTRA_MYSTERIOUS_MINERGATE_TAG   0xDE
  
@@ -12,7 +20,7 @@ index ecb4c6040..94a0866b2 100644
  #define TX_EXTRA_NONCE_PAYMENT_ID           0x00
  #define TX_EXTRA_NONCE_ENCRYPTED_PAYMENT_ID 0x01
  
-@@ -179,11 +182,33 @@ namespace cryptonote
+@@ -179,11 +183,33 @@ namespace cryptonote
      END_SERIALIZE()
    };
  
@@ -47,7 +55,7 @@ index ecb4c6040..94a0866b2 100644
  }
  
  VARIANT_TAG(binary_archive, cryptonote::tx_extra_padding, TX_EXTRA_TAG_PADDING);
-@@ -192,3 +217,5 @@ VARIANT_TAG(binary_archive, cryptonote::tx_extra_nonce, TX_EXTRA_NONCE);
+@@ -192,3 +218,5 @@ VARIANT_TAG(binary_archive, cryptonote::tx_extra_nonce, TX_EXTRA_NONCE);
  VARIANT_TAG(binary_archive, cryptonote::tx_extra_merge_mining_tag, TX_EXTRA_MERGE_MINING_TAG);
  VARIANT_TAG(binary_archive, cryptonote::tx_extra_additional_pub_keys, TX_EXTRA_TAG_ADDITIONAL_PUBKEYS);
  VARIANT_TAG(binary_archive, cryptonote::tx_extra_mysterious_minergate, TX_EXTRA_MYSTERIOUS_MINERGATE_TAG);
