@@ -302,7 +302,7 @@ index c3ba34260..d59efb890 100644
  void wallet2::cache_tx_data(const cryptonote::transaction& tx, const crypto::hash &txid, tx_cache_data &tx_cache_data) const
  {
    if(!parse_tx_extra(tx.extra, tx_cache_data.tx_extra_fields))
-@@ -1881,16 +1991,161 @@ bool wallet2::spends_one_of_ours(const cryptonote::transaction &tx) const
+@@ -1881,16 +1991,162 @@ bool wallet2::spends_one_of_ours(const cryptonote::transaction &tx) const
    return false;
  }
  //----------------------------------------------------------------------------------------------------
@@ -420,6 +420,7 @@ index c3ba34260..d59efb890 100644
 +    // Check to see if this is an offshore tx
 +    bOffshoreTx = get_offshore_from_tx_extra(tx.extra, offshore_data);
 +    if (bOffshoreTx) {
++      if (m_multisig) return;
 +    }
 +  }
 +

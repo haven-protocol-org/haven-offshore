@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/tx_pool.cpp b/src/cryptonote_core/tx_pool.cpp
-index 696bc88d4..449192bbd 100644
+index 696bc88d4..bc133c8ee 100644
 --- a/src/cryptonote_core/tx_pool.cpp
 +++ b/src/cryptonote_core/tx_pool.cpp
 @@ -107,8 +107,8 @@ namespace cryptonote
@@ -146,7 +146,13 @@ index 696bc88d4..449192bbd 100644
      }
  
      tvc.m_verifivation_failed = false;
-@@ -355,7 +438,7 @@ namespace cryptonote
+@@ -350,12 +433,12 @@ namespace cryptonote
+ 
+     ++m_cookie;
+ 
+-    MINFO("Transaction added to pool: txid " << id << " weight: " << tx_weight << " fee/byte: " << (fee / (double)(tx_weight ? tx_weight : 1)));
++    MINFO("Transaction added to pool: txid " << id << " weight: " << tx_weight << " fee/byte: " << ((fee > 0 ? fee : fee_usd) / (double)(tx_weight ? tx_weight : 1)));
+ 
      prune(m_txpool_max_weight);
  
      return true;
@@ -343,6 +349,15 @@ index 696bc88d4..449192bbd 100644
        relayed = meta.relayed;
        do_not_relay = meta.do_not_relay;
        double_spend_seen = meta.double_spend_seen;
+@@ -728,7 +898,7 @@ namespace cryptonote
+     txs.reserve(m_blockchain.get_txpool_tx_count());
+     m_blockchain.for_all_txpool_txes([this, now, &txs](const crypto::hash &txid, const txpool_tx_meta_t &meta, const cryptonote::blobdata *){
+       // 0 fee transactions are never relayed
+-      if(!meta.pruned && meta.fee > 0 && !meta.do_not_relay)
++      if(!meta.pruned && (meta.fee > 0 || meta.fee_usd > 0) && !meta.do_not_relay)
+       {
+         if (!meta.dandelionpp_stem && now - meta.last_relayed_time <= get_relay_delay(now, meta.receive_time))
+           return true;
 @@ -1102,11 +1272,29 @@ namespace cryptonote
    {
      CRITICAL_REGION_LOCAL(m_transactions_lock);
