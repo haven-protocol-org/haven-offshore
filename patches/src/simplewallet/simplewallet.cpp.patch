@@ -1,5 +1,5 @@
 diff --git a/src/simplewallet/simplewallet.cpp b/src/simplewallet/simplewallet.cpp
-index ffe38eedf..81a365a81 100644
+index ffe38eedf..04f38f8d1 100644
 --- a/src/simplewallet/simplewallet.cpp
 +++ b/src/simplewallet/simplewallet.cpp
 @@ -147,7 +147,7 @@ static std::string get_human_readable_timespan(uint64_t seconds);
@@ -670,13 +670,13 @@ index ffe38eedf..81a365a81 100644
 +    } else {
 +      // Support old format of offshore_data
 +      if (strSourceCurrency == "XHV")
-+	offshore_data.data += 'A';
++	      offshore_data.data += 'A';
 +      else 
-+	offshore_data.data += 'N';
++	      offshore_data.data += 'N';
 +      if (strDestinationCurrency == "XHV")
-+	offshore_data.data += 'A';
++	      offshore_data.data += 'A';
 +      else 
-+	offshore_data.data += 'N';
++	      offshore_data.data += 'N';
 +    }
 +    cryptonote::add_offshore_to_tx_extra(extra, offshore_data);
 +
@@ -694,11 +694,11 @@ index ffe38eedf..81a365a81 100644
 +
 +      // Modify the count of locked blocks
 +      if (0/*m_wallet->use_fork_rules(HF_VERSION_OFFSHORE_FEES_V3, 0)*/) {
-+	locked_blocks = (priority == 4) ? 180 : (priority == 3) ? 1440 : (priority == 2) ? 3600 : 7200;
++	      locked_blocks = (priority == 4) ? 180 : (priority == 3) ? 1440 : (priority == 2) ? 3600 : 7200;
 +      } else if (m_wallet->use_fork_rules(HF_VERSION_OFFSHORE_FEES_V2, 0)) {
-+	locked_blocks = (priority == 4) ? 180 : (priority == 3) ? 720 : (priority == 2) ? 1440 : 5040;
++	      ocked_blocks = (priority == 4) ? 180 : (priority == 3) ? 720 : (priority == 2) ? 1440 : 5040;
 +      } else {
-+	locked_blocks = 60 * pow(3, std::max((uint32_t)0, 4-priority));
++	      locked_blocks = 60 * pow(3, std::max((uint32_t)0, 4-priority));
 +      }
 +
 +      // Modify the transfer_type to support the unlock time
@@ -725,7 +725,7 @@ index ffe38eedf..81a365a81 100644
 +    cryptonote::add_offshore_to_tx_extra(extra, offshore_data);
 +
 +    // Set the bool flags
-+    if ((strSourceCurrency != "XUSD") && (strDestinationCurrency != "XUSD")) {
++    if (strSourceCurrency != "XUSD" && strDestinationCurrency != "XUSD") {
 +      xasset_transfer = true;
 +    } else if (strSourceCurrency != "XUSD") {
 +      xasset_to_xusd = true;
