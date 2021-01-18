@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_basic/cryptonote_basic.h b/src/cryptonote_basic/cryptonote_basic.h
-index e2286ae8c..0c13f2b9d 100644
+index e2286ae8c..898357a71 100644
 --- a/src/cryptonote_basic/cryptonote_basic.h
 +++ b/src/cryptonote_basic/cryptonote_basic.h
 @@ -42,6 +42,7 @@
@@ -137,7 +137,7 @@ index e2286ae8c..0c13f2b9d 100644
      }
    };
  
-@@ -295,7 +364,10 @@ namespace cryptonote
+@@ -295,7 +364,11 @@ namespace cryptonote
              ar.tag("rctsig_prunable");
              ar.begin_object();
              r = rct_signatures.p.serialize_rctsig_prunable(ar, rct_signatures.type, vin.size(), vout.size(),
@@ -145,20 +145,22 @@ index e2286ae8c..0c13f2b9d 100644
 +                vin.size() > 0 && vin[0].type() == typeid(txin_to_key) ? boost::get<txin_to_key>(vin[0]).key_offsets.size() - 1 :
 +                vin.size() > 0 && vin[0].type() == typeid(txin_offshore) ? boost::get<txin_offshore>(vin[0]).key_offsets.size() - 1 :
 +                vin.size() > 0 && vin[0].type() == typeid(txin_onshore) ? boost::get<txin_onshore>(vin[0]).key_offsets.size() - 1 :
++                vin.size() > 0 && vin[0].type() == typeid(txin_xasset) ? boost::get<txin_xasset>(vin[0]).key_offsets.size() - 1 :
 +							   0);
              if (!r || !ar.stream().good()) return false;
              ar.end_object();
            }
-@@ -433,6 +505,8 @@ namespace cryptonote
+@@ -433,6 +506,9 @@ namespace cryptonote
        size_t operator()(const txin_to_script& txin) const{return 0;}
        size_t operator()(const txin_to_scripthash& txin) const{return 0;}
        size_t operator()(const txin_to_key& txin) const {return txin.key_offsets.size();}
 +      size_t operator()(const txin_offshore& txin) const {return txin.key_offsets.size();}
 +      size_t operator()(const txin_onshore& txin) const {return txin.key_offsets.size();}
++      size_t operator()(const txin_xasset& txin) const {return txin.key_offsets.size();}
      };
  
      return boost::apply_visitor(txin_signature_size_visitor(), tx_in);
-@@ -450,6 +524,7 @@ namespace cryptonote
+@@ -450,6 +526,7 @@ namespace cryptonote
      uint64_t timestamp;
      crypto::hash  prev_id;
      uint32_t nonce;
@@ -166,7 +168,7 @@ index e2286ae8c..0c13f2b9d 100644
  
      BEGIN_SERIALIZE()
        VARINT_FIELD(major_version)
-@@ -457,6 +532,8 @@ namespace cryptonote
+@@ -457,6 +534,8 @@ namespace cryptonote
        VARINT_FIELD(timestamp)
        FIELD(prev_id)
        FIELD(nonce)
@@ -175,11 +177,12 @@ index e2286ae8c..0c13f2b9d 100644
      END_SERIALIZE()
    };
  
-@@ -556,15 +633,19 @@ namespace std {
+@@ -556,15 +635,22 @@ namespace std {
  }
  
  BLOB_SERIALIZER(cryptonote::txout_to_key);
 +BLOB_SERIALIZER(cryptonote::txout_offshore);
++BLOB_SERIALIZER(cryptonote::txout_xasset);
  BLOB_SERIALIZER(cryptonote::txout_to_scripthash);
  
  VARIANT_TAG(binary_archive, cryptonote::txin_gen, 0xff);
@@ -188,35 +191,41 @@ index e2286ae8c..0c13f2b9d 100644
  VARIANT_TAG(binary_archive, cryptonote::txin_to_key, 0x2);
 +VARIANT_TAG(binary_archive, cryptonote::txin_offshore, 0x3);
 +VARIANT_TAG(binary_archive, cryptonote::txin_onshore, 0x4);
++VARIANT_TAG(binary_archive, cryptonote::txin_xasset, 0x5);
  VARIANT_TAG(binary_archive, cryptonote::txout_to_script, 0x0);
  VARIANT_TAG(binary_archive, cryptonote::txout_to_scripthash, 0x1);
  VARIANT_TAG(binary_archive, cryptonote::txout_to_key, 0x2);
 +VARIANT_TAG(binary_archive, cryptonote::txout_offshore, 0x3);
++VARIANT_TAG(binary_archive, cryptonote::txout_xasset, 0x4);
  VARIANT_TAG(binary_archive, cryptonote::transaction, 0xcc);
  VARIANT_TAG(binary_archive, cryptonote::block, 0xbb);
  
-@@ -572,9 +653,12 @@ VARIANT_TAG(json_archive, cryptonote::txin_gen, "gen");
+@@ -572,9 +658,14 @@ VARIANT_TAG(json_archive, cryptonote::txin_gen, "gen");
  VARIANT_TAG(json_archive, cryptonote::txin_to_script, "script");
  VARIANT_TAG(json_archive, cryptonote::txin_to_scripthash, "scripthash");
  VARIANT_TAG(json_archive, cryptonote::txin_to_key, "key");
 +VARIANT_TAG(json_archive, cryptonote::txin_offshore, "offshore");
 +VARIANT_TAG(json_archive, cryptonote::txin_onshore, "onshore");
++VARIANT_TAG(json_archive, cryptonote::txin_xasset, "xasset");
  VARIANT_TAG(json_archive, cryptonote::txout_to_script, "script");
  VARIANT_TAG(json_archive, cryptonote::txout_to_scripthash, "scripthash");
  VARIANT_TAG(json_archive, cryptonote::txout_to_key, "key");
 +VARIANT_TAG(json_archive, cryptonote::txout_offshore, "offshore");
++VARIANT_TAG(json_archive, cryptonote::txout_xasset, "xasset");
  VARIANT_TAG(json_archive, cryptonote::transaction, "tx");
  VARIANT_TAG(json_archive, cryptonote::block, "block");
  
-@@ -582,8 +666,11 @@ VARIANT_TAG(debug_archive, cryptonote::txin_gen, "gen");
+@@ -582,8 +673,13 @@ VARIANT_TAG(debug_archive, cryptonote::txin_gen, "gen");
  VARIANT_TAG(debug_archive, cryptonote::txin_to_script, "script");
  VARIANT_TAG(debug_archive, cryptonote::txin_to_scripthash, "scripthash");
  VARIANT_TAG(debug_archive, cryptonote::txin_to_key, "key");
 +VARIANT_TAG(debug_archive, cryptonote::txin_offshore, "offshore");
 +VARIANT_TAG(debug_archive, cryptonote::txin_onshore, "onshore");
++VARIANT_TAG(debug_archive, cryptonote::txin_xasset, "xasset");
  VARIANT_TAG(debug_archive, cryptonote::txout_to_script, "script");
  VARIANT_TAG(debug_archive, cryptonote::txout_to_scripthash, "scripthash");
  VARIANT_TAG(debug_archive, cryptonote::txout_to_key, "key");
 +VARIANT_TAG(debug_archive, cryptonote::txout_offshore, "offshore");
++VARIANT_TAG(debug_archive, cryptonote::txout_xasset, "xasset");
  VARIANT_TAG(debug_archive, cryptonote::transaction, "tx");
  VARIANT_TAG(debug_archive, cryptonote::block, "block");

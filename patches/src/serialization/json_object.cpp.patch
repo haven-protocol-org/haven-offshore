@@ -1,5 +1,5 @@
 diff --git a/src/serialization/json_object.cpp b/src/serialization/json_object.cpp
-index 5c042aa7b..5ddadd55d 100644
+index 5c042aa7b..6a2cae842 100644
 --- a/src/serialization/json_object.cpp
 +++ b/src/serialization/json_object.cpp
 @@ -278,6 +278,7 @@ void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const cryptonote::b
@@ -18,7 +18,7 @@ index 5c042aa7b..5ddadd55d 100644
    GET_FROM_JSON_OBJECT(val, b.miner_tx, miner_tx);
    GET_FROM_JSON_OBJECT(val, b.tx_hashes, tx_hashes);
  }
-@@ -314,6 +316,14 @@ void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const cryptonote::t
+@@ -314,6 +316,18 @@ void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const cryptonote::t
      {
        INSERT_INTO_JSON_OBJECT(dest, to_key, input);
      }
@@ -30,10 +30,14 @@ index 5c042aa7b..5ddadd55d 100644
 +    {
 +      INSERT_INTO_JSON_OBJECT(dest, onshore, input);
 +    }
++    void operator()(cryptonote::txin_xasset const& input) const
++    {
++      INSERT_INTO_JSON_OBJECT(dest, xasset, input);
++    }
      void operator()(cryptonote::txin_gen const& input) const
      {
        INSERT_INTO_JSON_OBJECT(dest, gen, input);
-@@ -352,6 +362,18 @@ void fromJsonValue(const rapidjson::Value& val, cryptonote::txin_v& txin)
+@@ -352,6 +366,24 @@ void fromJsonValue(const rapidjson::Value& val, cryptonote::txin_v& txin)
        fromJsonValue(elem.value, tmpVal);
        txin = std::move(tmpVal);
      }
@@ -49,10 +53,16 @@ index 5c042aa7b..5ddadd55d 100644
 +      fromJsonValue(elem.value, tmpVal);
 +      txin = std::move(tmpVal);
 +    }
++    else if (elem.name == "xasset")
++    {
++      cryptonote::txin_xasset tmpVal;
++      fromJsonValue(elem.value, tmpVal);
++      txin = std::move(tmpVal);
++    }
      else if (elem.name == "gen")
      {
        cryptonote::txin_gen tmpVal;
-@@ -466,6 +488,53 @@ void fromJsonValue(const rapidjson::Value& val, cryptonote::txin_to_key& txin)
+@@ -466,6 +498,79 @@ void fromJsonValue(const rapidjson::Value& val, cryptonote::txin_to_key& txin)
    GET_FROM_JSON_OBJECT(val, txin.k_image, key_image);
  }
  
@@ -103,10 +113,36 @@ index 5c042aa7b..5ddadd55d 100644
 +  GET_FROM_JSON_OBJECT(val, txin.key_offsets, key_offsets);
 +  GET_FROM_JSON_OBJECT(val, txin.k_image, key_image);
 +}
++
++void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const cryptonote::txin_xasset& txin)
++{
++  dest.StartObject();
++
++  INSERT_INTO_JSON_OBJECT(dest, amount, txin.amount);
++  INSERT_INTO_JSON_OBJECT(dest, key_offsets, txin.key_offsets);
++  INSERT_INTO_JSON_OBJECT(dest, key_image, txin.k_image);
++  INSERT_INTO_JSON_OBJECT(dest, asset_type, txin.asset_type);
++
++  dest.EndObject();
++}
++
++
++void fromJsonValue(const rapidjson::Value& val, cryptonote::txin_xasset& txin)
++{
++  if (!val.IsObject())
++  {
++    throw WRONG_TYPE("json object");
++  }
++
++  GET_FROM_JSON_OBJECT(val, txin.amount, amount);
++  GET_FROM_JSON_OBJECT(val, txin.key_offsets, key_offsets);
++  GET_FROM_JSON_OBJECT(val, txin.k_image, key_image);
++  GET_FROM_JSON_OBJECT(val, txin.asset_type, asset_type);
++}
  
  void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const cryptonote::txout_to_script& txout)
  {
-@@ -528,6 +597,27 @@ void fromJsonValue(const rapidjson::Value& val, cryptonote::txout_to_key& txout)
+@@ -528,6 +633,50 @@ void fromJsonValue(const rapidjson::Value& val, cryptonote::txout_to_key& txout)
    GET_FROM_JSON_OBJECT(val, txout.key, key);
  }
  
@@ -131,10 +167,33 @@ index 5c042aa7b..5ddadd55d 100644
 +}
 +
 +
++void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const cryptonote::txout_xasset& txout)
++{
++  dest.StartObject();
++
++  INSERT_INTO_JSON_OBJECT(dest, key, txout.key);
++  INSERT_INTO_JSON_OBJECT(dest, asset_type, txout.asset_type);
++
++  dest.EndObject();
++}
++
++
++void fromJsonValue(const rapidjson::Value& val, cryptonote::txout_xasset& txout)
++{
++  if (!val.IsObject())
++  {
++    throw WRONG_TYPE("json object");
++  }
++
++  GET_FROM_JSON_OBJECT(val, txout.key, key);
++  GET_FROM_JSON_OBJECT(val, txout.asset_type, asset_type);
++}
++
++
  void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const cryptonote::tx_out& txout)
  {
    dest.StartObject();
-@@ -543,6 +633,10 @@ void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const cryptonote::t
+@@ -543,6 +692,14 @@ void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const cryptonote::t
      {
        INSERT_INTO_JSON_OBJECT(dest, to_key, output);
      }
@@ -142,10 +201,24 @@ index 5c042aa7b..5ddadd55d 100644
 +    {
 +      INSERT_INTO_JSON_OBJECT(dest, to_key, output);
 +    }
++    void operator()(cryptonote::txout_xasset const& output) const
++    {
++      INSERT_INTO_JSON_OBJECT(dest, to_key, output);
++    }
      void operator()(cryptonote::txout_to_script const& output) const
      {
        INSERT_INTO_JSON_OBJECT(dest, to_script, output);
-@@ -1008,6 +1102,59 @@ void fromJsonValue(const rapidjson::Value& val, cryptonote::rpc::error& error)
+@@ -575,6 +732,9 @@ void fromJsonValue(const rapidjson::Value& val, cryptonote::tx_out& txout)
+       fromJsonValue(elem.value, txout.amount);
+     }
+ 
++    // HERE BE DRAGONS!!!
++    // NEAC: Should there be an entry for offshore / xasset here???
++    // LAND AHOY!!!
+     if (elem.name == "to_key")
+     {
+       cryptonote::txout_to_key tmpVal;
+@@ -1008,6 +1168,59 @@ void fromJsonValue(const rapidjson::Value& val, cryptonote::rpc::error& error)
    GET_FROM_JSON_OBJECT(val, error.message, message);
  }
  
@@ -205,7 +278,7 @@ index 5c042aa7b..5ddadd55d 100644
  void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const cryptonote::rpc::BlockHeaderResponse& response)
  {
    dest.StartObject();
-@@ -1017,6 +1164,7 @@ void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const cryptonote::r
+@@ -1017,6 +1230,7 @@ void toJsonValue(rapidjson::Writer<epee::byte_stream>& dest, const cryptonote::r
    INSERT_INTO_JSON_OBJECT(dest, timestamp, response.timestamp);
    INSERT_INTO_JSON_OBJECT(dest, prev_id, response.prev_id);
    INSERT_INTO_JSON_OBJECT(dest, nonce, response.nonce);
@@ -213,7 +286,7 @@ index 5c042aa7b..5ddadd55d 100644
    INSERT_INTO_JSON_OBJECT(dest, height, response.height);
    INSERT_INTO_JSON_OBJECT(dest, depth, response.depth);
    INSERT_INTO_JSON_OBJECT(dest, hash, response.hash);
-@@ -1038,6 +1186,7 @@ void fromJsonValue(const rapidjson::Value& val, cryptonote::rpc::BlockHeaderResp
+@@ -1038,6 +1252,7 @@ void fromJsonValue(const rapidjson::Value& val, cryptonote::rpc::BlockHeaderResp
    GET_FROM_JSON_OBJECT(val, response.timestamp, timestamp);
    GET_FROM_JSON_OBJECT(val, response.prev_id, prev_id);
    GET_FROM_JSON_OBJECT(val, response.nonce, nonce);
