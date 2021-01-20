@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/cryptonote_tx_utils.cpp b/src/cryptonote_core/cryptonote_tx_utils.cpp
-index 3dd29dd1b..830d20914 100644
+index 3dd29dd1b..2ad7ce82b 100644
 --- a/src/cryptonote_core/cryptonote_tx_utils.cpp
 +++ b/src/cryptonote_core/cryptonote_tx_utils.cpp
 @@ -75,8 +75,75 @@ namespace cryptonote
@@ -1103,7 +1103,7 @@ index 3dd29dd1b..830d20914 100644
 +    uint64_t summary_outs_money = 0, summary_outs_money_usd = 0, summary_outs_money_xasset = 0;
 +
 +
-+    std::vector<std::pair<std::string, uint64_t> outamounts;
++    std::vector<std::pair<std::string, uint64_t>> outamounts;
 +    rct::keyV destination_keys;
 +    uint64_t amount_out = 0;
 +
