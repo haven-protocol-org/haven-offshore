@@ -1,5 +1,5 @@
 diff --git a/src/wallet/wallet2.cpp b/src/wallet/wallet2.cpp
-index c3ba34260..ef7ec7829 100644
+index c3ba34260..5b773f842 100644
 --- a/src/wallet/wallet2.cpp
 +++ b/src/wallet/wallet2.cpp
 @@ -29,6 +29,7 @@
@@ -4086,7 +4086,7 @@ index c3ba34260..ef7ec7829 100644
 -  THROW_WALLET_EXCEPTION_IF(balance_all(true) == 0, error::wallet_internal_error, "Zero balance");
 -  THROW_WALLET_EXCEPTION_IF(account_minreserve && balance(account_minreserve->first, true) < account_minreserve->second, error::wallet_internal_error,
 +  THROW_WALLET_EXCEPTION_IF(balance_all(true)["XHV"] == 0, error::wallet_internal_error, "Zero balance");
-+  THROW_WALLET_EXCEPTION_IF(account_minreserve && balance(m_transfers, account_minreserve->first, true) < account_minreserve->second, error::wallet_internal_error,
++  THROW_WALLET_EXCEPTION_IF(account_minreserve && balance(m_transfers, "XHV", account_minreserve->first, true) < account_minreserve->second, error::wallet_internal_error,
      "Not enough balance in this account for the requested minimum reserve amount");
  
    // determine which outputs to include in the proof

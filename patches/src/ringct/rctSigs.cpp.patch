@@ -1,5 +1,5 @@
 diff --git a/src/ringct/rctSigs.cpp b/src/ringct/rctSigs.cpp
-index 2e3e7007e..0f9254f43 100644
+index 2e3e7007e..aed25aa63 100644
 --- a/src/ringct/rctSigs.cpp
 +++ b/src/ringct/rctSigs.cpp
 @@ -36,6 +36,8 @@
@@ -532,14 +532,15 @@ index 2e3e7007e..0f9254f43 100644
      //   Note: For txn fees, the last index in the amounts vector should contain that
      //   Thus the amounts vector will be "one" longer than the destinations vectort
 -    rctSig genRct(const key &message, const ctkeyV & inSk, const keyV & destinations, const vector<xmr_amount> & amounts, const ctkeyM &mixRing, const keyV &amount_keys, const multisig_kLRki *kLRki, multisig_out *msout, unsigned int index, ctkeyV &outSk, const RCTConfig &rct_config, hw::device &hwdev) {
-+  rctSig genRct(const key &message, const ctkeyM & inSk, const keyV & destinations, const vector<pair<xmr_amount,xmr_amount>> & amounts, const ctkeyM &mixRing, const keyV &amount_keys, const multisig_kLRki *kLRki, multisig_out *msout, unsigned int index, ctkeyV &outSk, const RCTConfig &rct_config, hw::device &hwdev) {
++  rctSig genRct(const key &message, const ctkeyV & inSk, const std::string in_asset_type, const keyV & destinations, const std::vector<std::pair<std::string, uint64_t>> & amounts, const ctkeyM &mixRing, const keyV &amount_keys, const multisig_kLRki *kLRki, multisig_out *msout, unsigned int index, ctkeyV &outSk, const RCTConfig &rct_config, hw::device &hwdev) {
          CHECK_AND_ASSERT_THROW_MES(amounts.size() == destinations.size() || amounts.size() == destinations.size() + 1, "Different number of amounts/destinations");
          CHECK_AND_ASSERT_THROW_MES(amount_keys.size() == destinations.size(), "Different number of amount_keys/destinations");
          CHECK_AND_ASSERT_THROW_MES(index < mixRing.size(), "Bad index into mixRing");
-@@ -712,6 +1167,20 @@ namespace rct {
+@@ -712,6 +1167,21 @@ namespace rct {
          rv.p.rangeSigs.resize(destinations.size());
          rv.ecdhInfo.resize(destinations.size());
  
++	/*
 +	// HERE BE DRAGONS!!!
 +	// NEAC: convert incoming amount vector/pairs into discrete vectors
 +	std::vector<xmr_amount> amounts_xhv, amounts_usd;
@@ -557,7 +558,7 @@ index 2e3e7007e..0f9254f43 100644
          size_t i = 0;
          keyV masks(destinations.size()); //sk mask..
          outSk.resize(destinations.size());
-@@ -719,20 +1188,32 @@ namespace rct {
+@@ -719,20 +1189,32 @@ namespace rct {
              //add destination to sig
              rv.outPk[i].dest = copy(destinations[i]);
              //compute range proof
@@ -594,7 +595,7 @@ index 2e3e7007e..0f9254f43 100644
          }
          else
          {
-@@ -743,11 +1224,14 @@ namespace rct {
+@@ -743,21 +1225,25 @@ namespace rct {
          rv.mixRing = mixRing;
          if (msout)
            msout->c.resize(1);
@@ -603,27 +604,33 @@ index 2e3e7007e..0f9254f43 100644
 +	// NEAC: call this twice - once for each currency
 +        rv.p.MGs.push_back(proveRctMG(get_pre_mlsag_hash(rv, hwdev), rv.mixRing, inSk_xhv, outSk, rv.outPk, kLRki, msout ? &msout->c[0] : NULL, index, txnFeeKey,hwdev));
 +	// LAND AHOY!!!
++	*/
          return rv;
      }
  
 -    rctSig genRct(const key &message, const ctkeyV & inSk, const ctkeyV  & inPk, const keyV & destinations, const vector<xmr_amount> & amounts, const keyV &amount_keys, const multisig_kLRki *kLRki, multisig_out *msout, const int mixin, const RCTConfig &rct_config, hw::device &hwdev) {
-+  rctSig genRct(const key &message, const ctkeyM & inSk, const ctkeyV  & inPk, const keyV & destinations, const vector<pair<xmr_amount,xmr_amount>> & amounts, const keyV &amount_keys, const multisig_kLRki *kLRki, multisig_out *msout, const int mixin, const RCTConfig &rct_config, hw::device &hwdev) {
++  rctSig genRct(const key &message, const ctkeyV & inSk, const std::string in_asset_type, const ctkeyV  & inPk, const keyV & destinations, const std::vector<std::pair<std::string, uint64_t>> & amounts, const keyV &amount_keys, const multisig_kLRki *kLRki, multisig_out *msout, const int mixin, const RCTConfig &rct_config, hw::device &hwdev) {
          unsigned int index;
          ctkeyM mixRing;
          ctkeyV outSk;
-@@ -757,7 +1241,7 @@ namespace rct {
+         tie(mixRing, index) = populateFromBlockchain(inPk, mixin);
+-        return genRct(message, inSk, destinations, amounts, mixRing, amount_keys, kLRki, msout, index, outSk, rct_config, hwdev);
++        return genRct(message, inSk, in_asset_type, destinations, amounts, mixRing, amount_keys, kLRki, msout, index, outSk, rct_config, hwdev);
+     }
      
      //RCT simple    
      //for post-rct only
 -    rctSig genRctSimple(const key &message, const ctkeyV & inSk, const keyV & destinations, const vector<xmr_amount> &inamounts, const vector<xmr_amount> &outamounts, xmr_amount txnFee, const ctkeyM & mixRing, const keyV &amount_keys, const std::vector<multisig_kLRki> *kLRki, multisig_out *msout, const std::vector<unsigned int> & index, ctkeyV &outSk, const RCTConfig &rct_config, hw::device &hwdev) {
-+  rctSig genRctSimple(const key &message, const ctkeyM & inSk, const keyV & destinations, const vector<std::pair<xmr_amount,xmr_amount>> &inamounts, const vector<std::pair<xmr_amount,xmr_amount>> &outamounts, xmr_amount txnFee, xmr_amount txnFee_usd, xmr_amount txnOffshoreFee, xmr_amount txnOffshoreFee_usd, const ctkeyM & mixRing, const keyV &amount_keys, const std::vector<multisig_kLRki> *kLRki, multisig_out *msout, const std::vector<unsigned int> & index, ctkeyV &outSk, const RCTConfig &rct_config, hw::device &hwdev, const offshore::pricing_record pr) {
++  rctSig genRctSimple(const key & message, const ctkeyV & inSk, const keyV & destinations, const std::vector<xmr_amount> & inamounts, const std::string in_asset_type, const std::vector<std::pair<std::string,xmr_amount>> & outamounts, xmr_amount txnFee, xmr_amount txnFee_usd, xmr_amount txnOffshoreFee, xmr_amount txnOffshoreFee_usd, const ctkeyM & mixRing, const keyV &amount_keys, const std::vector<multisig_kLRki> *kLRki, multisig_out *msout, const std::vector<unsigned int> & index, ctkeyV &outSk, const RCTConfig &rct_config, hw::device &hwdev, const offshore::pricing_record pr) {
          const bool bulletproof = rct_config.range_proof_type != RangeProofBorromean;
          CHECK_AND_ASSERT_THROW_MES(inamounts.size() > 0, "Empty inamounts");
          CHECK_AND_ASSERT_THROW_MES(inamounts.size() == inSk.size(), "Different number of inamounts/inSk");
-@@ -773,10 +1257,65 @@ namespace rct {
+@@ -772,30 +1258,97 @@ namespace rct {
+         if (kLRki && msout) {
            CHECK_AND_ASSERT_THROW_MES(kLRki->size() == inamounts.size(), "Mismatched kLRki/inamounts sizes");
          }
- 
+-
++	/*
 +	// HERE BE DRAGONS!!!
 +	// NEAC: convert incoming amount vector/pairs into discrete vectors
 +	bool xhv_sent = false, usd_sent = false; 
@@ -657,7 +664,7 @@ index 2e3e7007e..0f9254f43 100644
 +	bool onshore = (usd_sent && !xhv_sent && usd_received && xhv_received);
 +	bool offshore_to_offshore = (usd_sent && !xhv_sent && usd_received && !xhv_received);
 +	// LAND AHOY!!!
-+	
++	*/	
          rctSig rv;
 -        rv.type = bulletproof ? (rct_config.bp_version == 0 || rct_config.bp_version >= 2 ? RCTTypeBulletproof2 : RCTTypeBulletproof) : RCTTypeSimple;
 +        if (bulletproof)
@@ -687,7 +694,11 @@ index 2e3e7007e..0f9254f43 100644
          if (!bulletproof)
            rv.p.rangeSigs.resize(destinations.size());
          rv.ecdhInfo.resize(destinations.size());
-@@ -787,15 +1326,27 @@ namespace rct {
+-
++	/*
+         size_t i;
+         keyV masks(destinations.size()); //sk mask..
+         outSk.resize(destinations.size());
          for (i = 0; i < destinations.size(); i++) {
  
              //add destination to sig
@@ -720,7 +731,7 @@ index 2e3e7007e..0f9254f43 100644
  
          rv.p.bulletproofs.clear();
          if (bulletproof)
-@@ -804,24 +1355,42 @@ namespace rct {
+@@ -804,24 +1357,42 @@ namespace rct {
              size_t amounts_proved = 0;
              if (rct_config.range_proof_type == RangeProofPaddedBulletproof)
              {
@@ -772,7 +783,7 @@ index 2e3e7007e..0f9254f43 100644
                  }
              }
              else while (amounts_proved < n_amounts)
-@@ -831,71 +1400,146 @@ namespace rct {
+@@ -831,71 +1402,141 @@ namespace rct {
                    while (batch_size * 2 + amounts_proved <= n_amounts && batch_size * 2 <= BULLETPROOF_MAX_OUTPUTS)
                      batch_size *= 2;
                  rct::keyV C, masks;
@@ -916,42 +927,37 @@ index 2e3e7007e..0f9254f43 100644
 +        {
 +            msout->c.resize(inamounts.size());
 +            msout->mu_p.resize(rv.type == RCTTypeCLSAG ? inamounts.size() : 0);
-+        }
+         }
 +        for (i = 0 ; i < inamounts.size(); i++)
 +        {
 +            if (rv.type == RCTTypeCLSAG)
 +            {
 +	      rv.p.CLSAGs[i] = proveRctCLSAGSimple(full_message, rv.mixRing[i], (xhv_sent ? inSk_xhv[i] : inSk_usd[i]), a[i], pseudoOuts[i], kLRki ? &(*kLRki)[i]: NULL, msout ? &msout->c[i] : NULL, msout ? &msout->mu_p[i] : NULL, index[i], hwdev);
-+	      /*
-+	      if (hwdev.get_mode() != hw::device::TRANSACTION_CREATE_FAKE) {
-+		bool result_ver = verRctCLSAGSimple(full_message, rv.p.CLSAGs[i], rv.mixRing[i], pseudoOuts[i]);
-+		CHECK_AND_ASSERT_THROW_MES(result_ver, "Sanity check on proveRctCLSAGSimple() failed");
-+	      }
-+	      */
 +	    }
 +            else
 +            {
 +                rv.p.MGs[i] = proveRctMGSimple(full_message, rv.mixRing[i], inSk_xhv[i], a[i], pseudoOuts[i], kLRki ? &(*kLRki)[i]: NULL, msout ? &msout->c[i] : NULL, index[i], hwdev);
 +            }
-         }
++        }
++	*/
          return rv;
      }
  
 -    rctSig genRctSimple(const key &message, const ctkeyV & inSk, const ctkeyV & inPk, const keyV & destinations, const vector<xmr_amount> &inamounts, const vector<xmr_amount> &outamounts, const keyV &amount_keys, const std::vector<multisig_kLRki> *kLRki, multisig_out *msout, xmr_amount txnFee, unsigned int mixin, const RCTConfig &rct_config, hw::device &hwdev) {
-+  rctSig genRctSimple(const key &message, const ctkeyM & inSk, const ctkeyV & inPk, const keyV & destinations, const vector<pair<xmr_amount,xmr_amount>> &inamounts, const vector<pair<xmr_amount,xmr_amount>> &outamounts, const keyV &amount_keys, const std::vector<multisig_kLRki> *kLRki, multisig_out *msout, xmr_amount txnFee, xmr_amount txnFee_usd, xmr_amount txnOffshoreFee, xmr_amount txnOffshoreFee_usd, unsigned int mixin, const RCTConfig &rct_config, hw::device &hwdev, const offshore::pricing_record pr) {
++  rctSig genRctSimple(const key & message, const ctkeyV & inSk, const ctkeyV & inPk, const keyV & destinations, const std::vector<xmr_amount> & inamounts, const std::string in_asset_type, const std::vector<std::pair<std::string,xmr_amount>> & outamounts, const keyV &amount_keys, const std::vector<multisig_kLRki> *kLRki, multisig_out *msout, xmr_amount txnFee, xmr_amount txnFee_usd, xmr_amount txnOffshoreFee, xmr_amount txnOffshoreFee_usd, unsigned int mixin, const RCTConfig &rct_config, hw::device &hwdev, const offshore::pricing_record pr) {
          std::vector<unsigned int> index;
          index.resize(inPk.size());
          ctkeyM mixRing;
-@@ -905,7 +1549,7 @@ namespace rct {
+@@ -905,7 +1546,7 @@ namespace rct {
            mixRing[i].resize(mixin+1);
            index[i] = populateFromBlockchainSimple(mixRing[i], inPk[i], mixin);
          }
 -        return genRctSimple(message, inSk, destinations, inamounts, outamounts, txnFee, mixRing, amount_keys, kLRki, msout, index, outSk, rct_config, hwdev);
-+        return genRctSimple(message, inSk, destinations, inamounts, outamounts, txnFee, txnFee_usd, txnOffshoreFee, txnOffshoreFee_usd, mixRing, amount_keys, kLRki, msout, index, outSk, rct_config, hwdev, pr);
++        return genRctSimple(message, inSk, destinations, inamounts, in_asset_type, outamounts, txnFee, txnFee_usd, txnOffshoreFee, txnOffshoreFee_usd, mixRing, amount_keys, kLRki, msout, index, outSk, rct_config, hwdev, pr);
      }
  
      //RingCT protocol
-@@ -978,9 +1622,18 @@ namespace rct {
+@@ -978,9 +1619,18 @@ namespace rct {
          }
      }
  
@@ -971,7 +977,7 @@ index 2e3e7007e..0f9254f43 100644
        try
        {
          PERF_TIMER(verRctSemanticsSimple);
-@@ -995,13 +1648,22 @@ namespace rct {
+@@ -995,13 +1645,22 @@ namespace rct {
          {
            CHECK_AND_ASSERT_MES(rvp, false, "rctSig pointer is NULL");
            const rctSig &rv = *rvp;
@@ -996,7 +1002,7 @@ index 2e3e7007e..0f9254f43 100644
              CHECK_AND_ASSERT_MES(rv.pseudoOuts.empty(), false, "rv.pseudoOuts is not empty");
            }
            else
-@@ -1024,21 +1686,79 @@ namespace rct {
+@@ -1024,21 +1683,79 @@ namespace rct {
            const bool bulletproof = is_rct_bulletproof(rv.type);
            const keyV &pseudoOuts = bulletproof ? rv.p.pseudoOuts : rv.pseudoOuts;
  
@@ -1091,7 +1097,7 @@ index 2e3e7007e..0f9254f43 100644
              return false;
            }
  
-@@ -1083,19 +1803,19 @@ namespace rct {
+@@ -1083,19 +1800,19 @@ namespace rct {
        }
      }
  
@@ -1115,7 +1121,7 @@ index 2e3e7007e..0f9254f43 100644
              false, "verRctNonSemanticsSimple called on non simple rctSig");
          const bool bulletproof = is_rct_bulletproof(rv.type);
          // semantics check is early, and mixRing/MGs aren't resolved yet
-@@ -1118,14 +1838,19 @@ namespace rct {
+@@ -1118,14 +1835,19 @@ namespace rct {
          results.resize(rv.mixRing.size());
          for (size_t i = 0 ; i < rv.mixRing.size() ; i++) {
            tpool.submit(&waiter, [&, i] {
@@ -1137,7 +1143,7 @@ index 2e3e7007e..0f9254f43 100644
              return false;
            }
          }
-@@ -1162,7 +1887,7 @@ namespace rct {
+@@ -1162,7 +1884,7 @@ namespace rct {
  
          //mask amount and mask
          ecdhTuple ecdh_info = rv.ecdhInfo[i];
@@ -1146,7 +1152,7 @@ index 2e3e7007e..0f9254f43 100644
          mask = ecdh_info.mask;
          key amount = ecdh_info.amount;
          key C = rv.outPk[i].mask;
-@@ -1186,16 +1911,16 @@ namespace rct {
+@@ -1186,16 +1908,16 @@ namespace rct {
      }
  
      xmr_amount decodeRctSimple(const rctSig & rv, const key & sk, unsigned int i, key &mask, hw::device &hwdev) {
@@ -1166,7 +1172,7 @@ index 2e3e7007e..0f9254f43 100644
          DP("C");
          DP(C);
          key Ctmp;
-@@ -1215,12 +1940,13 @@ namespace rct {
+@@ -1215,12 +1937,13 @@ namespace rct {
        return decodeRctSimple(rv, sk, i, mask, hwdev);
      }
  
@@ -1181,7 +1187,7 @@ index 2e3e7007e..0f9254f43 100644
          if (rv.type == RCTTypeFull)
          {
            CHECK_AND_ASSERT_MES(rv.p.MGs.size() == 1, false, "MGs not a single element");
-@@ -1230,6 +1956,8 @@ namespace rct {
+@@ -1230,6 +1953,8 @@ namespace rct {
              CHECK_AND_ASSERT_MES(!rv.p.MGs[n].ss[indices[n]].empty(), false, "empty ss line");
          }
  
@@ -1190,7 +1196,7 @@ index 2e3e7007e..0f9254f43 100644
          for (size_t n = 0; n < indices.size(); ++n) {
              rct::key diff;
              sc_mulsub(diff.bytes, msout.c[n].bytes, secret_key.bytes, k[n].bytes);
-@@ -1237,4 +1965,71 @@ namespace rct {
+@@ -1237,4 +1962,71 @@ namespace rct {
          }
          return true;
      }
