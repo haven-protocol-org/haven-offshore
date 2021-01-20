@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/cryptonote_tx_utils.h b/src/cryptonote_core/cryptonote_tx_utils.h
-index 309e4177f..db7f6931b 100644
+index 309e4177f..00f0e1438 100644
 --- a/src/cryptonote_core/cryptonote_tx_utils.h
 +++ b/src/cryptonote_core/cryptonote_tx_utils.h
 @@ -37,8 +37,15 @@
@@ -135,10 +135,10 @@ index 309e4177f..db7f6931b 100644
 +	return;
 +      }
 +      if (ver < 5) {
-+	a & x.currency_type_burnt;
-+	a & x.amount_usd;
-+	a & x.mask_usd;
-+	a & x.currency_type_minted;
++	//a & x.currency_type_burnt;
++	//a & x.amount_usd;
++	//a & x.mask_usd;
++	//a & x.currency_type_minted;
 +      }
 +      if (ver < 3) {
 +	return;
@@ -163,7 +163,7 @@ index 309e4177f..db7f6931b 100644
 +      if (ver < 3)
 +	return;
 +      a & x.amount_usd;
-+      if (var < 4) {
++      if (ver < 4) {
 +	return;
 +      }
 +      a & x.amount_xasset;
