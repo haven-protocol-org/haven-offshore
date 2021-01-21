@@ -1,5 +1,5 @@
 diff --git a/src/wallet/wallet2.cpp b/src/wallet/wallet2.cpp
-index c3ba34260..446b3a9fd 100644
+index c3ba34260..cc6130738 100644
 --- a/src/wallet/wallet2.cpp
 +++ b/src/wallet/wallet2.cpp
 @@ -29,6 +29,7 @@
@@ -2984,8 +2984,8 @@ index c3ba34260..446b3a9fd 100644
 +  bool xasset_transfer = false;
 +  bool xasset_to_xusd = false;
 +  bool xusd_to_xasset = false;
-+  std::string strSource = "";
-+  std::string strDest = "";
++  std::string strSource = "XHV";
++  std::string strDest = "XHV";
 +  if (bOffshoreTx) {
 +
 +    // Split the TX extra information into the 2 currencies
