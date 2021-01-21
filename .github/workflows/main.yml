@@ -149,7 +149,7 @@ jobs:
       run: |
         msys2do wget http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-boost-1.72.0-3-any.pkg.tar.zst
         msys2do wget http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-icu-66.1-1-any.pkg.tar.zst
-        msys2do pacman -U --noconfirm *.tar.xz
+        msys2do pacman -U --noconfirm *.tar.zst
     - name: build Haven
       run: msys2do ./build-haven.sh release-static-win64
     - name: Upload artifact
