@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/cryptonote_tx_utils.cpp b/src/cryptonote_core/cryptonote_tx_utils.cpp
-index 3dd29dd1b..2ad7ce82b 100644
+index 3dd29dd1b..413a304cb 100644
 --- a/src/cryptonote_core/cryptonote_tx_utils.cpp
 +++ b/src/cryptonote_core/cryptonote_tx_utils.cpp
 @@ -75,8 +75,75 @@ namespace cryptonote
@@ -785,8 +785,8 @@ index 3dd29dd1b..2ad7ce82b 100644
 +    bool xasset_transfer = false;
 +    bool xasset_to_xusd = false;
 +    bool xusd_to_xasset = false;
-+    std::string strSource = "";
-+    std::string strDest = "";
++    std::string strSource = "XHV"; // Default value is needed for non-offshore TXs
++    std::string strDest = "XHV"; // Default value is needed for non-offshore TXs
 +    if (bOffshoreTx) {
 +      // Split the TX extra information into the 2 currencies
 +      if (offshore_data.data.size() > 2) {

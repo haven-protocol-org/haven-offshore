@@ -40,6 +40,7 @@
 #include <openssl/ssl.h>
 
 #include <cstdint>
+#include <string>
 
 namespace epee
 {
@@ -110,6 +111,8 @@ namespace offshore
     pricing_record(const pricing_record& orig) noexcept;
     ~pricing_record() = default;
     pricing_record& operator=(const pricing_record& orig) noexcept;
+
+    uint64_t operator[](const std::string asset_type) const noexcept;
     
     bool equal(const pricing_record& other) const noexcept;
 

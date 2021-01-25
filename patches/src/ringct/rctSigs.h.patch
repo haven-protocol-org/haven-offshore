@@ -1,5 +1,5 @@
 diff --git a/src/ringct/rctSigs.h b/src/ringct/rctSigs.h
-index 9227eab1e..d0c131d8e 100644
+index 9227eab1e..e71507c10 100644
 --- a/src/ringct/rctSigs.h
 +++ b/src/ringct/rctSigs.h
 @@ -47,6 +47,7 @@ extern "C" {
@@ -52,8 +52,8 @@ index 9227eab1e..d0c131d8e 100644
 -    bool verRctSemanticsSimple(const std::vector<const rctSig*> & rv);
 -    bool verRctNonSemanticsSimple(const rctSig & rv);
 -    static inline bool verRctSimple(const rctSig & rv) { return verRctSemanticsSimple(rv) && verRctNonSemanticsSimple(rv); }
-+    bool verRctSemanticsSimple(const rctSig & rv, const offshore::pricing_record pr, const bool offshore = false, const bool onshore = false, const bool offshore_to_offshore = false);
-+    bool verRctSemanticsSimple(const std::vector<const rctSig*> & rvv, const offshore::pricing_record pr, const bool offshore = false, const bool onshore = false, const bool offshore_to_offshore = false);
++    bool verRctSemanticsSimple(const rctSig & rv, const offshore::pricing_record pr, const bool offshore = false, const bool onshore = false, const bool offshore_to_offshore = false, const bool xasset_to_xusd = false, const bool xusd_to_xasset = false, const bool xasset_transfer = false);
++    bool verRctSemanticsSimple(const std::vector<const rctSig*> & rvv, const offshore::pricing_record pr, const bool offshore = false, const bool onshore = false, const bool offshore_to_offshore = false, const bool xasset_to_xusd = false, const bool xusd_to_xasset = false, const bool xasset_transfer = false);
 +  bool verRctNonSemanticsSimple(const rctSig & rv);
 +  //static inline bool verRctSimple(const rctSig & rv) { return verRctSemanticsSimple(rv) && verRctNonSemanticsSimple(rv); }
      xmr_amount decodeRct(const rctSig & rv, const key & sk, unsigned int i, key & mask, hw::device &hwdev);

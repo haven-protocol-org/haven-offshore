@@ -29,8 +29,6 @@
 
 #include "pricing_record.h"
 
-#include <cstring>
-
 #include "serialization/keyvalue_serialization.h"
 #include "storages/portable_storage.h"
 
@@ -190,6 +188,37 @@ namespace offshore
     return *this;
   }
 
+  uint64_t pricing_record::operator[](const std::string asset_type) const noexcept
+  {
+    if (asset_type == "XHV") {
+      return 1000000000000;
+    } else if (asset_type == "XUSD") {
+      return unused1;
+    } else if (asset_type == "XAU") {
+      return xAU;
+    } else if (asset_type == "XAUD") {
+      return xAUD;
+    } else if (asset_type == "XBTC") {
+      return xBTC;
+    } else if (asset_type == "XCAD") {
+      return xCAD;
+    } else if (asset_type == "XCHF") {
+      return xCHF;
+    } else if (asset_type == "XCNY") {
+      return xCNY;
+    } else if (asset_type == "XEUR") {
+      return xEUR;
+    } else if (asset_type == "XGBP") {
+      return xGBP;
+    } else if (asset_type == "XJPY") {
+      return xJPY;
+    } else if (asset_type == "XNOK") {
+      return xNOK;
+    } else {
+      return 1000000000000;
+    }
+  }
+  
   bool pricing_record::equal(const pricing_record& other) const noexcept
   {
     return ((xAG == other.xAG) &&

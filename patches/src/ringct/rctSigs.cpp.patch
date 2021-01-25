@@ -1,5 +1,5 @@
 diff --git a/src/ringct/rctSigs.cpp b/src/ringct/rctSigs.cpp
-index 2e3e7007e..aed25aa63 100644
+index 2e3e7007e..eaf960e78 100644
 --- a/src/ringct/rctSigs.cpp
 +++ b/src/ringct/rctSigs.cpp
 @@ -36,6 +36,8 @@
@@ -364,7 +364,7 @@ index 2e3e7007e..aed25aa63 100644
  
        keyV kv;
 -      if (rv.type == RCTTypeBulletproof || rv.type == RCTTypeBulletproof2)
-+      if (rv.type == RCTTypeBulletproof || rv.type == RCTTypeBulletproof2 || rv.type == RCTTypeCLSAG)
++      if (rv.type == RCTTypeBulletproof || rv.type == RCTTypeBulletproof2 || rv.type == RCTTypeCLSAG || rv.type == RCTTypeCLSAGN)
        {
          kv.reserve((6*2+9) * rv.p.bulletproofs.size());
          for (const auto &p: rv.p.bulletproofs)
@@ -580,7 +580,7 @@ index 2e3e7007e..aed25aa63 100644
 +            //rv.ecdhInfo[i].amount = d2h(amounts[i]);
 +            rv.ecdhInfo[i].amount = d2h(amounts[i].first);
 +	    // LAND AHOY!!!
-+            hwdev.ecdhEncode(rv.ecdhInfo[i], amount_keys[i], rv.type == RCTTypeBulletproof2 || rv.type == RCTTypeCLSAG);
++            hwdev.ecdhEncode(rv.ecdhInfo[i], amount_keys[i], rv.type == RCTTypeBulletproof2 || rv.type == RCTTypeCLSAG || rv.type == RCTTypeCLSAGN);
          }
  
          //set txn fee
@@ -625,46 +625,46 @@ index 2e3e7007e..aed25aa63 100644
          const bool bulletproof = rct_config.range_proof_type != RangeProofBorromean;
          CHECK_AND_ASSERT_THROW_MES(inamounts.size() > 0, "Empty inamounts");
          CHECK_AND_ASSERT_THROW_MES(inamounts.size() == inSk.size(), "Different number of inamounts/inSk");
-@@ -772,30 +1258,97 @@ namespace rct {
-         if (kLRki && msout) {
+@@ -773,10 +1259,71 @@ namespace rct {
            CHECK_AND_ASSERT_THROW_MES(kLRki->size() == inamounts.size(), "Mismatched kLRki/inamounts sizes");
          }
--
-+	/*
-+	// HERE BE DRAGONS!!!
-+	// NEAC: convert incoming amount vector/pairs into discrete vectors
-+	bool xhv_sent = false, usd_sent = false; 
-+	std::vector<xmr_amount> inamounts_xhv, inamounts_usd, outamounts_xhv, outamounts_usd, outamounts_nonzero;
-+        for (size_t i = 0 ; i < inamounts.size(); i++) {
-+	  inamounts_xhv.push_back(inamounts[i].first);
-+	  inamounts_usd.push_back(inamounts[i].second);
-+	  if (inamounts[i].first != 0) xhv_sent = true;
-+	  if (inamounts[i].second != 0) usd_sent = true;
-+	}
-+	bool xhv_received = false, usd_received = false; 
-+        for (size_t i = 0 ; i < outamounts.size(); i++) {
-+	  outamounts_xhv.push_back(outamounts[i].first);
-+	  outamounts_usd.push_back(outamounts[i].second);
-+	  if (outamounts[i].first != 0) xhv_received = true;
-+	  if (outamounts[i].second != 0) usd_received = true;
-+	}
-+	ctkeyV inSk_xhv, inSk_usd;
-+	for (size_t i=0; i<inSk.size(); i++) {
-+	  inSk_xhv.push_back(inSk[i].front());
-+	  inSk_usd.push_back(inSk[i].back());
-+	}
-+	for (size_t i=0; i < outamounts.size(); ++i) {
-+	  if ((outamounts[i].first == 0) && (outamounts[i].second != 0))
-+	    outamounts_nonzero.push_back(outamounts[i].second);
-+	  else
-+	    outamounts_nonzero.push_back(outamounts[i].first);
+ 
++	std::vector<xmr_amount> outamounts_rangesig, outamounts_flat_amounts;
++	
++	// Work out the type of the TX from the mix of inputs and outputs
++	bool xhv_sent = false, usd_sent = false, xasset_sent = false; 
++	if (in_asset_type == "XHV") {
++	  xhv_sent = true;
++	} else if (in_asset_type == "XUSD") {
++	  usd_sent = true;
++	} else {
++	  xasset_sent = true;
 +	}
 +
++	// NEAC: convert outgoing amount vector/pairs into discrete vectors
++	bool xhv_received = false, usd_received = false, xasset_received = false; 
++        for (size_t i = 0 ; i < outamounts.size(); i++) {
++	  if (outamounts[i].first == "XHV") {
++	    outamounts_rangesig.push_back(outamounts[i].second);
++	    xhv_received = true;
++	  } else if (outamounts[i].first == "XUSD") {
++	    outamounts_rangesig.push_back(0);
++	    usd_received = true;
++	  } else {
++	    outamounts_rangesig.push_back(0);
++	    xasset_received = true;
++	  }
++	  // The second value is always non-zero - just copy it in all conditions so we can build bulletproof vector
++	  outamounts_flat_amounts.push_back(outamounts[i].second);
++	}
++	
 +	bool offshore = (xhv_sent && !usd_sent && usd_received && xhv_received);
 +	bool onshore = (usd_sent && !xhv_sent && usd_received && xhv_received);
 +	bool offshore_to_offshore = (usd_sent && !xhv_sent && usd_received && !xhv_received);
-+	// LAND AHOY!!!
-+	*/	
++	bool xasset_to_xusd = (xasset_sent && xasset_received && usd_received);
++	bool xusd_to_xasset = (usd_sent && xasset_received && usd_received);
++	bool xasset_transfer = (xasset_sent && xasset_received && !usd_received);
++
          rctSig rv;
 -        rv.type = bulletproof ? (rct_config.bp_version == 0 || rct_config.bp_version >= 2 ? RCTTypeBulletproof2 : RCTTypeBulletproof) : RCTTypeSimple;
 +        if (bulletproof)
@@ -672,6 +672,9 @@ index 2e3e7007e..aed25aa63 100644
 +          switch (rct_config.bp_version)
 +          {
 +            case 0:
++            case 4:
++              rv.type = RCTTypeCLSAGN;
++              break;
 +            case 3:
 +              rv.type = RCTTypeCLSAG;
 +              break;
@@ -691,14 +694,11 @@ index 2e3e7007e..aed25aa63 100644
          rv.message = message;
          rv.outPk.resize(destinations.size());
 +        rv.outPk_usd.resize(destinations.size());
++        rv.outPk_xasset.resize(destinations.size());
          if (!bulletproof)
            rv.p.rangeSigs.resize(destinations.size());
          rv.ecdhInfo.resize(destinations.size());
--
-+	/*
-         size_t i;
-         keyV masks(destinations.size()); //sk mask..
-         outSk.resize(destinations.size());
+@@ -787,15 +1334,27 @@ namespace rct {
          for (i = 0; i < destinations.size(); i++) {
  
              //add destination to sig
@@ -710,7 +710,7 @@ index 2e3e7007e..aed25aa63 100644
 +            if (!bulletproof) {
 +	      // HERE BE DRAGONS!!!
 +	      // NEAC: need to change the type to accommodate multiple rangeSigs - one for each currency
-+              rv.p.rangeSigs[i] = proveRange(rv.outPk[i].mask, outSk[i].mask, outamounts_xhv[i]);
++              rv.p.rangeSigs[i] = proveRange(rv.outPk[i].mask, outSk[i].mask, outamounts_rangesig[i]);
 +	      // LAND AHOY!!!
 +	    }
              #ifdef DBG
@@ -731,7 +731,7 @@ index 2e3e7007e..aed25aa63 100644
  
          rv.p.bulletproofs.clear();
          if (bulletproof)
-@@ -804,24 +1357,42 @@ namespace rct {
+@@ -804,24 +1363,40 @@ namespace rct {
              size_t amounts_proved = 0;
              if (rct_config.range_proof_type == RangeProofPaddedBulletproof)
              {
@@ -742,7 +742,7 @@ index 2e3e7007e..aed25aa63 100644
 -                    // use a fake bulletproof for speed
 -                    rv.p.bulletproofs.push_back(make_dummy_bulletproof(outamounts, C, masks));
 +		  // use a fake bulletproof for speed
-+		  rv.p.bulletproofs.push_back(make_dummy_bulletproof(outamounts_nonzero, C, masks));
++		  rv.p.bulletproofs.push_back(make_dummy_bulletproof(outamounts_flat_amounts, C, masks));
                  }
                  else
                  {
@@ -752,7 +752,7 @@ index 2e3e7007e..aed25aa63 100644
 -                    CHECK_AND_ASSERT_THROW_MES(verBulletproof(rv.p.bulletproofs.back()), "verBulletproof failed on newly created proof");
 -                    #endif
 +		  const epee::span<const key> keys{&amount_keys[0], amount_keys.size()};
-+		  rv.p.bulletproofs.push_back(proveRangeBulletproof(C, masks, outamounts_nonzero, keys, hwdev));
++		  rv.p.bulletproofs.push_back(proveRangeBulletproof(C, masks, outamounts_flat_amounts, keys, hwdev));
 +		  // HERE BE DRAGONS!!!
 +		  // NEAC: disable these checks again in the final builds
 +                  //#ifdef DBG
@@ -763,48 +763,41 @@ index 2e3e7007e..aed25aa63 100644
 +
                  for (i = 0; i < outamounts.size(); ++i)
                  {
-+		  if ((outamounts[i].first == 0) && (outamounts[i].second != 0)) {
-+                    rv.outPk[i].mask = zeromask;
-+                    rv.outPk_usd[i].mask = rct::scalarmult8(C[i]);
-+		  } else if ((outamounts[i].first == 0) && (outamounts[i].second == 0)) {
-+		    if (offshore_to_offshore) {
-+		      rv.outPk[i].mask = zeromask;
-+		      rv.outPk_usd[i].mask = rct::scalarmult8(C[i]);
-+		    } else {
-+		      rv.outPk[i].mask = rct::scalarmult8(C[i]);
-+		      rv.outPk_usd[i].mask = zeromask;
-+		    }
-+		  } else {
++		  if (outamounts[i].first == "XHV") {
                      rv.outPk[i].mask = rct::scalarmult8(C[i]);
 -                    outSk[i].mask = masks[i];
 +                    rv.outPk_usd[i].mask = zeromask;
++                    rv.outPk_xasset[i].mask = zeromask;
++		  } else if (outamounts[i].first == "XUSD") {
++                    rv.outPk[i].mask = zeromask;
++                    rv.outPk_usd[i].mask = rct::scalarmult8(C[i]);
++                    rv.outPk_xasset[i].mask = zeromask;
++		  } else {
++                    rv.outPk[i].mask = zeromask;
++                    rv.outPk_usd[i].mask = zeromask;
++                    rv.outPk_xasset[i].mask = rct::scalarmult8(C[i]);
 +		  }
 +		  outSk[i].mask = masks[i];
                  }
              }
              else while (amounts_proved < n_amounts)
-@@ -831,71 +1402,141 @@ namespace rct {
-                   while (batch_size * 2 + amounts_proved <= n_amounts && batch_size * 2 <= BULLETPROOF_MAX_OUTPUTS)
+@@ -832,8 +1407,9 @@ namespace rct {
                      batch_size *= 2;
                  rct::keyV C, masks;
--                std::vector<uint64_t> batch_amounts(batch_size);
+                 std::vector<uint64_t> batch_amounts(batch_size);
 -                for (i = 0; i < batch_size; ++i)
-+                std::vector<std::pair<uint64_t, uint64_t>> batch_amounts(batch_size);
+-                  batch_amounts[i] = outamounts[i + amounts_proved];
 +                for (i = 0; i < batch_size; ++i) {
-                   batch_amounts[i] = outamounts[i + amounts_proved];
++                  batch_amounts[i] = outamounts_flat_amounts[i + amounts_proved];
 +		}
                  if (hwdev.get_mode() == hw::device::TRANSACTION_CREATE_FAKE)
                  {
                      // use a fake bulletproof for speed
--                    rv.p.bulletproofs.push_back(make_dummy_bulletproof(batch_amounts, C, masks));
-+                    rv.p.bulletproofs.push_back(make_dummy_bulletproofXHV(batch_amounts, C, masks));
-                 }
-                 else
+@@ -843,44 +1419,111 @@ namespace rct {
                  {
                      const epee::span<const key> keys{&amount_keys[amounts_proved], batch_size};
--                    rv.p.bulletproofs.push_back(proveRangeBulletproof(C, masks, batch_amounts, keys, hwdev));
+                     rv.p.bulletproofs.push_back(proveRangeBulletproof(C, masks, batch_amounts, keys, hwdev));
 -                #ifdef DBG
-+                    rv.p.bulletproofs.push_back(proveRangeBulletproofXHV(C, masks, batch_amounts, keys, hwdev));
 +		    //#ifdef DBG
                      CHECK_AND_ASSERT_THROW_MES(verBulletproof(rv.p.bulletproofs.back()), "verBulletproof failed on newly created proof");
 -                #endif
@@ -814,20 +807,18 @@ index 2e3e7007e..aed25aa63 100644
                  {
 -                  rv.outPk[i + amounts_proved].mask = rct::scalarmult8(C[i]);
 -                  outSk[i + amounts_proved].mask = masks[i];
-+		  if ((outamounts[i + amounts_proved].first == 0) && (outamounts[i + amounts_proved].second != 0)) {
-+                    rv.outPk[i + amounts_proved].mask = zeromask;
-+                    rv.outPk_usd[i + amounts_proved].mask = rct::scalarmult8(C[i]);
-+		  } else if ((outamounts[i].first == 0) && (outamounts[i].second == 0)) {
-+		    if (offshore_to_offshore) {
-+		      rv.outPk[i + amounts_proved].mask = zeromask;
-+		      rv.outPk_usd[i + amounts_proved].mask = rct::scalarmult8(C[i]);
-+		    } else {
-+		      rv.outPk[i + amounts_proved].mask = rct::scalarmult8(C[i]);
-+		      rv.outPk_usd[i + amounts_proved].mask = zeromask;
-+		    }
-+		  } else {
++		  if (outamounts[i + amounts_proved].first == "XHV") {
 +                    rv.outPk[i + amounts_proved].mask = rct::scalarmult8(C[i]);
 +                    rv.outPk_usd[i + amounts_proved].mask = zeromask;
++                    rv.outPk_xasset[i + amounts_proved].mask = zeromask;
++		  } else if (outamounts[i + amounts_proved].first == "XUSD") {
++                    rv.outPk[i + amounts_proved].mask = zeromask;
++                    rv.outPk_usd[i + amounts_proved].mask = rct::scalarmult8(C[i]);
++                    rv.outPk_xasset[i + amounts_proved].mask = zeromask;
++		  } else {
++                    rv.outPk[i + amounts_proved].mask = zeromask;
++                    rv.outPk_usd[i + amounts_proved].mask = zeromask;
++                    rv.outPk_xasset[i + amounts_proved].mask = rct::scalarmult8(C[i]);
 +		  }
 +		  outSk[i + amounts_proved].mask = masks[i];
                  }
@@ -837,7 +828,7 @@ index 2e3e7007e..aed25aa63 100644
  
          key sumout = zero();
 +	key atomic = d2h(1000000000000);
-+	key rate = d2h(pr.unused1);
++	key rate = d2h(pr.unused1); // MA in XHV - used to convert between XHV-XUSD
 +	key inverse_atomic = invert(atomic);
 +	key inverse_rate = invert(rate);
          for (i = 0; i < outSk.size(); ++i)
@@ -850,39 +841,52 @@ index 2e3e7007e..aed25aa63 100644
 -            hwdev.ecdhEncode(rv.ecdhInfo[i], amount_keys[i], rv.type == RCTTypeBulletproof2);
 +	  key outSk_scaled = zero();
 +	  key tempkey = zero();
-+	  if (offshore || (!onshore && !offshore_to_offshore)) {
++	  if (in_asset_type == "XHV") {
 +	    // SPENDING XHV
-+	    if ((outamounts[i].first == 0) && (outamounts[i].second != 0)) {
-+	      // Convert output amount to XHV for equalKeys() testing
++	    if (outamounts[i].first == "XUSD") {
++	      // OFFSHORE - Convert output amount to XHV for equalKeys() testing
 +	      sc_mul(tempkey.bytes, outSk[i].mask.bytes, atomic.bytes);
 +	      sc_mul(outSk_scaled.bytes, tempkey.bytes, inverse_rate.bytes);
-+	      //outSk_scaled = outSk[i].mask;
 +	    } else {
 +	      // Output amount in XHV already - no conversion required
 +	      outSk_scaled = outSk[i].mask;
 +	    }
-+	  } else {
-+	    // SPENDING USD
-+	    if ((outamounts[i].first == 0) && (outamounts[i].second != 0)) {
++	  } else if (in_asset_type == "XUSD") {
++	    // SPENDING XUSD
++	    if (outamounts[i].first == "XUSD") {
 +	      // Output amount in USD already - no conversion required
 +	      outSk_scaled = outSk[i].mask;
-+	    } else if ((outamounts[i].first == 0) && (outamounts[i].second == 0)) {
-+	      // Output amount in USD already, but it's a 0 amount so probably dummy change from a sweep_all
-+	      outSk_scaled = outSk[i].mask;
-+	    } else {
-+	      // Convert output amount to USD for equalKeys() testing
++	    } else if (outamounts[i].first == "XHV") {
++	      // ONSHORE - convert output amount to USD for equalKeys() testing
 +	      sc_mul(tempkey.bytes, outSk[i].mask.bytes, rate.bytes);
 +	      sc_mul(outSk_scaled.bytes, tempkey.bytes, inverse_atomic.bytes);
-+	      //outSk_scaled = outSk[i].mask;
++	    } else {
++	      // xAsset equivalent to OFFSHORE - convert output amount to USD for equalKeys() testing
++	      key rate_xasset = d2h(pr[outamounts[i].first]);
++	      key inverse_rate_xasset = invert(rate_xasset);
++	      sc_mul(tempkey.bytes, outSk[i].mask.bytes, atomic.bytes);
++	      sc_mul(outSk_scaled.bytes, tempkey.bytes, inverse_rate_xasset.bytes);
++	    }
++	  } else {
++	    // SPENDING XASSET
++	    if (outamounts[i].first == "XUSD") {
++	      // xAsset equivalent to ONSHORE - convert output amount to USD for equalKeys() testing
++	      key rate_xasset = d2h(pr[outamounts[i].first]);
++	      sc_mul(tempkey.bytes, outSk[i].mask.bytes, rate_xasset.bytes);
++	      sc_mul(outSk_scaled.bytes, tempkey.bytes, inverse_atomic.bytes);
++	    } else if (outamounts[i].first == "XHV") {
++	      // SHOULD NOT BE POSSIBLE!!!
++	    } else {
++	      // Output amount in xAsset already - no conversion required
++	      outSk_scaled = outSk[i].mask;
 +	    }
 +	  }
 +	  sc_add(sumout.bytes, outSk_scaled.bytes, sumout.bytes);
 +	  
 +	  //mask amount and mask
-+	  uint64_t amount_nonzero = (outamounts[i].first == 0 ? outamounts[i].second : outamounts[i].first);
 +	  rv.ecdhInfo[i].mask = copy(outSk[i].mask);
-+	  rv.ecdhInfo[i].amount = d2h(amount_nonzero);
-+	  hwdev.ecdhEncode(rv.ecdhInfo[i], amount_keys[i], rv.type == RCTTypeBulletproof2 || rv.type == RCTTypeCLSAG);
++	  rv.ecdhInfo[i].amount = d2h(outamounts_flat_amounts[i]);
++	  hwdev.ecdhEncode(rv.ecdhInfo[i], amount_keys[i], rv.type == RCTTypeBulletproof2 || rv.type == RCTTypeCLSAG || rv.type == RCTTypeCLSAGN);
          }
              
          //set txn fee
@@ -896,13 +900,12 @@ index 2e3e7007e..aed25aa63 100644
          keyV &pseudoOuts = bulletproof ? rv.p.pseudoOuts : rv.pseudoOuts;
          pseudoOuts.resize(inamounts.size());
 -        rv.p.MGs.resize(inamounts.size());
-+        if (rv.type == RCTTypeCLSAG)
++        if ((rv.type == RCTTypeCLSAG) || (rv.type == RCTTypeCLSAGN))
 +            rv.p.CLSAGs.resize(inamounts.size());
 +        else
 +            rv.p.MGs.resize(inamounts.size());
          key sumpouts = zero(); //sum pseudoOut masks
          keyV a(inamounts.size());
-+	std::vector<uint64_t> inamounts_nonzero = (inamounts[0].first != 0) ? inamounts_xhv : inamounts_usd;
          for (i = 0 ; i < inamounts.size() - 1; i++) {
 -            skGen(a[i]);
 -            sc_add(sumpouts.bytes, a[i].bytes, sumpouts.bytes);
@@ -912,12 +915,11 @@ index 2e3e7007e..aed25aa63 100644
 +	  // Sum the random keys as we iterate
 +	  sc_add(sumpouts.bytes, a[i].bytes, sumpouts.bytes);
 +	  // Generate a commitment to the amount with the random key
-+	  genC(pseudoOuts[i], a[i], inamounts_nonzero[i]);
++	  genC(pseudoOuts[i], a[i], inamounts[i]);
          }
          sc_sub(a[i].bytes, sumout.bytes, sumpouts.bytes);
--        genC(pseudoOuts[i], a[i], inamounts[i]);
-+        genC(pseudoOuts[i], a[i], inamounts_nonzero[i]);
-         DP(pseudoOuts[i]);
+         genC(pseudoOuts[i], a[i], inamounts[i]);
+@@ -888,14 +1531,26 @@ namespace rct {
  
          key full_message = get_pre_mlsag_hash(rv,hwdev);
          if (msout)
@@ -926,20 +928,20 @@ index 2e3e7007e..aed25aa63 100644
 -            rv.p.MGs[i] = proveRctMGSimple(full_message, rv.mixRing[i], inSk[i], a[i], pseudoOuts[i], kLRki ? &(*kLRki)[i]: NULL, msout ? &msout->c[i] : NULL, index[i], hwdev);
 +        {
 +            msout->c.resize(inamounts.size());
-+            msout->mu_p.resize(rv.type == RCTTypeCLSAG ? inamounts.size() : 0);
-         }
++            msout->mu_p.resize((rv.type == RCTTypeCLSAG || rv.type == RCTTypeCLSAGN) ? inamounts.size() : 0);
++        }
 +        for (i = 0 ; i < inamounts.size(); i++)
 +        {
-+            if (rv.type == RCTTypeCLSAG)
++	  if ((rv.type == RCTTypeCLSAG) || (rv.type == RCTTypeCLSAGN))
 +            {
-+	      rv.p.CLSAGs[i] = proveRctCLSAGSimple(full_message, rv.mixRing[i], (xhv_sent ? inSk_xhv[i] : inSk_usd[i]), a[i], pseudoOuts[i], kLRki ? &(*kLRki)[i]: NULL, msout ? &msout->c[i] : NULL, msout ? &msout->mu_p[i] : NULL, index[i], hwdev);
++	      rv.p.CLSAGs[i] = proveRctCLSAGSimple(full_message, rv.mixRing[i], inSk[i], a[i], pseudoOuts[i], kLRki ? &(*kLRki)[i]: NULL, msout ? &msout->c[i] : NULL, msout ? &msout->mu_p[i] : NULL, index[i], hwdev);
 +	    }
 +            else
 +            {
-+                rv.p.MGs[i] = proveRctMGSimple(full_message, rv.mixRing[i], inSk_xhv[i], a[i], pseudoOuts[i], kLRki ? &(*kLRki)[i]: NULL, msout ? &msout->c[i] : NULL, index[i], hwdev);
++                rv.p.MGs[i] = proveRctMGSimple(full_message, rv.mixRing[i], inSk[i], a[i], pseudoOuts[i], kLRki ? &(*kLRki)[i]: NULL, msout ? &msout->c[i] : NULL, index[i], hwdev);
 +            }
-+        }
-+	*/
+         }
++
          return rv;
      }
  
@@ -948,7 +950,7 @@ index 2e3e7007e..aed25aa63 100644
          std::vector<unsigned int> index;
          index.resize(inPk.size());
          ctkeyM mixRing;
-@@ -905,7 +1546,7 @@ namespace rct {
+@@ -905,7 +1560,7 @@ namespace rct {
            mixRing[i].resize(mixin+1);
            index[i] = populateFromBlockchainSimple(mixRing[i], inPk[i], mixin);
          }
@@ -957,7 +959,7 @@ index 2e3e7007e..aed25aa63 100644
      }
  
      //RingCT protocol
-@@ -978,9 +1619,18 @@ namespace rct {
+@@ -978,9 +1633,18 @@ namespace rct {
          }
      }
  
@@ -973,23 +975,23 @@ index 2e3e7007e..aed25aa63 100644
      //ver RingCT simple
      //assumes only post-rct style inputs (at least for max anonymity)
 -    bool verRctSemanticsSimple(const std::vector<const rctSig*> & rvv) {
-+  bool verRctSemanticsSimple(const std::vector<const rctSig*> & rvv, const offshore::pricing_record pr, const bool offshore, const bool onshore, const bool offshore_to_offshore) {
++  bool verRctSemanticsSimple(const std::vector<const rctSig*> & rvv, const offshore::pricing_record pr, const bool offshore, const bool onshore, const bool offshore_to_offshore, const bool xasset_to_xusd, const bool xusd_to_xasset, const bool xasset_transfer) {
        try
        {
          PERF_TIMER(verRctSemanticsSimple);
-@@ -995,13 +1645,22 @@ namespace rct {
+@@ -995,13 +1659,22 @@ namespace rct {
          {
            CHECK_AND_ASSERT_MES(rvp, false, "rctSig pointer is NULL");
            const rctSig &rv = *rvp;
 -          CHECK_AND_ASSERT_MES(rv.type == RCTTypeSimple || rv.type == RCTTypeBulletproof || rv.type == RCTTypeBulletproof2,
-+          CHECK_AND_ASSERT_MES(rv.type == RCTTypeSimple || rv.type == RCTTypeBulletproof || rv.type == RCTTypeBulletproof2 || rv.type == RCTTypeCLSAG,
++          CHECK_AND_ASSERT_MES(rv.type == RCTTypeSimple || rv.type == RCTTypeBulletproof || rv.type == RCTTypeBulletproof2 || rv.type == RCTTypeCLSAG || rv.type == RCTTypeCLSAGN,
                false, "verRctSemanticsSimple called on non simple rctSig");
            const bool bulletproof = is_rct_bulletproof(rv.type);
            if (bulletproof)
            {
              CHECK_AND_ASSERT_MES(rv.outPk.size() == n_bulletproof_amounts(rv.p.bulletproofs), false, "Mismatched sizes of outPk and bulletproofs");
 -            CHECK_AND_ASSERT_MES(rv.p.pseudoOuts.size() == rv.p.MGs.size(), false, "Mismatched sizes of rv.p.pseudoOuts and rv.p.MGs");
-+            if (rv.type == RCTTypeCLSAG)
++            if ((rv.type == RCTTypeCLSAG) || (rv.type == RCTTypeCLSAGN))
 +            {
 +              CHECK_AND_ASSERT_MES(rv.p.MGs.empty(), false, "MGs are not empty for CLSAG");
 +              CHECK_AND_ASSERT_MES(rv.p.pseudoOuts.size() == rv.p.CLSAGs.size(), false, "Mismatched sizes of rv.p.pseudoOuts and rv.p.CLSAGs");
@@ -1002,7 +1004,7 @@ index 2e3e7007e..aed25aa63 100644
              CHECK_AND_ASSERT_MES(rv.pseudoOuts.empty(), false, "rv.pseudoOuts is not empty");
            }
            else
-@@ -1024,21 +1683,79 @@ namespace rct {
+@@ -1024,21 +1697,79 @@ namespace rct {
            const bool bulletproof = is_rct_bulletproof(rv.type);
            const keyV &pseudoOuts = bulletproof ? rv.p.pseudoOuts : rv.pseudoOuts;
  
@@ -1097,15 +1099,15 @@ index 2e3e7007e..aed25aa63 100644
              return false;
            }
  
-@@ -1083,19 +1800,19 @@ namespace rct {
+@@ -1083,19 +1814,19 @@ namespace rct {
        }
      }
  
 -    bool verRctSemanticsSimple(const rctSig & rv)
-+    bool verRctSemanticsSimple(const rctSig & rv, const offshore::pricing_record pr, const bool offshore, const bool onshore, const bool offshore_to_offshore)
++    bool verRctSemanticsSimple(const rctSig & rv, const offshore::pricing_record pr, const bool offshore, const bool onshore, const bool offshore_to_offshore, const bool xasset_to_xusd, const bool xusd_to_xasset, const bool xasset_transfer)
      {
 -      return verRctSemanticsSimple(std::vector<const rctSig*>(1, &rv));
-+      return verRctSemanticsSimple(std::vector<const rctSig*>(1, &rv), pr, offshore, onshore, offshore_to_offshore);
++      return verRctSemanticsSimple(std::vector<const rctSig*>(1, &rv), pr, offshore, onshore, offshore_to_offshore, xasset_to_xusd, xusd_to_xasset, xasset_transfer);
      }
  
      //ver RingCT simple
@@ -1117,16 +1119,16 @@ index 2e3e7007e..aed25aa63 100644
          PERF_TIMER(verRctNonSemanticsSimple);
  
 -        CHECK_AND_ASSERT_MES(rv.type == RCTTypeSimple || rv.type == RCTTypeBulletproof || rv.type == RCTTypeBulletproof2,
-+        CHECK_AND_ASSERT_MES(rv.type == RCTTypeSimple || rv.type == RCTTypeBulletproof || rv.type == RCTTypeBulletproof2 || rv.type == RCTTypeCLSAG,
++        CHECK_AND_ASSERT_MES(rv.type == RCTTypeSimple || rv.type == RCTTypeBulletproof || rv.type == RCTTypeBulletproof2 || rv.type == RCTTypeCLSAG || rv.type == RCTTypeCLSAGN,
              false, "verRctNonSemanticsSimple called on non simple rctSig");
          const bool bulletproof = is_rct_bulletproof(rv.type);
          // semantics check is early, and mixRing/MGs aren't resolved yet
-@@ -1118,14 +1835,19 @@ namespace rct {
+@@ -1118,14 +1849,19 @@ namespace rct {
          results.resize(rv.mixRing.size());
          for (size_t i = 0 ; i < rv.mixRing.size() ; i++) {
            tpool.submit(&waiter, [&, i] {
 -              results[i] = verRctMGSimple(message, rv.p.MGs[i], rv.mixRing[i], pseudoOuts[i]);
-+              if (rv.type == RCTTypeCLSAG)
++				  if ((rv.type == RCTTypeCLSAG) || (rv.type == RCTTypeCLSAGN))
 +              {
 +                  results[i] = verRctCLSAGSimple(message, rv.p.CLSAGs[i], rv.mixRing[i], pseudoOuts[i]);
 +              }
@@ -1143,28 +1145,28 @@ index 2e3e7007e..aed25aa63 100644
              return false;
            }
          }
-@@ -1162,7 +1884,7 @@ namespace rct {
+@@ -1162,7 +1898,7 @@ namespace rct {
  
          //mask amount and mask
          ecdhTuple ecdh_info = rv.ecdhInfo[i];
 -        hwdev.ecdhDecode(ecdh_info, sk, rv.type == RCTTypeBulletproof2);
-+        hwdev.ecdhDecode(ecdh_info, sk, rv.type == RCTTypeBulletproof2 || rv.type == RCTTypeCLSAG);
++        hwdev.ecdhDecode(ecdh_info, sk, rv.type == RCTTypeBulletproof2 || rv.type == RCTTypeCLSAG || rv.type == RCTTypeCLSAGN);
          mask = ecdh_info.mask;
          key amount = ecdh_info.amount;
          key C = rv.outPk[i].mask;
-@@ -1186,16 +1908,16 @@ namespace rct {
+@@ -1186,16 +1922,16 @@ namespace rct {
      }
  
      xmr_amount decodeRctSimple(const rctSig & rv, const key & sk, unsigned int i, key &mask, hw::device &hwdev) {
 -        CHECK_AND_ASSERT_MES(rv.type == RCTTypeSimple || rv.type == RCTTypeBulletproof || rv.type == RCTTypeBulletproof2, false, "decodeRct called on non simple rctSig");
-+        CHECK_AND_ASSERT_MES(rv.type == RCTTypeSimple || rv.type == RCTTypeBulletproof || rv.type == RCTTypeBulletproof2 || rv.type == RCTTypeCLSAG, false, "decodeRct called on non simple rctSig");
++        CHECK_AND_ASSERT_MES(rv.type == RCTTypeSimple || rv.type == RCTTypeBulletproof || rv.type == RCTTypeBulletproof2 || rv.type == RCTTypeCLSAG || rv.type == RCTTypeCLSAGN, false, "decodeRct called on non simple rctSig");
          CHECK_AND_ASSERT_THROW_MES(i < rv.ecdhInfo.size(), "Bad index");
          CHECK_AND_ASSERT_THROW_MES(rv.outPk.size() == rv.ecdhInfo.size(), "Mismatched sizes of rv.outPk and rv.ecdhInfo");
  
          //mask amount and mask
          ecdhTuple ecdh_info = rv.ecdhInfo[i];
 -        hwdev.ecdhDecode(ecdh_info, sk, rv.type == RCTTypeBulletproof2);
-+        hwdev.ecdhDecode(ecdh_info, sk, rv.type == RCTTypeBulletproof2 || rv.type == RCTTypeCLSAG);
++        hwdev.ecdhDecode(ecdh_info, sk, rv.type == RCTTypeBulletproof2 || rv.type == RCTTypeCLSAG || rv.type == RCTTypeCLSAGN);
          mask = ecdh_info.mask;
          key amount = ecdh_info.amount;
 -        key C = rv.outPk[i].mask;
@@ -1172,7 +1174,7 @@ index 2e3e7007e..aed25aa63 100644
          DP("C");
          DP(C);
          key Ctmp;
-@@ -1215,12 +1937,13 @@ namespace rct {
+@@ -1215,12 +1951,13 @@ namespace rct {
        return decodeRctSimple(rv, sk, i, mask, hwdev);
      }
  
@@ -1187,7 +1189,7 @@ index 2e3e7007e..aed25aa63 100644
          if (rv.type == RCTTypeFull)
          {
            CHECK_AND_ASSERT_MES(rv.p.MGs.size() == 1, false, "MGs not a single element");
-@@ -1230,6 +1953,8 @@ namespace rct {
+@@ -1230,6 +1967,8 @@ namespace rct {
              CHECK_AND_ASSERT_MES(!rv.p.MGs[n].ss[indices[n]].empty(), false, "empty ss line");
          }
  
@@ -1196,13 +1198,13 @@ index 2e3e7007e..aed25aa63 100644
          for (size_t n = 0; n < indices.size(); ++n) {
              rct::key diff;
              sc_mulsub(diff.bytes, msout.c[n].bytes, secret_key.bytes, k[n].bytes);
-@@ -1237,4 +1962,71 @@ namespace rct {
+@@ -1237,4 +1976,71 @@ namespace rct {
          }
          return true;
      }
 +
 +    bool signMultisigCLSAG(rctSig &rv, const std::vector<unsigned int> &indices, const keyV &k, const multisig_out &msout, const key &secret_key) {
-+        CHECK_AND_ASSERT_MES(rv.type == RCTTypeCLSAG, false, "unsupported rct type");
++      CHECK_AND_ASSERT_MES((rv.type == RCTTypeCLSAG) || (rv.type == RCTTypeCLSAGN), false, "unsupported rct type");
 +        CHECK_AND_ASSERT_MES(indices.size() == k.size(), false, "Mismatched k/indices sizes");
 +        CHECK_AND_ASSERT_MES(k.size() == rv.p.CLSAGs.size(), false, "Mismatched k/MGs size");
 +        CHECK_AND_ASSERT_MES(k.size() == msout.c.size(), false, "Mismatched k/msout.c size");
@@ -1224,7 +1226,7 @@ index 2e3e7007e..aed25aa63 100644
 +    }
 +
 +    bool signMultisig(rctSig &rv, const std::vector<unsigned int> &indices, const keyV &k, const multisig_out &msout, const key &secret_key) {
-+        if (rv.type == RCTTypeCLSAG)
++      if ((rv.type == RCTTypeCLSAG) || (rv.type == RCTTypeCLSAGN))
 +            return signMultisigCLSAG(rv, indices, k, msout, secret_key);
 +        else
 +            return signMultisigMLSAG(rv, indices, k, msout, secret_key);
