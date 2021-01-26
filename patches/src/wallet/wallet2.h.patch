@@ -1,5 +1,5 @@
 diff --git a/src/wallet/wallet2.h b/src/wallet/wallet2.h
-index 3a14215b3..1e0e61065 100644
+index 3a14215b3..9d467e648 100644
 --- a/src/wallet/wallet2.h
 +++ b/src/wallet/wallet2.h
 @@ -131,9 +131,9 @@ private:
@@ -139,7 +139,7 @@ index 3a14215b3..1e0e61065 100644
      std::vector<wallet2::pending_tx> create_transactions_single(const crypto::key_image &ki, const cryptonote::account_public_address &address, bool is_subaddress, const size_t outputs, const size_t fake_outs_count, const uint64_t unlock_time, uint32_t priority, const std::vector<uint8_t>& extra);
      std::vector<wallet2::pending_tx> create_transactions_from(const cryptonote::account_public_address &address, bool is_subaddress, const size_t outputs, std::vector<size_t> unused_transfers_indices, std::vector<size_t> unused_dust_indices, const size_t fake_outs_count, const uint64_t unlock_time, uint32_t priority, const std::vector<uint8_t>& extra);
 -    bool sanity_check(const std::vector<wallet2::pending_tx> &ptx_vector, std::vector<cryptonote::tx_destination_entry> dsts) const;
-+    bool sanity_check(const std::vector<wallet2::pending_tx> &ptx_vector, std::vector<cryptonote::tx_destination_entry> dsts, bool offshore = false, bool onshore = false, bool offshore_to_offshore = false, offshore::pricing_record pr = offshore::pricing_record()) const;
++    bool sanity_check(const std::vector<wallet2::pending_tx> &ptx_vector, std::vector<cryptonote::tx_destination_entry> dsts, bool offshore = false, bool onshore = false, bool offshore_to_offshore = false, bool xasset_to_xusd = false, bool xusd_to_xasset = false, bool xasset_transfer = false, const std::string strSource = "XHV", const std::string strDest = "XHV", offshore::pricing_record pr = offshore::pricing_record()) const;
      void cold_tx_aux_import(const std::vector<pending_tx>& ptx, const std::vector<std::string>& tx_device_aux);
      void cold_sign_tx(const std::vector<pending_tx>& ptx_vector, signed_tx_set &exported_txs, std::vector<cryptonote::address_parse_info> &dsts_info, std::vector<std::string> & tx_device_aux);
      uint64_t cold_key_image_sync(uint64_t &spent, uint64_t &unspent);
@@ -178,7 +178,7 @@ index 3a14215b3..1e0e61065 100644
 -    bool check_tx_proof(const crypto::hash &txid, const cryptonote::account_public_address &address, bool is_subaddress, const std::string &message, const std::string &sig_str, uint64_t &received, bool &in_pool, uint64_t &confirmations);
 -    bool check_tx_proof(const cryptonote::transaction &tx, const cryptonote::account_public_address &address, bool is_subaddress, const std::string &message, const std::string &sig_str, uint64_t &received) const;
 +    bool check_tx_proof(const crypto::hash &txid, const cryptonote::account_public_address &address, bool is_subaddress, const std::string &message, const std::string &sig_str, uint64_t &received, uint64_t &received_usd, uint64_t &received_xasset, bool &in_pool, uint64_t &confirmations);
-+    bool check_tx_proof(const cryptonote::transaction &tx, const cryptonote::account_public_address &address, bool is_subaddress, const std::string &message, const std::string &sig_str, uint64_t &received, uint64_t &received_usd, uint64_t &received_usd) const;
++    bool check_tx_proof(const cryptonote::transaction &tx, const cryptonote::account_public_address &address, bool is_subaddress, const std::string &message, const std::string &sig_str, uint64_t &received, uint64_t &received_usd, uint64_t &received_xasset) const;
  
      std::string get_spend_proof(const crypto::hash &txid, const std::string &message);
      bool check_spend_proof(const crypto::hash &txid, const std::string &message, const std::string &sig_str);
