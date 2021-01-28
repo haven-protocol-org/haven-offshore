@@ -1,5 +1,5 @@
 diff --git a/src/simplewallet/simplewallet.cpp b/src/simplewallet/simplewallet.cpp
-index ffe38eedf..75df56d2c 100644
+index ffe38eedf..9dc926a85 100644
 --- a/src/simplewallet/simplewallet.cpp
 +++ b/src/simplewallet/simplewallet.cpp
 @@ -147,7 +147,7 @@ static std::string get_human_readable_timespan(uint64_t seconds);
@@ -1227,20 +1227,21 @@ index ffe38eedf..75df56d2c 100644
  
      if (received > 0)
      {
-@@ -8029,10 +8487,10 @@ bool simple_wallet::check_tx_proof(const std::vector<std::string> &args)
+@@ -8029,10 +8487,11 @@ bool simple_wallet::check_tx_proof(const std::vector<std::string> &args)
  
    try
    {
 -    uint64_t received;
-+    uint64_t received, received_usd;
++    uint64_t received, received_usd, received_xasset;
      bool in_pool;
      uint64_t confirmations;
 -    if (m_wallet->check_tx_proof(txid, info.address, info.is_subaddress, args.size() == 4 ? args[3] : "", sig_str, received, in_pool, confirmations))
-+    if (m_wallet->check_tx_proof(txid, info.address, info.is_subaddress, args.size() == 4 ? args[3] : "", sig_str, received, received_usd, in_pool, confirmations))
++    std::string asset_type;
++    if (m_wallet->check_tx_proof(txid, info.address, info.is_subaddress, args.size() == 4 ? args[3] : "", sig_str, received, received_usd, received_xasset, asset_type, in_pool, confirmations))
      {
        success_msg_writer() << tr("Good signature");
        if (received > 0)
-@@ -8104,7 +8562,7 @@ bool simple_wallet::get_spend_proof(const std::vector<std::string> &args)
+@@ -8104,7 +8563,7 @@ bool simple_wallet::get_spend_proof(const std::vector<std::string> &args)
    try
    {
      const std::string sig_str = m_wallet->get_spend_proof(txid, args.size() == 2 ? args[1] : "");
@@ -1249,7 +1250,7 @@ index ffe38eedf..75df56d2c 100644
      if (m_wallet->save_to_file(filename, sig_str, true))
        success_msg_writer() << tr("signature file saved to: ") << filename;
      else
-@@ -8193,7 +8651,7 @@ bool simple_wallet::get_reserve_proof(const std::vector<std::string> &args)
+@@ -8193,7 +8652,7 @@ bool simple_wallet::get_reserve_proof(const std::vector<std::string> &args)
    try
    {
      const std::string sig_str = m_wallet->get_reserve_proof(account_minreserve, args.size() == 2 ? args[1] : "");
@@ -1258,7 +1259,7 @@ index ffe38eedf..75df56d2c 100644
      if (m_wallet->save_to_file(filename, sig_str, true))
        success_msg_writer() << tr("signature file saved to: ") << filename;
      else
-@@ -8368,7 +8826,7 @@ bool simple_wallet::get_transfers(std::vector<std::string>& local_args, std::vec
+@@ -8368,7 +8827,7 @@ bool simple_wallet::get_transfers(std::vector<std::string>& local_args, std::vec
          payment_id = payment_id.substr(0,16);
        std::string note = m_wallet->get_tx_note(pd.m_tx_hash);
        std::string destination = m_wallet->get_subaddress_as_str({m_current_subaddress_account, pd.m_subaddr_index.minor});
@@ -1267,7 +1268,7 @@ index ffe38eedf..75df56d2c 100644
        const bool unlocked = m_wallet->is_transfer_unlocked(pd.m_unlock_time, pd.m_block_height);
        std::string locked_msg = "unlocked";
        if (!unlocked)
-@@ -8422,11 +8880,12 @@ bool simple_wallet::get_transfers(std::vector<std::string>& local_args, std::vec
+@@ -8422,11 +8881,12 @@ bool simple_wallet::get_transfers(std::vector<std::string>& local_args, std::vec
        if (payment_id.substr(16).find_first_not_of('0') == std::string::npos)
          payment_id = payment_id.substr(0,16);
        std::string note = m_wallet->get_tx_note(i->first);
@@ -1282,7 +1283,7 @@ index ffe38eedf..75df56d2c 100644
          true,
          pd.m_amount_in - change - fee,
          i->first,
-@@ -8554,7 +9013,7 @@ bool simple_wallet::show_transfers(const std::vector<std::string> &args_)
+@@ -8554,7 +9014,7 @@ bool simple_wallet::show_transfers(const std::vector<std::string> &args_)
  
    for (const auto& transfer : all_transfers)
    {
@@ -1291,7 +1292,7 @@ index ffe38eedf..75df56d2c 100644
  
      std::string destinations = "-";
      if (!transfer.outputs.empty())
-@@ -8570,6 +9029,10 @@ bool simple_wallet::show_transfers(const std::vector<std::string> &args_)
+@@ -8570,6 +9030,10 @@ bool simple_wallet::show_transfers(const std::vector<std::string> &args_)
  
      auto formatter = boost::format("%8.8llu %6.6s %8.8s %25.25s %20.20s %s %s %14.14s %s %s - %s");
  
@@ -1302,7 +1303,7 @@ index ffe38eedf..75df56d2c 100644
      message_writer(color, false) << formatter
        % transfer.block
        % transfer.direction
-@@ -9250,8 +9713,13 @@ void simple_wallet::print_accounts()
+@@ -9250,8 +9714,13 @@ void simple_wallet::print_accounts()
    if (num_untagged_accounts > 0)
      print_accounts("");
  
@@ -1318,7 +1319,7 @@ index ffe38eedf..75df56d2c 100644
  }
  //----------------------------------------------------------------------------------------------------
  void simple_wallet::print_accounts(const std::string& tag)
-@@ -9273,22 +9741,33 @@ void simple_wallet::print_accounts(const std::string& tag)
+@@ -9273,22 +9742,33 @@ void simple_wallet::print_accounts(const std::string& tag)
    }
    success_msg_writer() << boost::format("  %15s %21s %21s %21s") % tr("Account") % tr("Balance") % tr("Unlocked balance") % tr("Label");
    uint64_t total_balance = 0, total_unlocked_balance = 0;
@@ -1364,7 +1365,7 @@ index ffe38eedf..75df56d2c 100644
  }
  //----------------------------------------------------------------------------------------------------
  bool simple_wallet::print_address(const std::vector<std::string> &args/* = std::vector<std::string>()*/)
-@@ -10219,7 +10698,7 @@ void simple_wallet::commit_or_save(std::vector<tools::wallet2::pending_tx>& ptx_
+@@ -10219,7 +10699,7 @@ void simple_wallet::commit_or_save(std::vector<tools::wallet2::pending_tx>& ptx_
        cryptonote::blobdata blob;
        tx_to_blob(ptx.tx, blob);
        const std::string blob_hex = epee::string_tools::buff_to_hex_nodelimer(blob);
@@ -1373,7 +1374,7 @@ index ffe38eedf..75df56d2c 100644
        if (m_wallet->save_to_file(filename, blob_hex, true))
          success_msg_writer(true) << tr("Transaction successfully saved to ") << filename << tr(", txid ") << txid;
        else
-@@ -10281,12 +10760,12 @@ int main(int argc, char* argv[])
+@@ -10281,12 +10761,12 @@ int main(int argc, char* argv[])
    bool should_terminate = false;
    std::tie(vm, should_terminate) = wallet_args::main(
     argc, argv,
@@ -1389,7 +1390,7 @@ index ffe38eedf..75df56d2c 100644
    );
  
    if (!vm)
-@@ -10473,7 +10952,7 @@ void simple_wallet::list_mms_messages(const std::vector<mms::message> &messages)
+@@ -10473,7 +10953,7 @@ void simple_wallet::list_mms_messages(const std::vector<mms::message> &messages)
  void simple_wallet::list_signers(const std::vector<mms::authorized_signer> &signers)
  {
    message_writer() << boost::format("%2s %-20s %-s") % tr("#") % tr("Label") % tr("Transport Address");
@@ -1398,7 +1399,7 @@ index ffe38eedf..75df56d2c 100644
    for (size_t i = 0; i < signers.size(); ++i)
    {
      const mms::authorized_signer &signer = signers[i];
-@@ -10679,7 +11158,7 @@ void simple_wallet::mms_signer(const std::vector<std::string> &args)
+@@ -10679,7 +11159,7 @@ void simple_wallet::mms_signer(const std::vector<std::string> &args)
    }
    if ((args.size() < 2) || (args.size() > 4))
    {
@@ -1407,7 +1408,7 @@ index ffe38eedf..75df56d2c 100644
      return;
    }
  
-@@ -10698,14 +11177,14 @@ void simple_wallet::mms_signer(const std::vector<std::string> &args)
+@@ -10698,14 +11178,14 @@ void simple_wallet::mms_signer(const std::vector<std::string> &args)
      bool ok = cryptonote::get_account_address_from_str_or_url(info, m_wallet->nettype(), args[3], oa_prompter);
      if (!ok)
      {

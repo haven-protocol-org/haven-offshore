@@ -1,5 +1,5 @@
 diff --git a/src/ringct/rctSigs.cpp b/src/ringct/rctSigs.cpp
-index 2e3e7007e..fee0cd07d 100644
+index 2e3e7007e..616dfac91 100644
 --- a/src/ringct/rctSigs.cpp
 +++ b/src/ringct/rctSigs.cpp
 @@ -36,6 +36,8 @@
@@ -727,7 +727,7 @@ index 2e3e7007e..fee0cd07d 100644
 +    bool xasset_transfer = (xasset_sent && xasset_received && !usd_received);
 +
 +    // Set the transaction type. Newest type that contains
-+    // xAseets is the RCTTypeCLSAGN.
++    // xAssets is the RCTTypeCLSAGN.
 +    rctSig rv;
 +    if (bulletproof)
 +    {
