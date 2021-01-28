@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/blockchain.cpp b/src/cryptonote_core/blockchain.cpp
-index c6942a037..6836cb111 100644
+index c6942a037..cf0a107ad 100644
 --- a/src/cryptonote_core/blockchain.cpp
 +++ b/src/cryptonote_core/blockchain.cpp
 @@ -56,6 +56,17 @@
@@ -1415,12 +1415,15 @@ index c6942a037..6836cb111 100644
          MERROR_VER("Failed to check ringct signatures!");
          return false;
        }
-@@ -3357,12 +4227,25 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc,
+@@ -3357,11 +4227,24 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc,
        }
        for (size_t n = 0; n < tx.vin.size(); ++n)
        {
 -        if (memcmp(&boost::get<txin_to_key>(tx.vin[n]).k_image, &rv.p.MGs[0].II[n], 32))
 -        {
+-          MERROR_VER("Failed to check ringct signatures: mismatched II/vin sizes");
+-          return false;
+-        }
 +	if (tx.vin[n].type() == typeid(txin_onshore)) {
 +	  if (memcmp(&boost::get<txin_onshore>(tx.vin[n]).k_image, &rv.p.MGs[0].II[n], 32)) {
 +	    MERROR_VER("Failed to check ringct signatures: mismatched II/vin sizes");
@@ -1429,20 +1432,19 @@ index c6942a037..6836cb111 100644
 +	}
 +	else if (tx.vin[n].type() == typeid(txin_offshore)) {
 +	  if (memcmp(&boost::get<txin_offshore>(tx.vin[n]).k_image, &rv.p.MGs[0].II[n], 32)) {
-           MERROR_VER("Failed to check ringct signatures: mismatched II/vin sizes");
-           return false;
-         }
-       }
++	    MERROR_VER("Failed to check ringct signatures: mismatched II/vin sizes");
++	    return false;
++	  }
++	}
 +	else {
 +	  if (memcmp(&boost::get<txin_to_key>(tx.vin[n]).k_image, &rv.p.MGs[0].II[n], 32)) {
 +	    MERROR_VER("Failed to check ringct signatures: mismatched II/vin sizes");
 +	    return false;
 +	  }
 +	}
-+      }
+       }
  
        if (!rct::verRct(rv, false))
-       {
 @@ -3376,16 +4259,16 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc,
        return false;
      }

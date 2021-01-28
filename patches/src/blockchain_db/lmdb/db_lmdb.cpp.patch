@@ -1,5 +1,5 @@
 diff --git a/src/blockchain_db/lmdb/db_lmdb.cpp b/src/blockchain_db/lmdb/db_lmdb.cpp
-index 5cec8879d..4bfa3c4d4 100644
+index 5cec8879d..a6ac48b1e 100644
 --- a/src/blockchain_db/lmdb/db_lmdb.cpp
 +++ b/src/blockchain_db/lmdb/db_lmdb.cpp
 @@ -41,6 +41,7 @@
@@ -268,27 +268,32 @@ index 5cec8879d..4bfa3c4d4 100644
    remove_tx_outputs(tip->data.tx_id, tx);
  
    result = mdb_cursor_get(m_cur_tx_outputs, &val_tx_id, NULL, MDB_SET);
-@@ -1030,8 +1201,8 @@ uint64_t BlockchainLMDB::add_output(const crypto::hash& tx_hash,
+@@ -1030,8 +1201,10 @@ uint64_t BlockchainLMDB::add_output(const crypto::hash& tx_hash,
    CURSOR(output_txs)
    CURSOR(output_amounts)
  
 -  if (tx_output.target.type() != typeid(txout_to_key))
 -    throw0(DB_ERROR("Wrong output type: expected txout_to_key"));
-+  if (tx_output.target.type() != typeid(txout_to_key) && tx_output.target.type() != typeid(txout_offshore))
-+    throw0(DB_ERROR("Wrong output type: expected txout_to_key or txout_offshore"));
++  if (tx_output.target.type() != typeid(txout_to_key) &&
++      tx_output.target.type() != typeid(txout_offshore) &&
++      tx_output.target.type() != typeid(txout_xasset))
++    throw0(DB_ERROR("Wrong output type: expected txout_to_key or txout_offshore or txout_xasset"));
    if (tx_output.amount == 0 && !commitment)
      throw0(DB_ERROR("RCT output without commitment"));
  
-@@ -1059,7 +1230,7 @@ uint64_t BlockchainLMDB::add_output(const crypto::hash& tx_hash,
+@@ -1059,7 +1232,10 @@ uint64_t BlockchainLMDB::add_output(const crypto::hash& tx_hash,
    else
      ok.amount_index = 0;
    ok.output_id = m_num_outputs;
 -  ok.data.pubkey = boost::get < txout_to_key > (tx_output.target).key;
-+  ok.data.pubkey = tx_output.target.type() == typeid(txout_to_key) ? boost::get < txout_to_key > (tx_output.target).key : boost::get < txout_offshore > (tx_output.target).key;
++  ok.data.pubkey
++    = tx_output.target.type() == typeid(txout_to_key) ? boost::get < txout_to_key > (tx_output.target).key
++    : tx_output.target.type() == typeid(txout_offshore) ? boost::get < txout_offshore > (tx_output.target).key
++    : boost::get < txout_xasset > (tx_output.target).key;
    ok.data.unlock_time = unlock_time;
    ok.data.height = m_height;
    if (tx_output.amount == 0)
-@@ -1424,6 +1595,9 @@ void BlockchainLMDB::open(const std::string& filename, const int db_flags)
+@@ -1424,6 +1600,9 @@ void BlockchainLMDB::open(const std::string& filename, const int db_flags)
  
    lmdb_db_open(txn, LMDB_PROPERTIES, MDB_CREATE, m_properties, "Failed to open db handle for m_properties");
  
@@ -298,7 +303,7 @@ index 5cec8879d..4bfa3c4d4 100644
    mdb_set_dupsort(txn, m_spent_keys, compare_hash32);
    mdb_set_dupsort(txn, m_block_heights, compare_hash32);
    mdb_set_dupsort(txn, m_tx_indices, compare_hash32);
-@@ -1440,6 +1614,9 @@ void BlockchainLMDB::open(const std::string& filename, const int db_flags)
+@@ -1440,6 +1619,9 @@ void BlockchainLMDB::open(const std::string& filename, const int db_flags)
    mdb_set_compare(txn, m_alt_blocks, compare_hash32);
    mdb_set_compare(txn, m_properties, compare_string);
  
@@ -308,7 +313,7 @@ index 5cec8879d..4bfa3c4d4 100644
    if (!(mdb_flags & MDB_RDONLY))
    {
      result = mdb_drop(txn, m_hf_starting_heights, 1);
-@@ -1476,7 +1653,7 @@ void BlockchainLMDB::open(const std::string& filename, const int db_flags)
+@@ -1476,7 +1658,7 @@ void BlockchainLMDB::open(const std::string& filename, const int db_flags)
          mdb_env_close(m_env);
          m_open = false;
          MFATAL("Existing lmdb database needs to be converted, which cannot be done on a read-only database.");
@@ -317,7 +322,7 @@ index 5cec8879d..4bfa3c4d4 100644
          return;
        }
        // Note that there was a schema change within version 0 as well.
-@@ -1599,6 +1776,10 @@ void BlockchainLMDB::reset()
+@@ -1599,6 +1781,10 @@ void BlockchainLMDB::reset()
      throw0(DB_ERROR(lmdb_error("Failed to drop m_tx_indices: ", result).c_str()));
    if (auto result = mdb_drop(txn, m_tx_outputs, 0))
      throw0(DB_ERROR(lmdb_error("Failed to drop m_tx_outputs: ", result).c_str()));
@@ -328,7 +333,7 @@ index 5cec8879d..4bfa3c4d4 100644
    if (auto result = mdb_drop(txn, m_output_txs, 0))
      throw0(DB_ERROR(lmdb_error("Failed to drop m_output_txs: ", result).c_str()));
    if (auto result = mdb_drop(txn, m_output_amounts, 0))
-@@ -2891,6 +3072,52 @@ uint64_t BlockchainLMDB::height() const
+@@ -2891,6 +3077,52 @@ uint64_t BlockchainLMDB::height() const
    return db_stats.ms_entries;
  }
  
@@ -381,7 +386,7 @@ index 5cec8879d..4bfa3c4d4 100644
  uint64_t BlockchainLMDB::num_outputs() const
  {
    LOG_PRINT_L3("BlockchainLMDB::" << __func__);
-@@ -5555,6 +5782,7 @@ void BlockchainLMDB::migrate_4_5()
+@@ -5555,6 +5787,7 @@ void BlockchainLMDB::migrate_4_5()
        bi.bi_hash = bi_old->bi_hash;
        bi.bi_cum_rct = bi_old->bi_cum_rct;
        bi.bi_long_term_block_weight = bi_old->bi_long_term_block_weight;
@@ -389,7 +394,7 @@ index 5cec8879d..4bfa3c4d4 100644
  
        MDB_val_set(nv, bi);
        result = mdb_cursor_put(c_cur, (MDB_val *)&zerokval, &nv, MDB_APPENDDUP);
-@@ -5600,6 +5828,134 @@ void BlockchainLMDB::migrate_4_5()
+@@ -5600,6 +5833,134 @@ void BlockchainLMDB::migrate_4_5()
    txn.commit();
  }
  
@@ -524,7 +529,7 @@ index 5cec8879d..4bfa3c4d4 100644
  void BlockchainLMDB::migrate(const uint32_t oldversion)
  {
    if (oldversion < 1)
-@@ -5612,6 +5968,8 @@ void BlockchainLMDB::migrate(const uint32_t oldversion)
+@@ -5612,6 +5973,8 @@ void BlockchainLMDB::migrate(const uint32_t oldversion)
      migrate_3_4();
    if (oldversion < 5)
      migrate_4_5();
