@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/cryptonote_tx_utils.cpp b/src/cryptonote_core/cryptonote_tx_utils.cpp
-index 3dd29dd1b..413a304cb 100644
+index 3dd29dd1b..c3623cd53 100644
 --- a/src/cryptonote_core/cryptonote_tx_utils.cpp
 +++ b/src/cryptonote_core/cryptonote_tx_utils.cpp
 @@ -75,8 +75,75 @@ namespace cryptonote
@@ -1155,7 +1155,7 @@ index 3dd29dd1b..413a304cb 100644
 +      } else {
 +        txout_xasset tk;
 +        tk.key = out_eph_public_key;
-+        tk.asset_type = dst_entr_clone.currency_type;
++        std::transform(dst_entr_clone.currency_type.begin(), dst_entr_clone.currency_type.end(), std::back_inserter(tk.asset_type), [] (char c) { return (uint8_t)c; });
 +        out.target = tk;
 +        out.amount = dst_entr_clone.amount_xasset;
 +        outamounts.push_back(std::pair<std::string, uint64_t>(dst_entr_clone.currency_type, dst_entr_clone.amount_xasset));
