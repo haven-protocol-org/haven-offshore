@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/cryptonote_core.cpp b/src/cryptonote_core/cryptonote_core.cpp
-index 5aed708d5..006b887c1 100644
+index 5aed708d5..8f702a643 100644
 --- a/src/cryptonote_core/cryptonote_core.cpp
 +++ b/src/cryptonote_core/cryptonote_core.cpp
 @@ -166,8 +166,8 @@ namespace cryptonote
@@ -115,7 +115,7 @@ index 5aed708d5..006b887c1 100644
 +	} else if (out.target.type() == typeid(txout_offshore)) {
 +	  LOG_PRINT_L1("txout_offshore target key = " << boost::get<txout_offshore>(out.target).key);
 +	} else if (out.target.type() == typeid(txout_xasset)) {
-+	  std::string asset_type(boost::get<txout_xasset>(out.target).asset_type.begin(), boost::get<txout_xasset>(out.target).asset_type.end());
++	  std::string asset_type = boost::get<txout_xasset>(out.target).asset_type;
 +	  LOG_PRINT_L1("txout_xasset target key = " << boost::get<txout_xasset>(out.target).key << ", asset type = " << asset_type) ;
 +	}
 +      }
