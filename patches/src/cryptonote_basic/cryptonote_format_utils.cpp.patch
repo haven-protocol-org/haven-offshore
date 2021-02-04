@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_basic/cryptonote_format_utils.cpp b/src/cryptonote_basic/cryptonote_format_utils.cpp
-index cb6d1ec91..8d11e5abb 100644
+index cb6d1ec91..ce5f1a1bf 100644
 --- a/src/cryptonote_basic/cryptonote_format_utils.cpp
 +++ b/src/cryptonote_basic/cryptonote_format_utils.cpp
 @@ -169,12 +169,56 @@ namespace cryptonote
@@ -229,7 +229,33 @@ index cb6d1ec91..8d11e5abb 100644
      }
      return true;
    }
-@@ -996,15 +1091,15 @@ namespace cryptonote
+@@ -871,11 +966,21 @@ namespace cryptonote
+     return true;
+   }
+   //---------------------------------------------------------------
+-  uint64_t get_outs_money_amount(const transaction& tx)
++  std::map<std::string, uint64_t> get_outs_money_amount(const transaction& tx)
+   {
+-    uint64_t outputs_amount = 0;
+-    for(const auto& o: tx.vout)
+-      outputs_amount += o.amount;
++    std::map<std::string, uint64_t> outputs_amount;
++    for(const auto& o: tx.vout) {
++      std::string asset_type;
++      if (o.target.type() == typeid(txout_offshore)) {
++        asset_type = "XUSD";
++      } else if (o.target.type() == typeid(txout_xasset)) {;
++        asset_type = boost::get<txout_xasset>(o.target).asset_type;
++      } else {
++        // this close covers miner tx and normal XHV ouputs.
++        asset_type = "XHV";
++      }
++      outputs_amount[asset_type] += o.amount;
++    }
+     return outputs_amount;
+   }
+   //---------------------------------------------------------------
+@@ -996,15 +1101,15 @@ namespace cryptonote
      switch (decimal_point)
      {
        case 12:
@@ -250,7 +276,7 @@ index cb6d1ec91..8d11e5abb 100644
        default:
          ASSERT_MES_AND_THROW("Invalid decimal point specification: " << decimal_point);
      }
-@@ -1038,6 +1133,20 @@ namespace cryptonote
+@@ -1038,6 +1143,20 @@ namespace cryptonote
      return s;
    }
    //---------------------------------------------------------------
@@ -271,7 +297,7 @@ index cb6d1ec91..8d11e5abb 100644
    crypto::hash get_blob_hash(const blobdata& blob)
    {
      crypto::hash h = null_hash;
-@@ -1082,7 +1191,11 @@ namespace cryptonote
+@@ -1082,7 +1201,11 @@ namespace cryptonote
        binary_archive<true> ba(ss);
        const size_t inputs = t.vin.size();
        const size_t outputs = t.vout.size();
@@ -284,7 +310,7 @@ index cb6d1ec91..8d11e5abb 100644
        bool r = tt.rct_signatures.p.serialize_rctsig_prunable(ba, t.rct_signatures.type, inputs, outputs, mixin);
        CHECK_AND_ASSERT_MES(r, false, "Failed to serialize rct signatures prunable");
        cryptonote::get_blob_hash(ss.str(), res);
-@@ -1421,7 +1534,8 @@ namespace cryptonote
+@@ -1421,7 +1544,8 @@ namespace cryptonote
    crypto::secret_key encrypt_key(crypto::secret_key key, const epee::wipeable_string &passphrase)
    {
      crypto::hash hash;
@@ -294,7 +320,7 @@ index cb6d1ec91..8d11e5abb 100644
      sc_add((unsigned char*)key.data, (const unsigned char*)key.data, (const unsigned char*)hash.data);
      return key;
    }
-@@ -1429,7 +1543,8 @@ namespace cryptonote
+@@ -1429,7 +1553,8 @@ namespace cryptonote
    crypto::secret_key decrypt_key(crypto::secret_key key, const epee::wipeable_string &passphrase)
    {
      crypto::hash hash;

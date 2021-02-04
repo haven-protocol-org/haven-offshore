@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/tx_pool.cpp b/src/cryptonote_core/tx_pool.cpp
-index 696bc88d4..bc133c8ee 100644
+index 696bc88d4..6b6e497b1 100644
 --- a/src/cryptonote_core/tx_pool.cpp
 +++ b/src/cryptonote_core/tx_pool.cpp
 @@ -107,8 +107,8 @@ namespace cryptonote
@@ -22,6 +22,15 @@ index 696bc88d4..bc133c8ee 100644
  
      if (tx.version == 1)
      {
+@@ -166,7 +166,7 @@ namespace cryptonote
+         return false;
+       }
+ 
+-      uint64_t outputs_amount = get_outs_money_amount(tx);
++      uint64_t outputs_amount = get_outs_money_amount(tx)["XHV"];
+       if(outputs_amount > inputs_amount)
+       {
+         LOG_PRINT_L1("transaction use more money than it has: use " << print_money(outputs_amount) << ", have " << print_money(inputs_amount));
 @@ -187,15 +187,84 @@ namespace cryptonote
      else
      {

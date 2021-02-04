@@ -1,5 +1,5 @@
 diff --git a/src/wallet/wallet_rpc_server.cpp b/src/wallet/wallet_rpc_server.cpp
-index 30eed07e7..0e0405583 100644
+index 30eed07e7..830467037 100644
 --- a/src/wallet/wallet_rpc_server.cpp
 +++ b/src/wallet/wallet_rpc_server.cpp
 @@ -289,7 +289,7 @@ namespace tools
@@ -20,25 +20,52 @@ index 30eed07e7..0e0405583 100644
      entry.subaddr_index = pd.m_subaddr_index;
      entry.subaddr_indices.push_back(pd.m_subaddr_index);
      entry.address = m_wallet->get_subaddress_as_str(pd.m_subaddr_index);
-@@ -360,7 +360,7 @@ namespace tools
+@@ -348,7 +348,8 @@ namespace tools
+     entry.timestamp = pd.m_timestamp;
+     entry.unlock_time = pd.m_unlock_time;
+     entry.locked = !m_wallet->is_transfer_unlocked(pd.m_unlock_time, pd.m_block_height);
+-    entry.fee = pd.m_amount_in - pd.m_amount_out;
++    // entry.fee = pd.m_amount_in - pd.m_amount_out;
++    entry.fee = 0; // TODO: fees
+     uint64_t change = pd.m_change == (uint64_t)-1 ? 0 : pd.m_change; // change may not be known
+     entry.amount = pd.m_amount_in - change - entry.fee;
+     entry.note = m_wallet->get_tx_note(txid);
+@@ -360,7 +361,8 @@ namespace tools
        td.address = d.address(m_wallet->nettype(), pd.m_payment_id);
      }
  
 -    entry.type = "out";
-+    entry.type = ((pd.m_offshore_to_offshore || pd.m_onshore) ? "XUSD out" : "out");
++    // entry.type = ((pd.m_offshore_to_offshore || pd.m_onshore) ? "XUSD out" : "out");
++    entry.type = pd.m_dest_currency_type;
      entry.subaddr_index = { pd.m_subaddr_account, 0 };
      for (uint32_t i: pd.m_subaddr_indices)
        entry.subaddr_indices.push_back({pd.m_subaddr_account, i});
-@@ -391,7 +391,7 @@ namespace tools
+@@ -378,7 +380,8 @@ namespace tools
+       entry.payment_id = entry.payment_id.substr(0,16);
+     entry.height = 0;
+     entry.timestamp = pd.m_timestamp;
+-    entry.fee = pd.m_amount_in - pd.m_amount_out;
++    // entry.fee = pd.m_amount_in - pd.m_amount_out;
++    entry.fee = 0;
+     entry.amount = pd.m_amount_in - pd.m_change - entry.fee;
+     entry.unlock_time = pd.m_tx.unlock_time;
+     entry.locked = true;
+@@ -391,7 +394,13 @@ namespace tools
        td.address = d.address(m_wallet->nettype(), pd.m_payment_id);
      }
  
 -    entry.type = is_failed ? "failed" : "pending";
-+    entry.type = is_failed ? "failed" : (pd.m_offshore_to_offshore || pd.m_onshore)? "XUSD pending" : "pending";
++    // entry.type = is_failed ? "failed" : (pd.m_offshore_to_offshore || pd.m_onshore)? "XUSD pending" : "pending";
++    if(is_failed) {
++      entry.type = "failed";
++    } else {
++      entry.type =  pd.m_dest_currency_type;
++    }
++
      entry.subaddr_index = { pd.m_subaddr_account, 0 };
      for (uint32_t i: pd.m_subaddr_indices)
        entry.subaddr_indices.push_back({pd.m_subaddr_account, i});
-@@ -415,7 +415,7 @@ namespace tools
+@@ -415,7 +424,7 @@ namespace tools
      entry.fee = pd.m_fee;
      entry.note = m_wallet->get_tx_note(pd.m_tx_hash);
      entry.double_spend_seen = ppd.m_double_spend_seen;
@@ -47,7 +74,7 @@ index 30eed07e7..0e0405583 100644
      entry.subaddr_index = pd.m_subaddr_index;
      entry.subaddr_indices.push_back(pd.m_subaddr_index);
      entry.address = m_wallet->get_subaddress_as_str(pd.m_subaddr_index);
-@@ -427,8 +427,16 @@ namespace tools
+@@ -427,8 +436,16 @@ namespace tools
      if (!m_wallet) return not_open(er);
      try
      {
@@ -66,7 +93,7 @@ index 30eed07e7..0e0405583 100644
        res.multisig_import_needed = m_wallet->multisig() && m_wallet->has_multisig_partial_key_images();
        std::map<uint32_t, std::map<uint32_t, uint64_t>> balance_per_subaddress_per_account;
        std::map<uint32_t, std::map<uint32_t, std::pair<uint64_t, std::pair<uint64_t, uint64_t>>>> unlocked_balance_per_subaddress_per_account;
-@@ -436,14 +444,14 @@ namespace tools
+@@ -436,14 +453,14 @@ namespace tools
        {
          for (uint32_t account_index = 0; account_index < m_wallet->get_num_subaddress_accounts(); ++account_index)
          {
@@ -85,7 +112,7 @@ index 30eed07e7..0e0405583 100644
        }
        std::vector<tools::wallet2::transfer_details> transfers;
        m_wallet->get_transfers(transfers);
-@@ -622,8 +630,8 @@ namespace tools
+@@ -622,8 +639,8 @@ namespace tools
          wallet_rpc::COMMAND_RPC_GET_ACCOUNTS::subaddress_account_info info;
          info.account_index = subaddr_index.major;
          info.base_address = m_wallet->get_subaddress_as_str(subaddr_index);
@@ -96,7 +123,7 @@ index 30eed07e7..0e0405583 100644
          info.label = m_wallet->get_subaddress_label(subaddr_index);
          info.tag = account_tags.second[subaddr_index.major];
          res.subaddress_accounts.push_back(info);
-@@ -857,17 +865,18 @@ namespace tools
+@@ -857,17 +874,18 @@ namespace tools
      return true;
    }
    //------------------------------------------------------------------------------------------------------------------------------
@@ -119,7 +146,7 @@ index 30eed07e7..0e0405583 100644
    {
      for (const auto & ptx : ptx_vector)
      {
-@@ -879,7 +888,8 @@ namespace tools
+@@ -879,7 +897,8 @@ namespace tools
          fill(tx_key, std::string(s.data(), s.size()));
        }
        // Compute amount leaving wallet in tx. By convention dests does not include change outputs
@@ -129,7 +156,7 @@ index 30eed07e7..0e0405583 100644
        fill(fee, ptx.fee);
        fill(weight, cryptonote::get_transaction_weight(ptx.tx));
      }
-@@ -925,6 +935,193 @@ namespace tools
+@@ -925,6 +944,193 @@ namespace tools
      return true;
    }
    //------------------------------------------------------------------------------------------------------------------------------
@@ -323,7 +350,7 @@ index 30eed07e7..0e0405583 100644
    bool wallet_rpc_server::on_transfer(const wallet_rpc::COMMAND_RPC_TRANSFER::request& req, wallet_rpc::COMMAND_RPC_TRANSFER::response& res, epee::json_rpc::error& er, const connection_context *ctx)
    {
  
-@@ -967,7 +1164,7 @@ namespace tools
+@@ -967,7 +1173,7 @@ namespace tools
          return false;
        }
  
@@ -332,7 +359,7 @@ index 30eed07e7..0e0405583 100644
            res.tx_hash, req.get_tx_hex, res.tx_blob, req.get_tx_metadata, res.tx_metadata, er);
      }
      catch (const std::exception& e)
-@@ -1013,8 +1210,8 @@ namespace tools
+@@ -1013,8 +1219,8 @@ namespace tools
          return false;
        }
  
@@ -343,7 +370,7 @@ index 30eed07e7..0e0405583 100644
      }
      catch (const std::exception& e)
      {
-@@ -1376,8 +1573,8 @@ namespace tools
+@@ -1376,8 +1582,8 @@ namespace tools
      {
        std::vector<wallet2::pending_tx> ptx_vector = m_wallet->create_unmixable_sweep_transactions();
  
@@ -354,7 +381,7 @@ index 30eed07e7..0e0405583 100644
      }
      catch (const std::exception& e)
      {
-@@ -1434,8 +1631,8 @@ namespace tools
+@@ -1434,8 +1640,8 @@ namespace tools
        uint32_t priority = m_wallet->adjust_priority(req.priority);
        std::vector<wallet2::pending_tx> ptx_vector = m_wallet->create_transactions_all(req.below_amount, dsts[0].addr, dsts[0].is_subaddress, req.outputs, mixin, req.unlock_time, priority, extra, req.account_index, subaddr_indices);
  
@@ -365,7 +392,7 @@ index 30eed07e7..0e0405583 100644
      }
      catch (const std::exception& e)
      {
-@@ -1509,7 +1706,7 @@ namespace tools
+@@ -1509,7 +1715,7 @@ namespace tools
          return false;
        }
  
@@ -374,7 +401,7 @@ index 30eed07e7..0e0405583 100644
            res.tx_hash, req.get_tx_hex, res.tx_blob, req.get_tx_metadata, res.tx_metadata, er);
      }
      catch (const std::exception& e)
-@@ -2224,7 +2421,7 @@ namespace tools
+@@ -2224,7 +2430,7 @@ namespace tools
  
      try
      {
@@ -383,7 +410,7 @@ index 30eed07e7..0e0405583 100644
      }
      catch (const std::exception &e)
      {
-@@ -2290,7 +2487,7 @@ namespace tools
+@@ -2290,7 +2496,7 @@ namespace tools
  
      try
      {
@@ -392,7 +419,7 @@ index 30eed07e7..0e0405583 100644
      }
      catch (const std::exception &e)
      {
-@@ -3462,6 +3659,9 @@ namespace tools
+@@ -3462,6 +3668,9 @@ namespace tools
        }
      }
  
@@ -402,7 +429,7 @@ index 30eed07e7..0e0405583 100644
      try
      {
        if (!req.spendkey.empty())
-@@ -3526,6 +3726,12 @@ namespace tools
+@@ -3526,6 +3735,12 @@ namespace tools
      }
  
      // early check for mandatory fields

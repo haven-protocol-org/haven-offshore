@@ -1,5 +1,5 @@
 diff --git a/src/ringct/rctSigs.cpp b/src/ringct/rctSigs.cpp
-index 2e3e7007e..8f4cc5a2f 100644
+index 2e3e7007e..704bdc6da 100644
 --- a/src/ringct/rctSigs.cpp
 +++ b/src/ringct/rctSigs.cpp
 @@ -36,6 +36,8 @@
@@ -1525,7 +1525,7 @@ index 2e3e7007e..8f4cc5a2f 100644
          mask = ecdh_info.mask;
          key amount = ecdh_info.amount;
          key C = rv.outPk[i].mask;
-@@ -1186,16 +2036,16 @@ namespace rct {
+@@ -1186,16 +2036,19 @@ namespace rct {
      }
  
      xmr_amount decodeRctSimple(const rctSig & rv, const key & sk, unsigned int i, key &mask, hw::device &hwdev) {
@@ -1541,11 +1541,14 @@ index 2e3e7007e..8f4cc5a2f 100644
          mask = ecdh_info.mask;
          key amount = ecdh_info.amount;
 -        key C = rv.outPk[i].mask;
-+        key C = (equalKeys(scalarmultH(d2h(0)),rv.outPk[i].mask)) ? rv.outPk_usd[i].mask : rv.outPk[i].mask;
++        key C;
++	if (!equalKeys(scalarmultH(d2h(0)),rv.outPk[i].mask)) C = rv.outPk[i].mask;
++	else if (!equalKeys(scalarmultH(d2h(0)),rv.outPk_usd[i].mask)) C = rv.outPk_usd[i].mask;
++	else if (!equalKeys(scalarmultH(d2h(0)),rv.outPk_xasset[i].mask)) C = rv.outPk_xasset[i].mask;
          DP("C");
          DP(C);
          key Ctmp;
-@@ -1215,12 +2065,13 @@ namespace rct {
+@@ -1215,12 +2068,13 @@ namespace rct {
        return decodeRctSimple(rv, sk, i, mask, hwdev);
      }
  
@@ -1560,7 +1563,7 @@ index 2e3e7007e..8f4cc5a2f 100644
          if (rv.type == RCTTypeFull)
          {
            CHECK_AND_ASSERT_MES(rv.p.MGs.size() == 1, false, "MGs not a single element");
-@@ -1230,6 +2081,8 @@ namespace rct {
+@@ -1230,6 +2084,8 @@ namespace rct {
              CHECK_AND_ASSERT_MES(!rv.p.MGs[n].ss[indices[n]].empty(), false, "empty ss line");
          }
  
@@ -1569,7 +1572,7 @@ index 2e3e7007e..8f4cc5a2f 100644
          for (size_t n = 0; n < indices.size(); ++n) {
              rct::key diff;
              sc_mulsub(diff.bytes, msout.c[n].bytes, secret_key.bytes, k[n].bytes);
-@@ -1237,4 +2090,71 @@ namespace rct {
+@@ -1237,4 +2093,71 @@ namespace rct {
          }
          return true;
      }

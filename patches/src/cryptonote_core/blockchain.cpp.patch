@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/blockchain.cpp b/src/cryptonote_core/blockchain.cpp
-index c6942a037..cf0a107ad 100644
+index c6942a037..aad2039ef 100644
 --- a/src/cryptonote_core/blockchain.cpp
 +++ b/src/cryptonote_core/blockchain.cpp
 @@ -56,6 +56,17 @@
@@ -645,6 +645,15 @@ index c6942a037..cf0a107ad 100644
      if (cur_tx.weight != get_transaction_weight(cur_tx.tx))
      {
        LOG_ERROR("Creating block template: error: invalid transaction weight");
+@@ -1524,7 +1924,7 @@ bool Blockchain::create_block_template(block& b, const crypto::hash *from_block,
+       {
+         LOG_ERROR("Creating block template: error: cannot get inputs amount");
+       }
+-      else if (cur_tx.fee != inputs_amount - get_outs_money_amount(cur_tx.tx))
++      else if (cur_tx.fee != inputs_amount - get_outs_money_amount(cur_tx.tx)["XHV"])
+       {
+         LOG_ERROR("Creating block template: error: invalid fee");
+       }
 @@ -1559,7 +1959,7 @@ bool Blockchain::create_block_template(block& b, const crypto::hash *from_block,
    //make blocks coin-base tx looks close to real coinbase tx to get truthful blob weight
    uint8_t hf_version = b.major_version;
@@ -663,6 +672,15 @@ index c6942a037..cf0a107ad 100644
  
      CHECK_AND_ASSERT_MES(r, false, "Failed to construct miner tx, second chance");
      size_t coinbase_weight = get_transaction_weight(b.miner_tx);
+@@ -1759,7 +2159,7 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
+     bei.bl = b;
+     const uint64_t prev_height = alt_chain.size() ? prev_data.height : m_db->get_block_height(b.prev_id);
+     bei.height = prev_height + 1;
+-    uint64_t block_reward = get_outs_money_amount(b.miner_tx);
++    uint64_t block_reward = get_outs_money_amount(b.miner_tx)["XHV"];
+     const uint64_t prev_generated_coins = alt_chain.size() ? prev_data.already_generated_coins : m_db->get_block_already_generated_coins(prev_height);
+     bei.already_generated_coins = (block_reward < (MONEY_SUPPLY - prev_generated_coins)) ? prev_generated_coins + block_reward : MONEY_SUPPLY;
+ 
 @@ -2142,14 +2542,14 @@ void Blockchain::get_output_key_mask_unlocked(const uint64_t& amount, const uint
  //------------------------------------------------------------------
  bool Blockchain::get_output_distribution(uint64_t amount, uint64_t from_height, uint64_t to_height, uint64_t &start_height, std::vector<uint64_t> &distribution, uint64_t &base) const

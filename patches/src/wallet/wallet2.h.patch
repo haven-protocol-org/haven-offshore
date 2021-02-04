@@ -1,5 +1,5 @@
 diff --git a/src/wallet/wallet2.h b/src/wallet/wallet2.h
-index 3a14215b3..fdeb5d0bb 100644
+index 3a14215b3..c36c25da2 100644
 --- a/src/wallet/wallet2.h
 +++ b/src/wallet/wallet2.h
 @@ -131,9 +131,9 @@ private:
@@ -50,7 +50,14 @@ index 3a14215b3..fdeb5d0bb 100644
  
        BEGIN_SERIALIZE_OBJECT()
          FIELD(m_block_height)
-@@ -371,6 +385,9 @@ private:
+@@ -365,12 +379,16 @@ private:
+     {
+       crypto::hash m_tx_hash;
+       uint64_t m_amount;
++      std::string m_asset_type;
+       amounts_container m_amounts;
+       uint64_t m_fee;
+       uint64_t m_block_height;
        uint64_t m_unlock_time;
        uint64_t m_timestamp;
        bool m_coinbase;
@@ -60,7 +67,16 @@ index 3a14215b3..fdeb5d0bb 100644
        cryptonote::subaddress_index m_subaddr_index;
      };
  
-@@ -400,6 +417,8 @@ private:
+@@ -390,7 +408,7 @@ private:
+     {
+       cryptonote::transaction_prefix m_tx;
+       uint64_t m_amount_in;
+-      uint64_t m_amount_out;
++      std::map<std::string, uint64_t> m_amount_out;
+       uint64_t m_change;
+       time_t m_sent_time;
+       std::vector<cryptonote::tx_destination_entry> m_dests;
+@@ -400,12 +418,14 @@ private:
        uint32_t m_subaddr_account;   // subaddress account of your wallet to be used in this transfer
        std::set<uint32_t> m_subaddr_indices;  // set of address indices used as inputs in this transfer
        std::vector<std::pair<crypto::key_image, std::vector<uint64_t>>> m_rings; // relative
@@ -69,7 +85,14 @@ index 3a14215b3..fdeb5d0bb 100644
      };
  
      struct confirmed_transfer_details
-@@ -415,10 +434,12 @@ private:
+     {
+       uint64_t m_amount_in;
+-      uint64_t m_amount_out;
++      std::map<std::string, uint64_t> m_amount_out;
+       uint64_t m_change;
+       uint64_t m_block_height;
+       std::vector<cryptonote::tx_destination_entry> m_dests;
+@@ -415,10 +435,28 @@ private:
        uint32_t m_subaddr_account;   // subaddress account of your wallet to be used in this transfer
        std::set<uint32_t> m_subaddr_indices;  // set of address indices used as inputs in this transfer
        std::vector<std::pair<crypto::key_image, std::vector<uint64_t>>> m_rings; // relative
@@ -77,14 +100,30 @@ index 3a14215b3..fdeb5d0bb 100644
 +      std::string m_dest_currency_type;
  
 -      confirmed_transfer_details(): m_amount_in(0), m_amount_out(0), m_change((uint64_t)-1), m_block_height(0), m_payment_id(crypto::null_hash), m_timestamp(0), m_unlock_time(0), m_subaddr_account((uint32_t)-1) {}
-+      confirmed_transfer_details(): m_amount_in(0), m_amount_out(0), m_change((uint64_t)-1), m_block_height(0), m_payment_id(crypto::null_hash), m_timestamp(0), m_unlock_time(0), m_subaddr_account((uint32_t)-1), m_source_currency_type("XHV"),m_dest_currency_type("XHV") {}
++      confirmed_transfer_details(): m_amount_in(0), m_change((uint64_t)-1), m_block_height(0), m_payment_id(crypto::null_hash), m_timestamp(0), m_unlock_time(0), m_subaddr_account((uint32_t)-1), m_source_currency_type("XHV"),m_dest_currency_type("XHV") {}
        confirmed_transfer_details(const unconfirmed_transfer_details &utd, uint64_t height):
 -        m_amount_in(utd.m_amount_in), m_amount_out(utd.m_amount_out), m_change(utd.m_change), m_block_height(height), m_dests(utd.m_dests), m_payment_id(utd.m_payment_id), m_timestamp(utd.m_timestamp), m_unlock_time(utd.m_tx.unlock_time), m_subaddr_account(utd.m_subaddr_account), m_subaddr_indices(utd.m_subaddr_indices), m_rings(utd.m_rings) {}
-+        m_amount_in(utd.m_amount_in), m_amount_out(utd.m_amount_out), m_change(utd.m_change), m_block_height(height), m_dests(utd.m_dests), m_payment_id(utd.m_payment_id), m_timestamp(utd.m_timestamp), m_unlock_time(utd.m_tx.unlock_time), m_subaddr_account(utd.m_subaddr_account), m_subaddr_indices(utd.m_subaddr_indices), m_rings(utd.m_rings), m_source_currency_type(utd.m_source_currency_type),m_dest_currency_type(utd.m_dest_currency_type) {}
++        m_amount_in(utd.m_amount_in), 
++        m_change(utd.m_change), 
++        m_block_height(height), 
++        m_dests(utd.m_dests), 
++        m_payment_id(utd.m_payment_id), 
++        m_timestamp(utd.m_timestamp), 
++        m_unlock_time(utd.m_tx.unlock_time), 
++        m_subaddr_account(utd.m_subaddr_account), 
++        m_subaddr_indices(utd.m_subaddr_indices), 
++        m_rings(utd.m_rings), 
++        m_source_currency_type(utd.m_source_currency_type),
++        m_dest_currency_type(utd.m_dest_currency_type)
++      {
++        for (const auto& o: utd.m_amount_out) {
++          m_amount_out[o.first] = o.second;
++        }
++      }
      };
  
      struct tx_construction_data
-@@ -832,23 +853,35 @@ private:
+@@ -832,23 +870,35 @@ private:
      bool key_on_device() const { return get_device_type() != hw::device::device_type::SOFTWARE; }
      hw::device::device_type get_device_type() const { return m_key_device_type; }
      bool reconnect_device();
@@ -128,7 +167,7 @@ index 3a14215b3..fdeb5d0bb 100644
  
      void commit_tx(pending_tx& ptx_vector);
      void commit_tx(std::vector<pending_tx>& ptx_vector);
-@@ -874,7 +907,7 @@ private:
+@@ -874,7 +924,7 @@ private:
      std::vector<wallet2::pending_tx> create_transactions_all(uint64_t below, const cryptonote::account_public_address &address, bool is_subaddress, const size_t outputs, const size_t fake_outs_count, const uint64_t unlock_time, uint32_t priority, const std::vector<uint8_t>& extra, uint32_t subaddr_account, std::set<uint32_t> subaddr_indices);
      std::vector<wallet2::pending_tx> create_transactions_single(const crypto::key_image &ki, const cryptonote::account_public_address &address, bool is_subaddress, const size_t outputs, const size_t fake_outs_count, const uint64_t unlock_time, uint32_t priority, const std::vector<uint8_t>& extra);
      std::vector<wallet2::pending_tx> create_transactions_from(const cryptonote::account_public_address &address, bool is_subaddress, const size_t outputs, std::vector<size_t> unused_transfers_indices, std::vector<size_t> unused_dust_indices, const size_t fake_outs_count, const uint64_t unlock_time, uint32_t priority, const std::vector<uint8_t>& extra);
@@ -137,7 +176,7 @@ index 3a14215b3..fdeb5d0bb 100644
      void cold_tx_aux_import(const std::vector<pending_tx>& ptx, const std::vector<std::string>& tx_device_aux);
      void cold_sign_tx(const std::vector<pending_tx>& ptx_vector, signed_tx_set &exported_txs, std::vector<cryptonote::address_parse_info> &dsts_info, std::vector<std::string> & tx_device_aux);
      uint64_t cold_key_image_sync(uint64_t &spent, uint64_t &unspent);
-@@ -889,6 +922,7 @@ private:
+@@ -889,6 +939,7 @@ private:
      void discard_unmixable_outputs();
      bool check_connection(uint32_t *version = NULL, bool *ssl = NULL, uint32_t timeout = 200000);
      void get_transfers(wallet2::transfer_container& incoming_transfers) const;
@@ -145,7 +184,7 @@ index 3a14215b3..fdeb5d0bb 100644
      void get_payments(const crypto::hash& payment_id, std::list<wallet2::payment_details>& payments, uint64_t min_height = 0, const boost::optional<uint32_t>& subaddr_account = boost::none, const std::set<uint32_t>& subaddr_indices = {}) const;
      void get_payments(std::list<std::pair<crypto::hash,wallet2::payment_details>>& payments, uint64_t min_height, uint64_t max_height = (uint64_t)-1, const boost::optional<uint32_t>& subaddr_account = boost::none, const std::set<uint32_t>& subaddr_indices = {}) const;
      void get_payments_out(std::list<std::pair<crypto::hash,wallet2::confirmed_transfer_details>>& confirmed_payments,
-@@ -1023,6 +1057,11 @@ private:
+@@ -1023,6 +1074,11 @@ private:
        if(ver < 29)
          return;
        a & m_rpc_client_secret_key;
@@ -157,7 +196,7 @@ index 3a14215b3..fdeb5d0bb 100644
      }
  
      /*!
-@@ -1108,13 +1147,13 @@ private:
+@@ -1108,13 +1164,13 @@ private:
      bool get_tx_key_cached(const crypto::hash &txid, crypto::secret_key &tx_key, std::vector<crypto::secret_key> &additional_tx_keys) const;
      void set_tx_key(const crypto::hash &txid, const crypto::secret_key &tx_key, const std::vector<crypto::secret_key> &additional_tx_keys);
      bool get_tx_key(const crypto::hash &txid, crypto::secret_key &tx_key, std::vector<crypto::secret_key> &additional_tx_keys);
@@ -176,7 +215,7 @@ index 3a14215b3..fdeb5d0bb 100644
  
      std::string get_spend_proof(const crypto::hash &txid, const std::string &message);
      bool check_spend_proof(const crypto::hash &txid, const std::string &message, const std::string &sig_str);
-@@ -1149,6 +1188,7 @@ private:
+@@ -1149,6 +1205,7 @@ private:
      uint64_t get_num_rct_outputs();
      size_t get_num_transfer_details() const { return m_transfers.size(); }
      const transfer_details &get_transfer_details(size_t idx) const;
@@ -184,7 +223,7 @@ index 3a14215b3..fdeb5d0bb 100644
  
      uint8_t get_current_hard_fork();
      void get_hard_fork_info(uint8_t version, uint64_t &earliest_height);
-@@ -1172,7 +1212,7 @@ private:
+@@ -1172,7 +1229,7 @@ private:
      std::vector<size_t> select_available_mixable_outputs();
  
      size_t pop_best_value_from(const transfer_container &transfers, std::vector<size_t> &unused_dust_indices, const std::vector<size_t>& selected_transfers, bool smallest = false) const;
@@ -193,7 +232,7 @@ index 3a14215b3..fdeb5d0bb 100644
  
      void set_tx_note(const crypto::hash &txid, const std::string &note);
      std::string get_tx_note(const crypto::hash &txid) const;
-@@ -1260,9 +1300,15 @@ private:
+@@ -1260,9 +1317,15 @@ private:
      std::vector<std::pair<uint64_t, uint64_t>> estimate_backlog(const std::vector<std::pair<double, double>> &fee_levels);
      std::vector<std::pair<uint64_t, uint64_t>> estimate_backlog(uint64_t min_tx_weight, uint64_t max_tx_weight, const std::vector<uint64_t> &fees);
  
@@ -210,7 +249,7 @@ index 3a14215b3..fdeb5d0bb 100644
      uint64_t get_fee_quantization_mask();
      uint64_t get_min_ring_size();
      uint64_t get_max_ring_size();
-@@ -1289,6 +1335,7 @@ private:
+@@ -1289,6 +1352,7 @@ private:
      }
      template<typename T> void handle_payment_changes(const T &res, std::false_type) {}
  
@@ -218,7 +257,7 @@ index 3a14215b3..fdeb5d0bb 100644
      // Light wallet specific functions
      // fetch unspent outs from lw node and store in m_transfers
      void light_wallet_get_unspent_outs();
-@@ -1367,8 +1414,8 @@ private:
+@@ -1367,8 +1431,8 @@ private:
      bool unblackball_output(const std::pair<uint64_t, uint64_t> &output);
      bool is_output_blackballed(const std::pair<uint64_t, uint64_t> &output) const;
  
@@ -229,7 +268,7 @@ index 3a14215b3..fdeb5d0bb 100644
      bool frozen(size_t idx) const;
      void freeze(const crypto::key_image &ki);
      void thaw(const crypto::key_image &ki);
-@@ -1431,7 +1478,7 @@ private:
+@@ -1431,7 +1495,7 @@ private:
      void process_new_transaction(const crypto::hash &txid, const cryptonote::transaction& tx, const std::vector<uint64_t> &o_indices, uint64_t height, uint8_t block_version, uint64_t ts, bool miner_tx, bool pool, bool double_spend_seen, const tx_cache_data &tx_cache_data, std::map<std::pair<uint64_t, uint64_t>, size_t> *output_tracker_cache = NULL);
      bool should_skip_block(const cryptonote::block &b, uint64_t height) const;
      void process_new_blockchain_entry(const cryptonote::block& b, const cryptonote::block_complete_entry& bche, const parsed_block &parsed_block, const crypto::hash& bl_id, uint64_t height, const std::vector<tx_cache_data> &tx_cache_data, size_t tx_cache_data_offset, std::map<std::pair<uint64_t, uint64_t>, size_t> *output_tracker_cache = NULL);
@@ -238,16 +277,16 @@ index 3a14215b3..fdeb5d0bb 100644
      void get_short_chain_history(std::list<crypto::hash>& ids, uint64_t granularity = 1) const;
      bool clear();
      void clear_soft(bool keep_key_images=false);
-@@ -1443,7 +1490,7 @@ private:
+@@ -1443,7 +1507,7 @@ private:
      uint64_t select_transfers(uint64_t needed_money, std::vector<size_t> unused_transfers_indices, std::vector<size_t>& selected_transfers) const;
      bool prepare_file_names(const std::string& file_path);
      void process_unconfirmed(const crypto::hash &txid, const cryptonote::transaction& tx, uint64_t height);
 -    void process_outgoing(const crypto::hash &txid, const cryptonote::transaction& tx, uint64_t height, uint64_t ts, uint64_t spent, uint64_t received, uint32_t subaddr_account, const std::set<uint32_t>& subaddr_indices);
-+    void process_outgoing(const crypto::hash &txid, const cryptonote::transaction& tx, uint64_t height, uint64_t ts, uint64_t spent, uint64_t received, uint32_t subaddr_account, const std::set<uint32_t>& subaddr_indices, bool offshore=false, std::string strSource="XHV", std::string strDest="XHV");
++    void process_outgoing(const crypto::hash &txid, const cryptonote::transaction& tx, uint64_t height, uint64_t ts, uint64_t spent, std::map<std::string, uint64_t>& received, uint32_t subaddr_account, const std::set<uint32_t>& subaddr_indices, std::string strSource="XHV", std::string strDest="XHV");
      void add_unconfirmed_tx(const cryptonote::transaction& tx, uint64_t amount_in, const std::vector<cryptonote::tx_destination_entry> &dests, const crypto::hash &payment_id, uint64_t change_amount, uint32_t subaddr_account, const std::set<uint32_t>& subaddr_indices);
      void generate_genesis(cryptonote::block& b) const;
      void check_genesis(const crypto::hash& genesis_hash) const; //throws
-@@ -1458,23 +1505,34 @@ private:
+@@ -1458,23 +1522,34 @@ private:
      std::vector<uint64_t> get_unspent_amounts_vector(bool strict);
      uint64_t get_dynamic_base_fee_estimate();
      float get_output_relatedness(const transfer_details &td0, const transfer_details &td1) const;
@@ -289,7 +328,7 @@ index 3a14215b3..fdeb5d0bb 100644
      bool add_rings(const crypto::chacha_key &key, const cryptonote::transaction_prefix &tx);
      bool add_rings(const cryptonote::transaction_prefix &tx);
      bool remove_rings(const cryptonote::transaction_prefix &tx);
-@@ -1529,12 +1587,15 @@ private:
+@@ -1529,12 +1604,15 @@ private:
      hashchain m_blockchain;
      std::unordered_map<crypto::hash, unconfirmed_transfer_details> m_unconfirmed_txs;
      std::unordered_map<crypto::hash, confirmed_transfer_details> m_confirmed_txs;
@@ -305,7 +344,7 @@ index 3a14215b3..fdeb5d0bb 100644
      payment_container m_payments;
      std::unordered_map<crypto::key_image, size_t> m_key_images;
      std::unordered_map<crypto::public_key, size_t> m_pub_keys;
-@@ -1548,6 +1609,8 @@ private:
+@@ -1548,6 +1626,8 @@ private:
      uint64_t m_upper_transaction_weight_limit; //TODO: auto-calc this value or request from daemon, now use some fixed value
      const std::vector<std::vector<tools::wallet2::multisig_info>> *m_multisig_rescan_info;
      const std::vector<std::vector<rct::key>> *m_multisig_rescan_k;
@@ -314,7 +353,7 @@ index 3a14215b3..fdeb5d0bb 100644
      std::unordered_map<crypto::public_key, crypto::key_image> m_cold_key_images;
  
      std::atomic<bool> m_run;
-@@ -1661,7 +1724,7 @@ private:
+@@ -1661,7 +1741,7 @@ private:
      static std::string default_daemon_address;
    };
  }
@@ -323,7 +362,27 @@ index 3a14215b3..fdeb5d0bb 100644
  BOOST_CLASS_VERSION(tools::wallet2::transfer_details, 12)
  BOOST_CLASS_VERSION(tools::wallet2::multisig_info, 1)
  BOOST_CLASS_VERSION(tools::wallet2::multisig_info::LR, 0)
-@@ -1977,8 +2040,15 @@ namespace boost
+@@ -1886,7 +1966,7 @@ namespace boost
+         // as it's readily understood to be sum of outputs.
+         // We convert it to include change from v6
+         if (!typename Archive::is_saving() && x.m_change != (uint64_t)-1)
+-          x.m_amount_out += x.m_change;
++          x.m_amount_out["XHV"] += x.m_change;
+       }
+       if (ver < 7)
+       {
+@@ -1924,8 +2004,8 @@ namespace boost
+         // We convert it to include change from v3
+         if (!typename Archive::is_saving() && x.m_change != (uint64_t)-1)
+         {
+-          if (x.m_amount_in > (x.m_amount_out + x.m_change))
+-            x.m_amount_out += x.m_change;
++          if (x.m_amount_in > (x.m_amount_out["XHV"] + x.m_change))
++            x.m_amount_out["XHV"] += x.m_change;
+         }
+       }
+       if (ver < 4)
+@@ -1977,8 +2057,15 @@ namespace boost
          return;
        }
        a & x.m_coinbase;
