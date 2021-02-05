@@ -1,5 +1,5 @@
 diff --git a/src/wallet/wallet2.h b/src/wallet/wallet2.h
-index 3a14215b3..c36c25da2 100644
+index 3a14215b3..107489783 100644
 --- a/src/wallet/wallet2.h
 +++ b/src/wallet/wallet2.h
 @@ -131,9 +131,9 @@ private:
@@ -7,10 +7,10 @@ index 3a14215b3..c36c25da2 100644
      // Full wallet callbacks
      virtual void on_new_block(uint64_t height, const cryptonote::block& block) {}
 -    virtual void on_money_received(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& tx, uint64_t amount, const cryptonote::subaddress_index& subaddr_index, bool is_change, uint64_t unlock_time) {}
-+    virtual void on_money_received(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& tx, uint64_t amount, const cryptonote::subaddress_index& subaddr_index, bool is_change, uint64_t unlock_time, bool offshore=false) {}     
++    virtual void on_money_received(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& tx, uint64_t amount, const cryptonote::subaddress_index& subaddr_index, bool is_change, uint64_t unlock_time, std::string asset_type) {}
      virtual void on_unconfirmed_money_received(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& tx, uint64_t amount, const cryptonote::subaddress_index& subaddr_index) {}
 -    virtual void on_money_spent(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& in_tx, uint64_t amount, const cryptonote::transaction& spend_tx, const cryptonote::subaddress_index& subaddr_index) {}
-+    virtual void on_money_spent(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& in_tx, uint64_t amount, const cryptonote::transaction& spend_tx, const cryptonote::subaddress_index& subaddr_index, bool offshore=false) {}
++    virtual void on_money_spent(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& in_tx, uint64_t amount, const cryptonote::transaction& spend_tx, const cryptonote::subaddress_index& subaddr_index, std::string asset_type) {}
      virtual void on_skip_transaction(uint64_t height, const crypto::hash &txid, const cryptonote::transaction& tx) {}
      virtual boost::optional<epee::wipeable_string> on_get_password(const char *reason) { return boost::none; }
      // Light wallet callbacks
@@ -291,7 +291,7 @@ index 3a14215b3..c36c25da2 100644
      uint64_t get_dynamic_base_fee_estimate();
      float get_output_relatedness(const transfer_details &td0, const transfer_details &td1) const;
 -    std::vector<size_t> pick_preferred_rct_inputs(uint64_t needed_money, uint32_t subaddr_account, const std::set<uint32_t> &subaddr_indices) const;
-+    std::vector<size_t> pick_preferred_rct_inputs(uint64_t needed_money, uint32_t subaddr_account, const std::set<uint32_t> &subaddr_indices, bool use_offshore_outputs) const;
++    std::vector<size_t> pick_preferred_rct_inputs(uint64_t needed_money, uint32_t subaddr_account, const std::set<uint32_t> &subaddr_indices, const std::string asset_type);
      void set_spent(size_t idx, uint64_t height);
      void set_unspent(size_t idx);
 +    void set_spent(transfer_details &td, uint64_t height);
