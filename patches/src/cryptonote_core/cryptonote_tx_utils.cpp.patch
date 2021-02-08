@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/cryptonote_tx_utils.cpp b/src/cryptonote_core/cryptonote_tx_utils.cpp
-index 3dd29dd1b..7a8b23cc4 100644
+index 3dd29dd1b..6243b93dd 100644
 --- a/src/cryptonote_core/cryptonote_tx_utils.cpp
 +++ b/src/cryptonote_core/cryptonote_tx_utils.cpp
 @@ -75,8 +75,75 @@ namespace cryptonote
@@ -1247,7 +1247,7 @@ index 3dd29dd1b..7a8b23cc4 100644
        if (use_simple_rct)
        {
          // mixRing indexing is done the other way round for simple
-@@ -575,28 +1348,114 @@ namespace cryptonote
+@@ -575,28 +1348,118 @@ namespace cryptonote
            }
          }
        }
@@ -1282,7 +1282,11 @@ index 3dd29dd1b..7a8b23cc4 100644
 +        }
 +      } else if (summary_inputs_money_xasset > summary_outs_money_xasset) {
 +        // TODO: work out the fee here
-+        fee_usd = summary_inputs_money_xasset - summary_outs_money_xasset - offshore_fee_usd;
++	boost::multiprecision::uint128_t amount_128 = (summary_inputs_money_xasset - summary_outs_money_xasset);
++	boost::multiprecision::uint128_t exchange_128 = pr[strSource];
++	boost::multiprecision::uint128_t xusd_128 = amount_128 * 1000000000000;
++	xusd_128 /= exchange_128;
++        fee_usd = ((uint64_t)xusd_128) - offshore_fee_usd;
 +        if (!use_simple_rct) {
 +          outamounts.push_back(std::pair<std::string, uint64_t>("XUSD", fee_usd));
 +        }
@@ -1371,7 +1375,7 @@ index 3dd29dd1b..7a8b23cc4 100644
  
        CHECK_AND_ASSERT_MES(tx.vout.size() == outSk.size(), false, "outSk size does not match vout");
  
-@@ -608,7 +1467,7 @@ namespace cryptonote
+@@ -608,7 +1471,7 @@ namespace cryptonote
      return true;
    }
    //---------------------------------------------------------------
@@ -1380,7 +1384,7 @@ index 3dd29dd1b..7a8b23cc4 100644
    {
      hw::device &hwdev = sender_account_keys.get_device();
      hwdev.open_tx(tx_key);
-@@ -626,7 +1485,7 @@ namespace cryptonote
+@@ -626,7 +1489,7 @@ namespace cryptonote
            additional_tx_keys.push_back(keypair::generate(sender_account_keys.get_device()).sec);
        }
  
@@ -1389,7 +1393,7 @@ index 3dd29dd1b..7a8b23cc4 100644
        hwdev.close_tx();
        return r;
      } catch(...) {
-@@ -640,22 +1499,31 @@ namespace cryptonote
+@@ -640,22 +1503,31 @@ namespace cryptonote
       std::unordered_map<crypto::public_key, cryptonote::subaddress_index> subaddresses;
       subaddresses[sender_account_keys.m_account_address.m_spend_public_key] = {0,0};
       crypto::secret_key tx_key;
@@ -1423,7 +1427,7 @@ index 3dd29dd1b..7a8b23cc4 100644
      CHECK_AND_ASSERT_MES(r, false, "failed to parse coinbase tx from hard coded blob");
      r = parse_and_validate_tx_from_blob(tx_bl, bl.miner_tx);
      CHECK_AND_ASSERT_MES(r, false, "failed to parse coinbase tx from hard coded blob");
-@@ -678,33 +1546,22 @@ namespace cryptonote
+@@ -678,33 +1550,22 @@ namespace cryptonote
  
    bool get_block_longhash(const Blockchain *pbc, const block& b, crypto::hash& res, const uint64_t height, const int miners)
    {
