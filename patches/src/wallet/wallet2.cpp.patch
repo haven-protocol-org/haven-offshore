@@ -2526,8 +2526,8 @@ index c3ba34260..d59efb890 100644
 +    const transfer_details& td = specific_transfers[idx];
 +    if (use_offshore_outputs) {
 +      // onshore or offshore_to_offshore
-+      bool b = get_pricing_record(src.pr, td.m_block_height);
-+      THROW_WALLET_EXCEPTION_IF(!b, error::wallet_internal_error, "Failed to get pricing record");
++      //bool b = get_pricing_record(src.pr, td.m_block_height);
++      //THROW_WALLET_EXCEPTION_IF(!b, error::wallet_internal_error, "Failed to get pricing record");
 +      src.amount = 0;
 +      src.amount_usd = td.amount();
 +      src.mask_usd = td.m_mask;
