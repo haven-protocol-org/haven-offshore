@@ -1,5 +1,5 @@
 diff --git a/src/ringct/rctSigs.cpp b/src/ringct/rctSigs.cpp
-index 2e3e7007e..67dd8e5a8 100644
+index 2e3e7007e..44da228b4 100644
 --- a/src/ringct/rctSigs.cpp
 +++ b/src/ringct/rctSigs.cpp
 @@ -36,6 +36,8 @@
@@ -994,7 +994,7 @@ index 2e3e7007e..67dd8e5a8 100644
 +        // SPENDING XASSET
 +        if (outamounts[i].first == "XUSD") {
 +          // xAsset equivalent to ONSHORE - convert output amount to USD for equalKeys() testing
-+          key rate_xasset = d2h(pr[outamounts[i].first]);
++          key rate_xasset = d2h(pr[in_asset_type]);
 +          sc_mul(tempkey.bytes, outSk[i].mask.bytes, rate_xasset.bytes);
 +          sc_mul(outSk_scaled.bytes, tempkey.bytes, inverse_atomic.bytes);
 +        } else if (outamounts[i].first == "XHV") {
@@ -1423,7 +1423,7 @@ index 2e3e7007e..67dd8e5a8 100644
 +	  key C_scaled = scalarmultKey(sumUSD, d2h(pr[strSource]));
 +	  key yD_invert = invert(d2h(1000000000000));
 +	  key C_final = scalarmultKey(C_scaled, yD_invert);
-+	  Zi = addKeys(C_final, sumXASSET);	  
++	  Zi = addKeys(C_final, sumXASSET);
 +	} else {
 +	  Zi = addKeys(sumXHV, sumUSD);
 +	}

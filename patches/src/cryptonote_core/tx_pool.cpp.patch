@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/tx_pool.cpp b/src/cryptonote_core/tx_pool.cpp
-index 696bc88d4..6b6e497b1 100644
+index 696bc88d4..7906c39cb 100644
 --- a/src/cryptonote_core/tx_pool.cpp
 +++ b/src/cryptonote_core/tx_pool.cpp
 @@ -107,8 +107,8 @@ namespace cryptonote
@@ -170,7 +170,7 @@ index 696bc88d4..6b6e497b1 100644
    //---------------------------------------------------------------------------------
    bool tx_memory_pool::add_tx(transaction &tx, tx_verification_context& tvc, relay_method tx_relay, bool relayed, uint8_t version)
    {
-@@ -441,28 +524,67 @@ namespace cryptonote
+@@ -441,28 +524,88 @@ namespace cryptonote
    //---------------------------------------------------------------------------------
    bool tx_memory_pool::insert_key_images(const transaction_prefix &tx, const crypto::hash &id, relay_method tx_relay)
    {
@@ -178,14 +178,33 @@ index 696bc88d4..6b6e497b1 100644
 -    {
 -      CHECKED_GET_SPECIFIC_VARIANT(in, const txin_to_key, txin, false);
 -      std::unordered_set<crypto::hash>& kei_image_set = m_spent_key_images[txin.k_image];
--
--      // Only allow multiple txes per key-image if kept-by-block. Only allow
--      // the same txid if going from local/stem->fluff.
 +    
 +    if (tx.vin[0].type() == typeid(txin_offshore)) {
 +      for(const auto& in: tx.vin)
 +      {
 +        CHECKED_GET_SPECIFIC_VARIANT(in, const txin_offshore, txin, false);
++        std::unordered_set<crypto::hash>& kei_image_set = m_spent_key_images[txin.k_image];
++        if (tx_relay != relay_method::block)
++        {
++          const bool one_txid =
++            (kei_image_set.empty() || (kei_image_set.size() == 1 && *(kei_image_set.cbegin()) == id));
++          CHECK_AND_ASSERT_MES(one_txid, false, "internal error: tx_relay=" << unsigned(tx_relay)
++                                            << ", kei_image_set.size()=" << kei_image_set.size() << ENDL << "txin.k_image=" << txin.k_image << ENDL
++                                            << "tx_id=" << id);
++        }
+ 
+-      // Only allow multiple txes per key-image if kept-by-block. Only allow
+-      // the same txid if going from local/stem->fluff.
++      const bool new_or_previously_private =
++        kei_image_set.insert(id).second ||
++        !m_blockchain.txpool_tx_matches_category(id, relay_category::legacy);
++      CHECK_AND_ASSERT_MES(new_or_previously_private, false, "internal error: try to insert duplicate iterator in key_image set");
++      }
++    }
++    else if (tx.vin[0].type() == typeid(txin_onshore)) {
++      for(const auto& in: tx.vin)
++      {
++        CHECKED_GET_SPECIFIC_VARIANT(in, const txin_onshore, txin, false);
 +        std::unordered_set<crypto::hash>& kei_image_set = m_spent_key_images[txin.k_image];
 +        if (tx_relay != relay_method::block)
 +        {
@@ -202,7 +221,8 @@ index 696bc88d4..6b6e497b1 100644
 +        !m_blockchain.txpool_tx_matches_category(id, relay_category::legacy);
 +      CHECK_AND_ASSERT_MES(new_or_previously_private, false, "internal error: try to insert duplicate iterator in key_image set");
 +      }
-+    }else if (tx.vin[0].type() == typeid(txin_onshore)) {
++    }
++    else if (tx.vin[0].type() == typeid(txin_xasset)) {
 +      for(const auto& in: tx.vin)
        {
 -        const bool one_txid =
@@ -210,7 +230,7 @@ index 696bc88d4..6b6e497b1 100644
 -        CHECK_AND_ASSERT_MES(one_txid, false, "internal error: tx_relay=" << unsigned(tx_relay)
 -                                           << ", kei_image_set.size()=" << kei_image_set.size() << ENDL << "txin.k_image=" << txin.k_image << ENDL
 -                                           << "tx_id=" << id);
-+        CHECKED_GET_SPECIFIC_VARIANT(in, const txin_onshore, txin, false);
++        CHECKED_GET_SPECIFIC_VARIANT(in, const txin_xasset, txin, false);
 +        std::unordered_set<crypto::hash>& kei_image_set = m_spent_key_images[txin.k_image];
 +        if (tx_relay != relay_method::block)
 +        {
@@ -251,7 +271,7 @@ index 696bc88d4..6b6e497b1 100644
      ++m_cookie;
      return true;
    }
-@@ -475,32 +597,77 @@ namespace cryptonote
+@@ -475,32 +618,99 @@ namespace cryptonote
      CRITICAL_REGION_LOCAL(m_transactions_lock);
      CRITICAL_REGION_LOCAL1(m_blockchain);
      // ND: Speedup
@@ -293,31 +313,53 @@ index 696bc88d4..6b6e497b1 100644
 +            m_spent_key_images.erase(it);
 +          }
 +      }
-+        }
-+        else if (tx.vin[0].type() == typeid(txin_offshore)) {
-+          for(const txin_v& vi: tx.vin)
-+      {
-+        CHECKED_GET_SPECIFIC_VARIANT(vi, const txin_offshore, txin, false);
-+        auto it = m_spent_key_images.find(txin.k_image);
-+        CHECK_AND_ASSERT_MES(it != m_spent_key_images.end(), false, "failed to find transaction input in key images. img=" << txin.k_image << ENDL
-+                << "transaction id = " << actual_hash);
-+        std::unordered_set<crypto::hash>& key_image_set =  it->second;
-+        CHECK_AND_ASSERT_MES(key_image_set.size(), false, "empty key_image set, img=" << txin.k_image << ENDL
-+                << "transaction id = " << actual_hash);
++    }
++    else if (tx.vin[0].type() == typeid(txin_offshore)) {
++      for(const txin_v& vi: tx.vin)
++	{
++	  CHECKED_GET_SPECIFIC_VARIANT(vi, const txin_offshore, txin, false);
++	  auto it = m_spent_key_images.find(txin.k_image);
++	  CHECK_AND_ASSERT_MES(it != m_spent_key_images.end(), false, "failed to find transaction input in key images. img=" << txin.k_image << ENDL
++			       << "transaction id = " << actual_hash);
++	  std::unordered_set<crypto::hash>& key_image_set =  it->second;
++	  CHECK_AND_ASSERT_MES(key_image_set.size(), false, "empty key_image set, img=" << txin.k_image << ENDL
++			       << "transaction id = " << actual_hash);
 +
-+        auto it_in_set = key_image_set.find(actual_hash);
-+        CHECK_AND_ASSERT_MES(it_in_set != key_image_set.end(), false, "transaction id not found in key_image set, img=" << txin.k_image << ENDL
-+                << "transaction id = " << actual_hash);
-+        key_image_set.erase(it_in_set);
-+        if(!key_image_set.size())
-+          {
-+            //it is now empty hash container for this key_image
-+            m_spent_key_images.erase(it);
-+          }
-+      }
-+        }
-+        else {
-+          for(const txin_v& vi: tx.vin)
++	  auto it_in_set = key_image_set.find(actual_hash);
++	  CHECK_AND_ASSERT_MES(it_in_set != key_image_set.end(), false, "transaction id not found in key_image set, img=" << txin.k_image << ENDL
++			       << "transaction id = " << actual_hash);
++	  key_image_set.erase(it_in_set);
++	  if(!key_image_set.size())
++	    {
++	      //it is now empty hash container for this key_image
++	      m_spent_key_images.erase(it);
++	    }
++	}
++    }
++    else if (tx.vin[0].type() == typeid(txin_xasset)) {
++      for(const txin_v& vi: tx.vin)
++	{
++	  CHECKED_GET_SPECIFIC_VARIANT(vi, const txin_xasset, txin, false);
++	  auto it = m_spent_key_images.find(txin.k_image);
++	  CHECK_AND_ASSERT_MES(it != m_spent_key_images.end(), false, "failed to find transaction input in key images. img=" << txin.k_image << ENDL
++			       << "transaction id = " << actual_hash);
++	  std::unordered_set<crypto::hash>& key_image_set =  it->second;
++	  CHECK_AND_ASSERT_MES(key_image_set.size(), false, "empty key_image set, img=" << txin.k_image << ENDL
++			       << "transaction id = " << actual_hash);
++
++	  auto it_in_set = key_image_set.find(actual_hash);
++	  CHECK_AND_ASSERT_MES(it_in_set != key_image_set.end(), false, "transaction id not found in key_image set, img=" << txin.k_image << ENDL
++			       << "transaction id = " << actual_hash);
++	  key_image_set.erase(it_in_set);
++	  if(!key_image_set.size())
++	    {
++	      //it is now empty hash container for this key_image
++	      m_spent_key_images.erase(it);
++	    }
++	}
++    }
++    else {
++      for(const txin_v& vi: tx.vin)
 +      {
 +        CHECKED_GET_SPECIFIC_VARIANT(vi, const txin_to_key, txin, false);
 +        auto it = m_spent_key_images.find(txin.k_image);
@@ -348,7 +390,7 @@ index 696bc88d4..6b6e497b1 100644
    {
      CRITICAL_REGION_LOCAL(m_transactions_lock);
      CRITICAL_REGION_LOCAL1(m_blockchain);
-@@ -533,6 +700,9 @@ namespace cryptonote
+@@ -533,6 +743,9 @@ namespace cryptonote
        }
        tx_weight = meta.weight;
        fee = meta.fee;
@@ -358,7 +400,7 @@ index 696bc88d4..6b6e497b1 100644
        relayed = meta.relayed;
        do_not_relay = meta.do_not_relay;
        double_spend_seen = meta.double_spend_seen;
-@@ -728,7 +898,7 @@ namespace cryptonote
+@@ -728,7 +941,7 @@ namespace cryptonote
      txs.reserve(m_blockchain.get_txpool_tx_count());
      m_blockchain.for_all_txpool_txes([this, now, &txs](const crypto::hash &txid, const txpool_tx_meta_t &meta, const cryptonote::blobdata *){
        // 0 fee transactions are never relayed
@@ -367,7 +409,7 @@ index 696bc88d4..6b6e497b1 100644
        {
          if (!meta.dandelionpp_stem && now - meta.last_relayed_time <= get_relay_delay(now, meta.receive_time))
            return true;
-@@ -1102,11 +1272,29 @@ namespace cryptonote
+@@ -1102,11 +1315,37 @@ namespace cryptonote
    {
      CRITICAL_REGION_LOCAL(m_transactions_lock);
      CRITICAL_REGION_LOCAL1(m_blockchain);
@@ -399,10 +441,18 @@ index 696bc88d4..6b6e497b1 100644
 +        if(have_tx_keyimg_as_spent(tokey_in.k_image, txid))
 +          return true;
 +      }
++    }
++    else if (tx.vin[0].type() == typeid(txin_xasset)) {
++      for(const auto& in: tx.vin)
++      {
++        CHECKED_GET_SPECIFIC_VARIANT(in, const txin_xasset, tokey_in, true);//should never fail
++        if(have_tx_keyimg_as_spent(tokey_in.k_image, txid))
++          return true;
++      }
      }
      return false;
    }
-@@ -1224,22 +1412,58 @@ namespace cryptonote
+@@ -1224,22 +1463,74 @@ namespace cryptonote
    //---------------------------------------------------------------------------------
    bool tx_memory_pool::have_key_images(const std::unordered_set<crypto::key_image>& k_images, const transaction_prefix& tx)
    {
@@ -431,6 +481,14 @@ index 696bc88d4..6b6e497b1 100644
 +      for(size_t i = 0; i!= tx.vin.size(); i++)
 +	{
 +	  CHECKED_GET_SPECIFIC_VARIANT(tx.vin[i], const txin_onshore, itk, false);
++	  if(k_images.count(itk.k_image))
++	    return true;
++	}
++    }
++    else if (tx.vin[0].type() == typeid(txin_xasset)) {
++      for(size_t i = 0; i!= tx.vin.size(); i++)
++	{
++	  CHECKED_GET_SPECIFIC_VARIANT(tx.vin[i], const txin_xasset, itk, false);
 +	  if(k_images.count(itk.k_image))
 +	    return true;
 +	}
@@ -468,10 +526,18 @@ index 696bc88d4..6b6e497b1 100644
 +	  auto i_res = k_images.insert(itk.k_image);
 +	  CHECK_AND_ASSERT_MES(i_res.second, false, "internal error: key images pool cache - inserted duplicate image in set: " << itk.k_image);
 +	}
++    }
++    else if (tx.vin[0].type() == typeid(txin_xasset)) {
++      for(size_t i = 0; i!= tx.vin.size(); i++)
++	{
++	  CHECKED_GET_SPECIFIC_VARIANT(tx.vin[i], const txin_xasset, itk, false);
++	  auto i_res = k_images.insert(itk.k_image);
++	  CHECK_AND_ASSERT_MES(i_res.second, false, "internal error: key images pool cache - inserted duplicate image in set: " << itk.k_image);
++	}
      }
      return true;
    }
-@@ -1252,8 +1476,18 @@ namespace cryptonote
+@@ -1252,8 +1543,21 @@ namespace cryptonote
      LockedTXN lock(m_blockchain.get_db());
      for(size_t i = 0; i!= tx.vin.size(); i++)
      {
@@ -484,6 +550,9 @@ index 696bc88d4..6b6e497b1 100644
 +      } else if (tx.vin[i].type() == typeid(txin_onshore)) {
 +	CHECKED_GET_SPECIFIC_VARIANT(tx.vin[i], const txin_onshore, itk, void());
 +        itk_key_image = itk.k_image;
++      } else if (tx.vin[i].type() == typeid(txin_xasset)) {
++	CHECKED_GET_SPECIFIC_VARIANT(tx.vin[i], const txin_xasset, itk, void());
++        itk_key_image = itk.k_image;
 +      } else {
 +	CHECKED_GET_SPECIFIC_VARIANT(tx.vin[i], const txin_offshore, itk, void());
 +        itk_key_image = itk.k_image;
@@ -492,7 +561,7 @@ index 696bc88d4..6b6e497b1 100644
        if (it != m_spent_key_images.end())
        {
          for (const crypto::hash &txid: it->second)
-@@ -1267,7 +1501,7 @@ namespace cryptonote
+@@ -1267,7 +1571,7 @@ namespace cryptonote
            }
            if (!meta.double_spend_seen)
            {
@@ -501,7 +570,7 @@ index 696bc88d4..6b6e497b1 100644
              meta.double_spend_seen = true;
              changed = true;
              try
-@@ -1321,7 +1555,7 @@ namespace cryptonote
+@@ -1321,7 +1625,7 @@ namespace cryptonote
    }
    //---------------------------------------------------------------------------------
    //TODO: investigate whether boolean return is appropriate
@@ -510,7 +579,7 @@ index 696bc88d4..6b6e497b1 100644
    {
      CRITICAL_REGION_LOCAL(m_transactions_lock);
      CRITICAL_REGION_LOCAL1(m_blockchain);
-@@ -1329,6 +1563,9 @@ namespace cryptonote
+@@ -1329,6 +1633,9 @@ namespace cryptonote
      uint64_t best_coinbase = 0, coinbase = 0;
      total_weight = 0;
      fee = 0;
@@ -520,7 +589,7 @@ index 696bc88d4..6b6e497b1 100644
      
      //baseline empty block
      if (!get_block_reward(median_weight, total_weight, already_generated_coins, best_coinbase, version))
-@@ -1361,7 +1598,9 @@ namespace cryptonote
+@@ -1361,7 +1668,9 @@ namespace cryptonote
        if (!meta.matches(relay_category::legacy) && !(m_mine_stem_txes && meta.get_relay_method() == relay_method::stem))
        {
          LOG_PRINT_L2("  tx relay method is " << (unsigned)meta.get_relay_method());
@@ -531,7 +600,7 @@ index 696bc88d4..6b6e497b1 100644
        }
        if (meta.pruned)
        {
-@@ -1388,7 +1627,10 @@ namespace cryptonote
+@@ -1388,7 +1697,10 @@ namespace cryptonote
            continue;
          }
          coinbase = block_reward + fee + meta.fee;
@@ -542,7 +611,7 @@ index 696bc88d4..6b6e497b1 100644
          {
            LOG_PRINT_L2("  would decrease coinbase to " << print_money(coinbase));
            continue;
-@@ -1446,10 +1688,20 @@ namespace cryptonote
+@@ -1446,10 +1758,20 @@ namespace cryptonote
          LOG_PRINT_L2("  key images already seen");
          continue;
        }

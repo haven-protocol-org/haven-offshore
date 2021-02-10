@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/cryptonote_tx_utils.cpp b/src/cryptonote_core/cryptonote_tx_utils.cpp
-index 3dd29dd1b..6243b93dd 100644
+index 3dd29dd1b..af00f2ad6 100644
 --- a/src/cryptonote_core/cryptonote_tx_utils.cpp
 +++ b/src/cryptonote_core/cryptonote_tx_utils.cpp
 @@ -75,8 +75,75 @@ namespace cryptonote
@@ -1344,11 +1344,11 @@ index 3dd29dd1b..6243b93dd 100644
 +          tx.amount_burnt = tx.amount_minted = 0;
 +        } else if (xusd_to_xasset) {
 +          double d_xasset_amount = boost::lexical_cast<double>(tx.amount_minted);
-+          double d_exchange_rate = boost::lexical_cast<double>(pr.unused1);
++          double d_exchange_rate = boost::lexical_cast<double>(pr[strDest]);
 +          tx.amount_burnt = (uint64_t)((d_xasset_amount / d_exchange_rate) * 1000000000000.0);
 +        } else if (xasset_to_xusd) {
 +          double d_xusd_amount = boost::lexical_cast<double>(tx.amount_minted) / 1000000000000.0;
-+          double d_exchange_rate = boost::lexical_cast<double>(pr.unused1);
++          double d_exchange_rate = boost::lexical_cast<double>(pr[strSource]);
 +          tx.amount_burnt = (uint64_t)(d_xusd_amount * d_exchange_rate);
 +        } else if (xasset_transfer) {
 +          tx.amount_burnt = tx.amount_minted = 0;

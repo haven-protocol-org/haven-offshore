@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/blockchain.h b/src/cryptonote_core/blockchain.h
-index 82051ecd4..65616afa5 100644
+index 82051ecd4..c822d7a17 100644
 --- a/src/cryptonote_core/blockchain.h
 +++ b/src/cryptonote_core/blockchain.h
 @@ -57,6 +57,7 @@
@@ -64,7 +64,7 @@ index 82051ecd4..65616afa5 100644
      network_type m_nettype;
      bool m_offline;
      difficulty_type m_fixed_difficulty;
-@@ -1139,6 +1149,12 @@ namespace cryptonote
+@@ -1139,6 +1149,15 @@ namespace cryptonote
      template<class visitor_t>
      inline bool scan_outputkeys_for_indexes(size_t tx_version, const txin_to_key& tx_in_to_key, visitor_t &vis, const crypto::hash &tx_prefix_hash, uint64_t* pmax_related_block_height = NULL) const;
  
@@ -73,22 +73,26 @@ index 82051ecd4..65616afa5 100644
 +
 +    template<class visitor_t>
 +    inline bool scan_outputkeys_for_indexes(size_t tx_version, const txin_offshore& tx_in_to_key, visitor_t &vis, const crypto::hash &tx_prefix_hash, uint64_t* pmax_related_block_height = NULL) const;
++
++    template<class visitor_t>
++    inline bool scan_outputkeys_for_indexes(size_t tx_version, const txin_xasset& tx_in_to_key, visitor_t &vis, const crypto::hash &tx_prefix_hash, uint64_t* pmax_related_block_height = NULL) const;
 +    
      /**
       * @brief collect output public keys of a transaction input set
       *
-@@ -1160,7 +1176,9 @@ namespace cryptonote
+@@ -1160,7 +1179,10 @@ namespace cryptonote
       * @return false if any output is not yet unlocked, or is missing, otherwise true
       */
      bool check_tx_input(size_t tx_version,const txin_to_key& txin, const crypto::hash& tx_prefix_hash, const std::vector<crypto::signature>& sig, const rct::rctSig &rct_signatures, std::vector<rct::ctkey> &output_keys, uint64_t* pmax_related_block_height) const;
 -
 +    bool check_tx_input(size_t tx_version,const txin_offshore& txin, const crypto::hash& tx_prefix_hash, const std::vector<crypto::signature>& sig, const rct::rctSig &rct_signatures, std::vector<rct::ctkey> &output_keys, uint64_t* pmax_related_block_height) const;
 +    bool check_tx_input(size_t tx_version,const txin_onshore& txin, const crypto::hash& tx_prefix_hash, const std::vector<crypto::signature>& sig, const rct::rctSig &rct_signatures, std::vector<rct::ctkey> &output_keys, uint64_t* pmax_related_block_height)const;
++    bool check_tx_input(size_t tx_version,const txin_xasset& txin, const crypto::hash& tx_prefix_hash, const std::vector<crypto::signature>& sig, const rct::rctSig &rct_signatures, std::vector<rct::ctkey> &output_keys, uint64_t* pmax_related_block_height)const;
 +   
      /**
       * @brief validate a transaction's inputs and their keys
       *
-@@ -1294,7 +1312,10 @@ namespace cryptonote
+@@ -1294,7 +1316,10 @@ namespace cryptonote
       *
       * @param b the block containing the miner transaction to be validated
       * @param cumulative_block_weight the block's weight
@@ -100,7 +104,7 @@ index 82051ecd4..65616afa5 100644
       * @param base_reward return-by-reference the new block's generated coins
       * @param already_generated_coins the amount of currency generated prior to this block
       * @param partial_block_reward return-by-reference true if miner accepted only partial reward
-@@ -1302,7 +1323,7 @@ namespace cryptonote
+@@ -1302,7 +1327,7 @@ namespace cryptonote
       *
       * @return false if anything is found wrong with the miner transaction, otherwise true
       */
