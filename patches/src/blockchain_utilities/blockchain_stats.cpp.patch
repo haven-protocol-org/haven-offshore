@@ -1,6 +1,8 @@
---- monero/src/blockchain_utilities/blockchain_stats.cpp	2019-12-20 13:52:25.268151102 +0000
-+++ monero-offshore/src/blockchain_utilities/blockchain_stats.cpp	2019-11-27 08:35:55.928826006 +0000
-@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
+diff --git a/src/blockchain_utilities/blockchain_stats.cpp b/src/blockchain_utilities/blockchain_stats.cpp
+index b6afde306..d78aa78a7 100644
+--- a/src/blockchain_utilities/blockchain_stats.cpp
++++ b/src/blockchain_utilities/blockchain_stats.cpp
+@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
  
    if (command_line::get_arg(vm, command_line::arg_help))
    {
@@ -9,7 +11,7 @@
      std::cout << desc_options << std::endl;
      return 1;
    }
-@@ -179,7 +179,7 @@ int main(int argc, char* argv[])
+@@ -170,7 +170,7 @@ int main(int argc, char* argv[])
  /*
   * The default output can be plotted with GnuPlot using these commands:
  set key autotitle columnhead
@@ -18,3 +20,12 @@
  set timefmt "%Y-%m-%d"
  set xdata time
  set xrange ["2014-04-17":*]
+@@ -359,7 +359,7 @@ skip:
+       totdiff += diff;
+     }
+     if (do_emission) {
+-      coinbase_amount = get_outs_money_amount(blk.miner_tx);
++      coinbase_amount = get_outs_money_amount(blk.miner_tx)["XHV"];
+       emission += coinbase_amount - tx_fee_amount;
+     }
+     if (do_fees) {
