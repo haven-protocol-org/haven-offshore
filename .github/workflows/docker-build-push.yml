@@ -6,6 +6,9 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v1
+        with:
+          submodules: recursive
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
