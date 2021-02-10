@@ -31,7 +31,8 @@ jobs:
           context: .
           file: ./.docker/Dockerfile
           platforms: linux/amd64
-          push: true
-          tags: kim0/haven:latest
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.docker_meta.outputs.tags }}
+          labels: ${{ steps.docker_meta.outputs.labels }}
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
