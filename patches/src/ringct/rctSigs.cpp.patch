@@ -1,5 +1,5 @@
 diff --git a/src/ringct/rctSigs.cpp b/src/ringct/rctSigs.cpp
-index 2e3e7007e..44da228b4 100644
+index 2e3e7007e..5bc211649 100644
 --- a/src/ringct/rctSigs.cpp
 +++ b/src/ringct/rctSigs.cpp
 @@ -36,6 +36,8 @@
@@ -24,7 +24,7 @@ index 2e3e7007e..44da228b4 100644
  
          return rct::Bulletproof{rct::keyV(n_outs, I), I, I, I, I, I, I, rct::keyV(nrl, I), rct::keyV(nrl, I), I, I, I};
      }
-+  
++  /*  
 +  rct::Bulletproof make_dummy_bulletproofXHV(const std::vector<std::pair<uint64_t, uint64_t>> &outamounts, rct::keyV &C, rct::keyV &masks)
 +    {
 +        const size_t n_outs = outamounts.size();
@@ -68,7 +68,7 @@ index 2e3e7007e..44da228b4 100644
 +    ge_p3_tobytes(foo.bytes, &ge_out);
 +    sc_mul(s, a, foo.bytes);
 +  }
-+
++  */
 +  rct::key sm(rct::key y, int n, const rct::key &x)
 +  {
 +    while (n--)
@@ -595,7 +595,7 @@ index 2e3e7007e..44da228b4 100644
          }
          else
          {
-@@ -743,170 +1225,402 @@ namespace rct {
+@@ -743,170 +1225,409 @@ namespace rct {
          rv.mixRing = mixRing;
          if (msout)
            msout->c.resize(1);
@@ -646,8 +646,10 @@ index 2e3e7007e..44da228b4 100644
 +    const std::vector<std::pair<std::string,xmr_amount>> & outamounts, 
 +    xmr_amount txnFee, 
 +    xmr_amount txnFee_usd, 
++    xmr_amount txnFee_xasset, 
 +    xmr_amount txnOffshoreFee, 
 +    xmr_amount txnOffshoreFee_usd, 
++    xmr_amount txnOffshoreFee_xasset, 
 +    const ctkeyM & mixRing, 
 +    const keyV &amount_keys, 
 +    const std::vector<multisig_kLRki> *kLRki, 
@@ -1022,8 +1024,11 @@ index 2e3e7007e..44da228b4 100644
 +    //set txn fee
 +    rv.txnFee = txnFee;
 +    rv.txnFee_usd = txnFee_usd;
++    rv.txnFee_xasset = txnFee_xasset;
 +    rv.txnOffshoreFee = txnOffshoreFee;
 +    rv.txnOffshoreFee_usd = txnOffshoreFee_usd;
++    rv.txnOffshoreFee_xasset = txnOffshoreFee_xasset;
++    rv.fees_asset_type = in_asset_type;
 +    // TODO: unused ??
 +    // key txnFeeKey = scalarmultH(d2h(rv.txnFee));
 +
@@ -1118,8 +1123,10 @@ index 2e3e7007e..44da228b4 100644
 +    multisig_out *msout, 
 +    xmr_amount txnFee, 
 +    xmr_amount txnFee_usd, 
++    xmr_amount txnFee_xasset, 
 +    xmr_amount txnOffshoreFee, 
 +    xmr_amount txnOffshoreFee_usd, 
++    xmr_amount txnOffshoreFee_xasset, 
 +    unsigned int mixin, 
 +    const RCTConfig &rct_config, 
 +    hw::device &hwdev, 
@@ -1134,12 +1141,12 @@ index 2e3e7007e..44da228b4 100644
 +      mixRing[i].resize(mixin+1);
 +      index[i] = populateFromBlockchainSimple(mixRing[i], inPk[i], mixin);
      }
-+    return genRctSimple(message, inSk, destinations, inamounts, in_asset_type, outamounts, txnFee, txnFee_usd, txnOffshoreFee, txnOffshoreFee_usd, mixRing, amount_keys, kLRki, msout, index, outSk, rct_config, hwdev, pr);
++    return genRctSimple(message, inSk, destinations, inamounts, in_asset_type, outamounts, txnFee, txnFee_usd, txnFee_xasset, txnOffshoreFee, txnOffshoreFee_usd, txnOffshoreFee_xasset, mixRing, amount_keys, kLRki, msout, index, outSk, rct_config, hwdev, pr);
 +  }
  
      //RingCT protocol
      //genRct: 
-@@ -978,124 +1692,259 @@ namespace rct {
+@@ -978,124 +1699,264 @@ namespace rct {
          }
      }
  
@@ -1341,6 +1348,12 @@ index 2e3e7007e..44da228b4 100644
 +	// Calculate onshore conversion fee (also always in D colour)
 +	const key txnOffshoreFeeKey_usd = scalarmultH(d2h(rv.txnOffshoreFee_usd));
 +
++	// Calculate tx fee for D colour
++	const key txnFeeKey_xasset = scalarmultH(d2h(rv.txnFee_xasset));
++
++	// Calculate onshore conversion fee (also always in D colour)
++	const key txnOffshoreFeeKey_xasset = scalarmultH(d2h(rv.txnOffshoreFee_xasset));
++
 +	/*  
 +          offshore TX:
 +            sumPseudoOuts = addKeys(pseudoOuts); (total of inputs)
@@ -1395,10 +1408,9 @@ index 2e3e7007e..44da228b4 100644
 +	// D COLOUR
 +	key sumXASSET;
 +	// Remove the fees
-+	// we already don't have any fee in the form of xasset
-+	// subKeys(sumXASSET, sumPseudoOuts_xasset, 0);
-+	// subKeys(sumXASSET, sumXASSET, 0);
-+	subKeys(sumXASSET, sumPseudoOuts_xasset, sumOutpks_xasset);
++	subKeys(sumXASSET, sumPseudoOuts_xasset, txnFeeKey_xasset);
++	subKeys(sumXASSET, sumXASSET, txnOffshoreFeeKey_xasset);
++	subKeys(sumXASSET, sumXASSET, sumOutpks_xasset);
 +
 +	// NEAC: attempt to only calculate forward
 +	// CALCULATE Zi
@@ -1498,7 +1510,7 @@ index 2e3e7007e..44da228b4 100644
              false, "verRctNonSemanticsSimple called on non simple rctSig");
          const bool bulletproof = is_rct_bulletproof(rv.type);
          // semantics check is early, and mixRing/MGs aren't resolved yet
-@@ -1118,14 +1967,19 @@ namespace rct {
+@@ -1118,14 +1979,19 @@ namespace rct {
          results.resize(rv.mixRing.size());
          for (size_t i = 0 ; i < rv.mixRing.size() ; i++) {
            tpool.submit(&waiter, [&, i] {
@@ -1520,7 +1532,7 @@ index 2e3e7007e..44da228b4 100644
              return false;
            }
          }
-@@ -1162,7 +2016,7 @@ namespace rct {
+@@ -1162,7 +2028,7 @@ namespace rct {
  
          //mask amount and mask
          ecdhTuple ecdh_info = rv.ecdhInfo[i];
@@ -1529,7 +1541,7 @@ index 2e3e7007e..44da228b4 100644
          mask = ecdh_info.mask;
          key amount = ecdh_info.amount;
          key C = rv.outPk[i].mask;
-@@ -1186,16 +2040,19 @@ namespace rct {
+@@ -1186,16 +2052,19 @@ namespace rct {
      }
  
      xmr_amount decodeRctSimple(const rctSig & rv, const key & sk, unsigned int i, key &mask, hw::device &hwdev) {
@@ -1552,7 +1564,7 @@ index 2e3e7007e..44da228b4 100644
          DP("C");
          DP(C);
          key Ctmp;
-@@ -1215,12 +2072,13 @@ namespace rct {
+@@ -1215,12 +2084,13 @@ namespace rct {
        return decodeRctSimple(rv, sk, i, mask, hwdev);
      }
  
@@ -1567,7 +1579,7 @@ index 2e3e7007e..44da228b4 100644
          if (rv.type == RCTTypeFull)
          {
            CHECK_AND_ASSERT_MES(rv.p.MGs.size() == 1, false, "MGs not a single element");
-@@ -1230,6 +2088,8 @@ namespace rct {
+@@ -1230,6 +2100,8 @@ namespace rct {
              CHECK_AND_ASSERT_MES(!rv.p.MGs[n].ss[indices[n]].empty(), false, "empty ss line");
          }
  
@@ -1576,7 +1588,7 @@ index 2e3e7007e..44da228b4 100644
          for (size_t n = 0; n < indices.size(); ++n) {
              rct::key diff;
              sc_mulsub(diff.bytes, msout.c[n].bytes, secret_key.bytes, k[n].bytes);
-@@ -1237,4 +2097,71 @@ namespace rct {
+@@ -1237,4 +2109,71 @@ namespace rct {
          }
          return true;
      }
