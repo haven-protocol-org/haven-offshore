@@ -40,7 +40,7 @@ RUN git clone https://github.com/zeromq/cppzmq.git -b ${CPPZMQ_VERSION} \
  && cd cppzmq \
  && mv *.hpp /usr/local/include
 
-RUN ./build-haven.sh release-static -j16
+RUN ./build-haven.sh release-static
 
 FROM ubuntu:20.04 as runner
 
