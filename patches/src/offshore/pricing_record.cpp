@@ -194,6 +194,8 @@ namespace offshore
       return 1000000000000;
     } else if (asset_type == "XUSD") {
       return unused1;
+    } else if (asset_type == "XAG") {
+      return xAG;
     } else if (asset_type == "XAU") {
       return xAU;
     } else if (asset_type == "XAUD") {
@@ -213,6 +215,8 @@ namespace offshore
     } else if (asset_type == "XJPY") {
       return xJPY;
     } else if (asset_type == "XNOK") {
+      return xNOK;
+    } else if (asset_type == "XNZD") {
       return xNOK;
     } else {
       return 1000000000000;
