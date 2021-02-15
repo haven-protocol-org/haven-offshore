@@ -1,5 +1,5 @@
 diff --git a/src/ringct/rctSigs.cpp b/src/ringct/rctSigs.cpp
-index 2e3e7007e..5bc211649 100644
+index 2e3e7007e..860070ace 100644
 --- a/src/ringct/rctSigs.cpp
 +++ b/src/ringct/rctSigs.cpp
 @@ -36,6 +36,8 @@
@@ -1146,7 +1146,7 @@ index 2e3e7007e..5bc211649 100644
  
      //RingCT protocol
      //genRct: 
-@@ -978,124 +1699,264 @@ namespace rct {
+@@ -978,124 +1699,266 @@ namespace rct {
          }
      }
  
@@ -1431,11 +1431,13 @@ index 2e3e7007e..5bc211649 100644
 +	  key yC_invert = invert(d2h(pr[strDest]));
 +	  key D_final = scalarmultKey(D_scaled, yC_invert);
 +	  Zi = addKeys(sumUSD, D_final);
-+	} else if (xasset_to_xusd || xasset_transfer) {  // NEEDS xasset_transfer here because the fees are converted
++	} else if (xasset_to_xusd) {  // NEEDS xasset_transfer here because the fees are converted
 +	  key C_scaled = scalarmultKey(sumUSD, d2h(pr[strSource]));
 +	  key yD_invert = invert(d2h(1000000000000));
 +	  key C_final = scalarmultKey(C_scaled, yD_invert);
 +	  Zi = addKeys(C_final, sumXASSET);
++	} else if (xasset_transfer) {
++	  Zi = addKeys(sumUSD, sumXASSET);
 +	} else {
 +	  Zi = addKeys(sumXHV, sumUSD);
 +	}
@@ -1510,7 +1512,7 @@ index 2e3e7007e..5bc211649 100644
              false, "verRctNonSemanticsSimple called on non simple rctSig");
          const bool bulletproof = is_rct_bulletproof(rv.type);
          // semantics check is early, and mixRing/MGs aren't resolved yet
-@@ -1118,14 +1979,19 @@ namespace rct {
+@@ -1118,14 +1981,19 @@ namespace rct {
          results.resize(rv.mixRing.size());
          for (size_t i = 0 ; i < rv.mixRing.size() ; i++) {
            tpool.submit(&waiter, [&, i] {
@@ -1532,7 +1534,7 @@ index 2e3e7007e..5bc211649 100644
              return false;
            }
          }
-@@ -1162,7 +2028,7 @@ namespace rct {
+@@ -1162,7 +2030,7 @@ namespace rct {
  
          //mask amount and mask
          ecdhTuple ecdh_info = rv.ecdhInfo[i];
@@ -1541,7 +1543,7 @@ index 2e3e7007e..5bc211649 100644
          mask = ecdh_info.mask;
          key amount = ecdh_info.amount;
          key C = rv.outPk[i].mask;
-@@ -1186,16 +2052,19 @@ namespace rct {
+@@ -1186,16 +2054,19 @@ namespace rct {
      }
  
      xmr_amount decodeRctSimple(const rctSig & rv, const key & sk, unsigned int i, key &mask, hw::device &hwdev) {
@@ -1564,7 +1566,7 @@ index 2e3e7007e..5bc211649 100644
          DP("C");
          DP(C);
          key Ctmp;
-@@ -1215,12 +2084,13 @@ namespace rct {
+@@ -1215,12 +2086,13 @@ namespace rct {
        return decodeRctSimple(rv, sk, i, mask, hwdev);
      }
  
@@ -1579,7 +1581,7 @@ index 2e3e7007e..5bc211649 100644
          if (rv.type == RCTTypeFull)
          {
            CHECK_AND_ASSERT_MES(rv.p.MGs.size() == 1, false, "MGs not a single element");
-@@ -1230,6 +2100,8 @@ namespace rct {
+@@ -1230,6 +2102,8 @@ namespace rct {
              CHECK_AND_ASSERT_MES(!rv.p.MGs[n].ss[indices[n]].empty(), false, "empty ss line");
          }
  
@@ -1588,7 +1590,7 @@ index 2e3e7007e..5bc211649 100644
          for (size_t n = 0; n < indices.size(); ++n) {
              rct::key diff;
              sc_mulsub(diff.bytes, msout.c[n].bytes, secret_key.bytes, k[n].bytes);
-@@ -1237,4 +2109,71 @@ namespace rct {
+@@ -1237,4 +2111,71 @@ namespace rct {
          }
          return true;
      }

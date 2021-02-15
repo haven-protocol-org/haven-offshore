@@ -1,5 +1,5 @@
 diff --git a/src/wallet/wallet2.cpp b/src/wallet/wallet2.cpp
-index c3ba34260..22bde96c0 100644
+index c3ba34260..2b89fdea3 100644
 --- a/src/wallet/wallet2.cpp
 +++ b/src/wallet/wallet2.cpp
 @@ -29,6 +29,7 @@
@@ -3378,7 +3378,7 @@ index c3ba34260..22bde96c0 100644
          tx.selected_transfers.size() << " inputs");
 -      if (use_rct)
 +      if (use_rct) {
-+	if ((strSource != "XHV") && (strSource != "XUSD")) needed_fee = 0;
++	//if ((strSource != "XHV") && (strSource != "XUSD")) needed_fee = 0;
          transfer_selected_rct(tx.dsts, tx.selected_transfers, fake_outs_count, outs, unlock_time, needed_fee, extra,
 -          test_tx, test_ptx, rct_config);
 -      else
@@ -3426,7 +3426,7 @@ index c3ba34260..22bde96c0 100644
 -              test_tx, test_ptx, rct_config);
 -          else
 +          if (use_rct) {
-+	    if ((strSource != "XHV") && (strSource != "XUSD")) needed_fee = 0;
++	    //if ((strSource != "XHV") && (strSource != "XUSD")) needed_fee = 0;
 +	    transfer_selected_rct(tx.dsts, tx.selected_transfers, fake_outs_count, outs, unlock_time, needed_fee, extra,
 +				  test_tx, test_ptx, rct_config, offshore, onshore, offshore_transfer, xasset_transfer, xasset_to_xusd, xusd_to_xasset, strSource, strDest);
 +	  } else
@@ -3473,7 +3473,7 @@ index c3ba34260..22bde96c0 100644
      pending_tx test_ptx;
 +
      if (use_rct) {
-+      if ((strSource != "XHV") && (strSource != "XUSD")) needed_fee = 0;
++      //if ((strSource != "XHV") && (strSource != "XUSD")) needed_fee = 0;
        transfer_selected_rct(tx.dsts,                    /* NOMOD std::vector<cryptonote::tx_destination_entry> dsts,*/
                              tx.selected_transfers,      /* const std::list<size_t> selected_transfers */
                              fake_outs_count,            /* CONST size_t fake_outputs_count, */
