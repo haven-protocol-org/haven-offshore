@@ -67,7 +67,7 @@ namespace offshore
     double xGBP;
     double xJPY;
     double xNOK;
-    double xNZD;
+    double xDPI;
     double xUSD;
     double unused1;
     double unused2;
@@ -93,7 +93,7 @@ namespace offshore
     uint64_t xGBP;
     uint64_t xJPY;
     uint64_t xNOK;
-    uint64_t xNZD;
+    uint64_t xDPI;
     uint64_t xUSD;
     uint64_t unused1;
     uint64_t unused2;

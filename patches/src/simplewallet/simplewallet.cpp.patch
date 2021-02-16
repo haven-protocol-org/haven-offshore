@@ -1,5 +1,5 @@
 diff --git a/src/simplewallet/simplewallet.cpp b/src/simplewallet/simplewallet.cpp
-index ffe38eedf..a4c8daccc 100644
+index ffe38eedf..2840804d0 100644
 --- a/src/simplewallet/simplewallet.cpp
 +++ b/src/simplewallet/simplewallet.cpp
 @@ -69,6 +69,7 @@
@@ -181,7 +181,7 @@ index ffe38eedf..a4c8daccc 100644
 +  }
 +
 +  std::vector<std::string> local_args = args;
-+  std::vector<std::string> currencies = {"xag", "xau", "xaud", "xbtc", "xcad", "xchf", "xcny", "xeur", "xgbp", "xjpy", "xnok", "xnzd"};
++  std::vector<std::string> currencies = {"xag", "xau", "xaud", "xbtc", "xcad", "xchf", "xcny", "xeur", "xgbp", "xjpy", "xnok", "xdpi"};
 +  local_args.insert(local_args.end(), currencies.begin(), currencies.end());
 +  return get_price(local_args);
 +}
@@ -234,8 +234,8 @@ index ffe38eedf..a4c8daccc 100644
 +      message_writer(i%2 ? console_color_green : console_color_blue, false) << boost::format(tr("\txJPY %d")) % print_money(pr.xJPY * xusd);
 +    else if (lowercase == "xnok")
 +      message_writer(i%2 ? console_color_green : console_color_blue, false) << boost::format(tr("\txNOK %d")) % print_money(pr.xNOK * xusd);
-+    else if (lowercase == "xnzd")
-+      message_writer(i%2 ? console_color_green : console_color_blue, false) << boost::format(tr("\txNZD %d")) % print_money(pr.xNZD * xusd);
++    else if (lowercase == "xdpi")
++      message_writer(i%2 ? console_color_green : console_color_blue, false) << boost::format(tr("\txDPI %d")) % print_money(pr.xDPI * xusd);
 +  }
 +  return true;
 +}
@@ -929,8 +929,8 @@ index ffe38eedf..a4c8daccc 100644
 +	} else if (xasset_to_xusd) {
 +	  total_sent = dsts.back().amount;
 +	  prompt << boost::format(tr("Converting %s %s into %s %s (plus conversion fee %s %s).\n"))
-+	    % print_money(total_sent) % strSource
-+	    % print_money(m_wallet->get_xusd_amount(total_sent, strSource, bc_height-1)) % strDest
++	    % print_money(m_wallet->get_xasset_amount(total_sent, strSource, bc_height-1)) % strSource
++	    % print_money(total_sent) % strDest
 +	    % print_money(offshore_fee) % strSource;
 +	  offshore::pricing_record pr;
 +	  bool r = m_wallet->get_pricing_record(pr, bc_height-1);

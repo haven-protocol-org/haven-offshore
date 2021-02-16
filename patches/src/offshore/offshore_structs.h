@@ -43,7 +43,7 @@ namespace offshore {
     double xGBP;
     double xJPY;
     double xNOK;
-    double xNZD;
+    double xDPI;
     double xUSD;
     double unused1;
     double unused2;

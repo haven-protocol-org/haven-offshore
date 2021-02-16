@@ -206,7 +206,7 @@ index 79ce610a9..fbb8b1742 100644
 +    a & x.xGBP;
 +    a & x.xJPY;
 +    a & x.xNOK;
-+    a & x.xNZD;
++    a & x.xDPI;
 +    a & x.xUSD;
 +    a & x.unused1;
 +    a & x.unused2;
