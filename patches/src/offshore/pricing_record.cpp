@@ -50,7 +50,7 @@ namespace offshore
       uint64_t xGBP;
       uint64_t xJPY;
       uint64_t xNOK;
-      uint64_t xDPI;
+      uint64_t xNZD;
       uint64_t xUSD;
       uint64_t unused1;
       uint64_t unused2;
@@ -69,7 +69,7 @@ namespace offshore
         KV_SERIALIZE(xGBP)
         KV_SERIALIZE(xJPY)
         KV_SERIALIZE(xNOK)
-        KV_SERIALIZE(xDPI)
+        KV_SERIALIZE(xNZD)
         KV_SERIALIZE(xUSD)
         KV_SERIALIZE(unused1)
         KV_SERIALIZE(unused2)
@@ -91,7 +91,7 @@ namespace offshore
     , xGBP(0)
     , xJPY(0)
     , xNOK(0)
-    , xDPI(0)
+    , xNZD(0)
     , xUSD(0)
     , unused1(0)
     , unused2(0)
@@ -117,7 +117,7 @@ namespace offshore
       xGBP = in.xGBP;
       xJPY = in.xJPY;
       xNOK = in.xNOK;
-      xDPI = in.xDPI;
+      xNZD = in.xNZD;
       xUSD = in.xUSD;
       unused1 = in.unused1;
       unused2 = in.unused2;
@@ -141,7 +141,7 @@ namespace offshore
       ss << std::hex << std::setw(2) << std::setfill('0') << (0xff & signature[i]);
       sig_hex += ss.str();
     }
-    const pr_serialized out{xAG,xAU,xAUD,xBTC,xCAD,xCHF,xCNY,xEUR,xGBP,xJPY,xNOK,xDPI,xUSD,unused1,unused2,unused3,sig_hex};
+    const pr_serialized out{xAG,xAU,xAUD,xBTC,xCAD,xCHF,xCNY,xEUR,xGBP,xJPY,xNOK,xNZD,xUSD,unused1,unused2,unused3,sig_hex};
     return out.store(dest, hparent);
   }
 
@@ -157,7 +157,7 @@ namespace offshore
     , xGBP(orig.xGBP)
     , xJPY(orig.xJPY)
     , xNOK(orig.xNOK)
-    , xDPI(orig.xDPI)
+    , xNZD(orig.xNZD)
     , xUSD(orig.xUSD)
     , unused1(orig.unused1)
     , unused2(orig.unused2)
@@ -179,7 +179,7 @@ namespace offshore
     xGBP = orig.xGBP;
     xJPY = orig.xJPY;
     xNOK = orig.xNOK;
-    xDPI = orig.xDPI;
+    xNZD = orig.xNZD;
     xUSD = orig.xUSD;
     unused1 = orig.unused1;
     unused2 = orig.unused2;
@@ -216,8 +216,8 @@ namespace offshore
       return xJPY;
     } else if (asset_type == "XNOK") {
       return xNOK;
-    } else if (asset_type == "XDPI") {
-      return xDPI;
+    } else if (asset_type == "XNZD") {
+      return xNZD;
     } else {
       return 1000000000000;
     }
@@ -236,7 +236,7 @@ namespace offshore
 	    (xGBP == other.xGBP) &&
 	    (xJPY == other.xJPY) &&
 	    (xNOK == other.xNOK) &&
-	    (xDPI == other.xDPI) &&
+	    (xNZD == other.xNZD) &&
 	    (xUSD == other.xUSD) &&
 	    (unused1 == other.unused1) &&
 	    (unused2 == other.unused2) &&
@@ -303,7 +303,7 @@ namespace offshore
     oss << ",\"xGBP\":" << xGBP;
     oss << ",\"xJPY\":" << xJPY;
     oss << ",\"xNOK\":" << xNOK;
-    oss << ",\"xDPI\":" << xDPI;
+    oss << ",\"xNZD\":" << xNZD;
     oss << ",\"xUSD\":" << xUSD;
     oss << ",\"unused1\":" << unused1;
     oss << ",\"unused2\":" << unused2;

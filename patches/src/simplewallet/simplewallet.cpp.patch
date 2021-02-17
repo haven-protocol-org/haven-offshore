@@ -181,7 +181,7 @@ index ffe38eedf..2840804d0 100644
 +  }
 +
 +  std::vector<std::string> local_args = args;
-+  std::vector<std::string> currencies = {"xag", "xau", "xaud", "xbtc", "xcad", "xchf", "xcny", "xeur", "xgbp", "xjpy", "xnok", "xdpi"};
++  std::vector<std::string> currencies = {"xag", "xau", "xaud", "xbtc", "xcad", "xchf", "xcny", "xeur", "xgbp", "xjpy", "xnok", "xnzd"};
 +  local_args.insert(local_args.end(), currencies.begin(), currencies.end());
 +  return get_price(local_args);
 +}
@@ -234,8 +234,8 @@ index ffe38eedf..2840804d0 100644
 +      message_writer(i%2 ? console_color_green : console_color_blue, false) << boost::format(tr("\txJPY %d")) % print_money(pr.xJPY * xusd);
 +    else if (lowercase == "xnok")
 +      message_writer(i%2 ? console_color_green : console_color_blue, false) << boost::format(tr("\txNOK %d")) % print_money(pr.xNOK * xusd);
-+    else if (lowercase == "xdpi")
-+      message_writer(i%2 ? console_color_green : console_color_blue, false) << boost::format(tr("\txDPI %d")) % print_money(pr.xDPI * xusd);
++    else if (lowercase == "xnzd")
++      message_writer(i%2 ? console_color_green : console_color_blue, false) << boost::format(tr("\txNZD %d")) % print_money(pr.xNZD * xusd);
 +  }
 +  return true;
 +}

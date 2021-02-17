@@ -391,7 +391,7 @@ index c3ba34260..2b89fdea3 100644
 +      asset_type == "XGBP" ? res.block_header.pricing_record.xGBP :
 +      asset_type == "XJPY" ? res.block_header.pricing_record.xJPY :
 +      asset_type == "XNOK" ? res.block_header.pricing_record.xNOK :
-+      asset_type == "XDPI" ? res.block_header.pricing_record.xDPI :
++      asset_type == "XNZD" ? res.block_header.pricing_record.xNZD :
 +      asset_type == "XUSD" ? res.block_header.pricing_record.xUSD :
 +      res.block_header.pricing_record.unused1;
 +    boost::multiprecision::uint128_t xasset_128 = xusd_128 * exchange_128;
@@ -442,7 +442,7 @@ index c3ba34260..2b89fdea3 100644
 +      asset_type == "XGBP" ? res.block_header.pricing_record.xGBP :
 +      asset_type == "XJPY" ? res.block_header.pricing_record.xJPY :
 +      asset_type == "XNOK" ? res.block_header.pricing_record.xNOK :
-+      asset_type == "XDPI" ? res.block_header.pricing_record.xDPI :
++      asset_type == "XNZD" ? res.block_header.pricing_record.xNZD :
 +      asset_type == "XHV" ? res.block_header.pricing_record.unused1 :
 +      res.block_header.pricing_record.unused1;
 +    if (asset_type == "XHV") {
