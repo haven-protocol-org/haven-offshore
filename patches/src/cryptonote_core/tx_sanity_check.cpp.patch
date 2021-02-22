@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/tx_sanity_check.cpp b/src/cryptonote_core/tx_sanity_check.cpp
-index e99982def..12bd16ed2 100644
+index e99982def..4594b9dc9 100644
 --- a/src/cryptonote_core/tx_sanity_check.cpp
 +++ b/src/cryptonote_core/tx_sanity_check.cpp
 @@ -39,7 +39,7 @@
@@ -11,7 +11,7 @@ index e99982def..12bd16ed2 100644
  {
    cryptonote::transaction tx;
  
-@@ -54,20 +54,47 @@ bool tx_sanity_check(const cryptonote::blobdata &tx_blob, uint64_t rct_outs_avai
+@@ -54,20 +54,55 @@ bool tx_sanity_check(const cryptonote::blobdata &tx_blob, uint64_t rct_outs_avai
      MERROR("Transaction is coinbase");
      return false;
    }
@@ -51,6 +51,14 @@ index e99982def..12bd16ed2 100644
 +      n_indices += in_to_key.key_offsets.size();
 +    } else if (txin.type() == typeid(cryptonote::txin_onshore)) {
 +      const cryptonote::txin_onshore &in_to_key = boost::get<cryptonote::txin_onshore>(txin);
++      if (in_to_key.amount != 0)
++	continue;
++      const std::vector<uint64_t> absolute = cryptonote::relative_output_offsets_to_absolute(in_to_key.key_offsets);
++      for (uint64_t offset: absolute)
++	rct_indices.insert(offset);
++      n_indices += in_to_key.key_offsets.size();
++    } else if (txin.type() == typeid(cryptonote::txin_xasset)) {
++      const cryptonote::txin_xasset &in_to_key = boost::get<cryptonote::txin_xasset>(txin);
 +      if (in_to_key.amount != 0)
 +	continue;
 +      const std::vector<uint64_t> absolute = cryptonote::relative_output_offsets_to_absolute(in_to_key.key_offsets);
