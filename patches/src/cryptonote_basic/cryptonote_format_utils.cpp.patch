@@ -132,7 +132,7 @@ index cb6d1ec91..36527faa1 100644
        if (!allow_partial)
          return false;
      }
-@@ -617,6 +675,7 @@ namespace cryptonote
+@@ -617,6 +675,8 @@ namespace cryptonote
      if (!pick<tx_extra_merge_mining_tag>(nar, tx_extra_fields, TX_EXTRA_MERGE_MINING_TAG)) return false;
      if (!pick<tx_extra_mysterious_minergate>(nar, tx_extra_fields, TX_EXTRA_MYSTERIOUS_MINERGATE_TAG)) return false;
      if (!pick<tx_extra_padding>(nar, tx_extra_fields, TX_EXTRA_TAG_PADDING)) return false;
@@ -141,7 +141,7 @@ index cb6d1ec91..36527faa1 100644
  
      // if not empty, someone added a new type and did not add a case above
      if (!tx_extra_fields.empty())
-@@ -657,6 +716,13 @@ namespace cryptonote
+@@ -657,6 +716,20 @@ namespace cryptonote
      return get_tx_pub_key_from_extra(tx.extra, pk_index);
    }
    //---------------------------------------------------------------
@@ -162,7 +162,7 @@ index cb6d1ec91..36527faa1 100644
    bool add_tx_pub_key_to_extra(transaction& tx, const crypto::public_key& tx_pub_key)
    {
      return add_tx_pub_key_to_extra(tx.extra, tx_pub_key);
-@@ -725,6 +791,18 @@ namespace cryptonote
+@@ -725,6 +791,30 @@ namespace cryptonote
      return true;
    }
    //---------------------------------------------------------------

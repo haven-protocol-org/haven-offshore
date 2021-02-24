@@ -2,7 +2,7 @@ diff --git a/src/cryptonote_basic/cryptonote_format_utils.h b/src/cryptonote_bas
 index d1b24d950..9547746be 100644
 --- a/src/cryptonote_basic/cryptonote_format_utils.h
 +++ b/src/cryptonote_basic/cryptonote_format_utils.h
-@@ -81,8 +81,10 @@ namespace cryptonote
+@@ -81,8 +81,12 @@ namespace cryptonote
    bool add_tx_pub_key_to_extra(std::vector<uint8_t>& tx_extra, const crypto::public_key& tx_pub_key);
    std::vector<crypto::public_key> get_additional_tx_pub_keys_from_extra(const std::vector<uint8_t>& tx_extra);
    std::vector<crypto::public_key> get_additional_tx_pub_keys_from_extra(const transaction_prefix& tx);

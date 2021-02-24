@@ -1,26 +1,5 @@
 diff --git a/src/wallet/wallet_rpc_server_commands_defs.h b/src/wallet/wallet_rpc_server_commands_defs.h
-
 index 507ff4f6c..8f11a698e 100644
---- a/src/wallet/wallet_rpc_server_commands_defs.h
-+++ b/src/wallet/wallet_rpc_server_commands_defs.h
-@@ -467,6 +467,7 @@ namespace wallet_rpc
-       uint64_t ring_size;
-       uint64_t unlock_time;
-       std::string payment_id;
-+      std::string memo;
-       bool get_tx_key;
-       bool do_not_relay;
-       bool get_tx_hex;
-@@ -480,6 +481,7 @@ namespace wallet_rpc
-         KV_SERIALIZE_OPT(ring_size, (uint64_t)0)
-         KV_SERIALIZE(unlock_time)
-         KV_SERIALIZE(payment_id)
-+        KV_SERIALIZE(memo)
-         KV_SERIALIZE(get_tx_key)
-         KV_SERIALIZE_OPT(do_not_relay, false)
-         KV_SERIALIZE_OPT(get_tx_hex, false)
-@@ -493,6 +495,7 @@ namespace wallet_rpc
-index 507ff4f6c..7078f5c04 100644
 --- a/src/wallet/wallet_rpc_server_commands_defs.h
 +++ b/src/wallet/wallet_rpc_server_commands_defs.h
 @@ -65,11 +65,13 @@ namespace wallet_rpc
@@ -50,6 +29,22 @@ index 507ff4f6c..7078f5c04 100644
        END_KV_SERIALIZE_MAP()
      };
      typedef epee::misc_utils::struct_init<request_t> request;
+@@ -467,6 +467,7 @@ namespace wallet_rpc
+       uint64_t ring_size;
+       uint64_t unlock_time;
+       std::string payment_id;
++      std::string memo;
+       bool get_tx_key;
+       bool do_not_relay;
+       bool get_tx_hex;
+@@ -480,6 +481,7 @@ namespace wallet_rpc
+         KV_SERIALIZE_OPT(ring_size, (uint64_t)0)
+         KV_SERIALIZE(unlock_time)
+         KV_SERIALIZE(payment_id)
++        KV_SERIALIZE(memo)
+         KV_SERIALIZE(get_tx_key)
+         KV_SERIALIZE_OPT(do_not_relay, false)
+         KV_SERIALIZE_OPT(get_tx_hex, false)
 @@ -493,6 +497,7 @@ namespace wallet_rpc
        std::string tx_hash;
        std::string tx_key;

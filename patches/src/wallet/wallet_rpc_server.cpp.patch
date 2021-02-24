@@ -156,7 +156,7 @@ index 30eed07e7..830467037 100644
        fill(fee, ptx.fee);
        fill(weight, cryptonote::get_transaction_weight(ptx.tx));
      }
-@@ -925,6 +944,193 @@ namespace tools
+@@ -925,6 +944,229 @@ namespace tools
      return true;
    }
    //------------------------------------------------------------------------------------------------------------------------------
