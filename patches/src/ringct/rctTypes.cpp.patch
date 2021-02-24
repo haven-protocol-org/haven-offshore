@@ -1,18 +1,22 @@
---- ringct/rctTypes.cpp.orig	2020-08-14 16:19:03.623859000 +0200
-+++ ringct/rctTypes.cpp	2020-08-14 19:37:03.850927000 +0200
-@@ -195,6 +195,7 @@
+diff --git a/src/ringct/rctTypes.cpp b/src/ringct/rctTypes.cpp
+index 1763542db..81d578a1e 100644
+--- a/src/ringct/rctTypes.cpp
++++ b/src/ringct/rctTypes.cpp
+@@ -195,6 +195,8 @@ namespace rct {
              case RCTTypeSimple:
              case RCTTypeBulletproof:
              case RCTTypeBulletproof2:
 +            case RCTTypeCLSAG:
++            case RCTTypeCLSAGN:
                  return true;
              default:
                  return false;
-@@ -207,6 +208,7 @@
+@@ -207,6 +209,8 @@ namespace rct {
          {
              case RCTTypeBulletproof:
              case RCTTypeBulletproof2:
 +            case RCTTypeCLSAG:
++            case RCTTypeCLSAGN:
                  return true;
              default:
                  return false;

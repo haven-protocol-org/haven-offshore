@@ -1,8 +1,8 @@
 diff --git a/src/hardforks/hardforks.cpp b/src/hardforks/hardforks.cpp
-index 7ad09dbef..5b2cf8fe9 100644
+index 7ad09dbef..9a8f8152f 100644
 --- a/src/hardforks/hardforks.cpp
 +++ b/src/hardforks/hardforks.cpp
-@@ -33,82 +33,45 @@
+@@ -33,82 +33,46 @@
  
  const hardfork_t mainnet_hard_forks[] = {
    // version 1 from the start of the blockchain
@@ -82,7 +82,8 @@ index 7ad09dbef..5b2cf8fe9 100644
 +  { 11, 50, 0, 1593613842 },
 +  { 13, 60, 0, 1593615042 },
 +  { 14, 70, 0, 1593616242 },
-+  { 15, 80, 0, 1593616243 }
++  { 15, 80, 0, 1593616243 },
++  { 16, 90, 0, 1593616244 }
  };
  const size_t num_testnet_hard_forks = sizeof(testnet_hard_forks) / sizeof(testnet_hard_forks[0]);
 -const uint64_t testnet_hard_fork_version_1_till = 624633;

@@ -1,5 +1,5 @@
 diff --git a/src/rpc/core_rpc_server.cpp b/src/rpc/core_rpc_server.cpp
-index 30b6190ab..a7526a48c 100644
+index 30b6190ab..6cc3af38c 100644
 --- a/src/rpc/core_rpc_server.cpp
 +++ b/src/rpc/core_rpc_server.cpp
 @@ -1134,7 +1134,7 @@ namespace cryptonote
@@ -11,7 +11,15 @@ index 30b6190ab..a7526a48c 100644
      {
        res.status = "Failed";
        res.reason = "Sanity check failed";
-@@ -1919,6 +1919,8 @@ namespace cryptonote
+@@ -1293,6 +1293,7 @@ namespace cryptonote
+       case 2: case 3: res.pow_algorithm = "CNv2 (Cryptonight variant 2)"; break;
+       case 4: case 5: res.pow_algorithm = "CNv4 (Cryptonight variant 4)"; break;
+       case 6: res.pow_algorithm = "RandomX"; break;
++      case 10: res.pow_algorithm = "CN-HAVEN (Cryptonight Haven variant 1)"; break;
+       default: res.pow_algorithm = "I'm not sure actually"; break;
+     }
+     if (res.is_background_mining_enabled)
+@@ -1919,6 +1920,8 @@ namespace cryptonote
      response.timestamp = blk.timestamp;
      response.prev_hash = string_tools::pod_to_hex(blk.prev_id);
      response.nonce = blk.nonce;
@@ -20,7 +28,7 @@ index 30b6190ab..a7526a48c 100644
      response.orphan_status = orphan_status;
      response.height = height;
      response.depth = m_core.get_current_blockchain_height() - height - 1;
-@@ -2560,6 +2562,19 @@ namespace cryptonote
+@@ -2560,6 +2563,19 @@ namespace cryptonote
      return true;
    }
    //------------------------------------------------------------------------------------------------------------------------------
@@ -40,7 +48,7 @@ index 30b6190ab..a7526a48c 100644
    bool core_rpc_server::on_get_base_fee_estimate(const COMMAND_RPC_GET_BASE_FEE_ESTIMATE::request& req, COMMAND_RPC_GET_BASE_FEE_ESTIMATE::response& res, epee::json_rpc::error& error_resp, const connection_context *ctx)
    {
      RPC_TRACKER(get_base_fee_estimate);
-@@ -2691,6 +2706,12 @@ namespace cryptonote
+@@ -2691,6 +2707,12 @@ namespace cryptonote
        return true;
      }
  
@@ -53,3 +61,12 @@ index 30b6190ab..a7526a48c 100644
      static const char software[] = "monero";
  #ifdef BUILD_TAG
      static const char buildtag[] = BOOST_PP_STRINGIZE(BUILD_TAG);
+@@ -3120,7 +3142,7 @@ namespace cryptonote
+         block_verification_context bvc;
+         if(m_core.handle_block_found(block, bvc))
+           MGINFO_GREEN("Block found by RPC user at height " << get_block_height(block) << ": " <<
+-              print_money(cryptonote::get_outs_money_amount(block.miner_tx)));
++              print_money(cryptonote::get_outs_money_amount(block.miner_tx)["XHV"]));
+         else
+           MERROR("Seemingly valid block was not accepted");
+       }

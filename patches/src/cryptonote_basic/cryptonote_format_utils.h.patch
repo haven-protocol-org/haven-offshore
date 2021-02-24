@@ -1,8 +1,8 @@
 diff --git a/src/cryptonote_basic/cryptonote_format_utils.h b/src/cryptonote_basic/cryptonote_format_utils.h
-index d1b24d950..2f66c4820 100644
+index d1b24d950..9547746be 100644
 --- a/src/cryptonote_basic/cryptonote_format_utils.h
 +++ b/src/cryptonote_basic/cryptonote_format_utils.h
-@@ -81,8 +81,12 @@ namespace cryptonote
+@@ -81,8 +81,10 @@ namespace cryptonote
    bool add_tx_pub_key_to_extra(std::vector<uint8_t>& tx_extra, const crypto::public_key& tx_pub_key);
    std::vector<crypto::public_key> get_additional_tx_pub_keys_from_extra(const std::vector<uint8_t>& tx_extra);
    std::vector<crypto::public_key> get_additional_tx_pub_keys_from_extra(const transaction_prefix& tx);
@@ -15,7 +15,16 @@ index d1b24d950..2f66c4820 100644
    bool remove_field_from_tx_extra(std::vector<uint8_t>& tx_extra, const std::type_info &type);
    void set_payment_id_to_tx_extra_nonce(blobdata& extra_nonce, const crypto::hash& payment_id);
    void set_encrypted_payment_id_to_tx_extra_nonce(blobdata& extra_nonce, const crypto::hash8& payment_id);
-@@ -142,6 +146,7 @@ namespace cryptonote
+@@ -124,7 +126,7 @@ namespace cryptonote
+   bool parse_and_validate_block_from_blob(const blobdata& b_blob, block& b);
+   bool parse_and_validate_block_from_blob(const blobdata& b_blob, block& b, crypto::hash &block_hash);
+   bool get_inputs_money_amount(const transaction& tx, uint64_t& money);
+-  uint64_t get_outs_money_amount(const transaction& tx);
++  std::map<std::string, uint64_t> get_outs_money_amount(const transaction& tx);
+   bool check_inputs_types_supported(const transaction& tx);
+   bool check_outs_valid(const transaction& tx);
+   bool parse_amount(uint64_t& amount, const std::string& str_amount);
+@@ -142,6 +144,7 @@ namespace cryptonote
    unsigned int get_default_decimal_point();
    std::string get_unit(unsigned int decimal_point = -1);
    std::string print_money(uint64_t amount, unsigned int decimal_point = -1);

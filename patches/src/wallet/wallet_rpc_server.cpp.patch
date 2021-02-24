@@ -1,5 +1,5 @@
 diff --git a/src/wallet/wallet_rpc_server.cpp b/src/wallet/wallet_rpc_server.cpp
-index 30eed07e7..74476dfe7 100644
+index 30eed07e7..830467037 100644
 --- a/src/wallet/wallet_rpc_server.cpp
 +++ b/src/wallet/wallet_rpc_server.cpp
 @@ -289,7 +289,7 @@ namespace tools
@@ -20,25 +20,52 @@ index 30eed07e7..74476dfe7 100644
      entry.subaddr_index = pd.m_subaddr_index;
      entry.subaddr_indices.push_back(pd.m_subaddr_index);
      entry.address = m_wallet->get_subaddress_as_str(pd.m_subaddr_index);
-@@ -360,7 +360,7 @@ namespace tools
+@@ -348,7 +348,8 @@ namespace tools
+     entry.timestamp = pd.m_timestamp;
+     entry.unlock_time = pd.m_unlock_time;
+     entry.locked = !m_wallet->is_transfer_unlocked(pd.m_unlock_time, pd.m_block_height);
+-    entry.fee = pd.m_amount_in - pd.m_amount_out;
++    // entry.fee = pd.m_amount_in - pd.m_amount_out;
++    entry.fee = 0; // TODO: fees
+     uint64_t change = pd.m_change == (uint64_t)-1 ? 0 : pd.m_change; // change may not be known
+     entry.amount = pd.m_amount_in - change - entry.fee;
+     entry.note = m_wallet->get_tx_note(txid);
+@@ -360,7 +361,8 @@ namespace tools
        td.address = d.address(m_wallet->nettype(), pd.m_payment_id);
      }
  
 -    entry.type = "out";
-+    entry.type = ((pd.m_offshore_to_offshore || pd.m_onshore) ? "XUSD out" : "out");
++    // entry.type = ((pd.m_offshore_to_offshore || pd.m_onshore) ? "XUSD out" : "out");
++    entry.type = pd.m_dest_currency_type;
      entry.subaddr_index = { pd.m_subaddr_account, 0 };
      for (uint32_t i: pd.m_subaddr_indices)
        entry.subaddr_indices.push_back({pd.m_subaddr_account, i});
-@@ -391,7 +391,7 @@ namespace tools
+@@ -378,7 +380,8 @@ namespace tools
+       entry.payment_id = entry.payment_id.substr(0,16);
+     entry.height = 0;
+     entry.timestamp = pd.m_timestamp;
+-    entry.fee = pd.m_amount_in - pd.m_amount_out;
++    // entry.fee = pd.m_amount_in - pd.m_amount_out;
++    entry.fee = 0;
+     entry.amount = pd.m_amount_in - pd.m_change - entry.fee;
+     entry.unlock_time = pd.m_tx.unlock_time;
+     entry.locked = true;
+@@ -391,7 +394,13 @@ namespace tools
        td.address = d.address(m_wallet->nettype(), pd.m_payment_id);
      }
  
 -    entry.type = is_failed ? "failed" : "pending";
-+    entry.type = is_failed ? "failed" : (pd.m_offshore_to_offshore || pd.m_onshore)? "XUSD pending" : "pending";
++    // entry.type = is_failed ? "failed" : (pd.m_offshore_to_offshore || pd.m_onshore)? "XUSD pending" : "pending";
++    if(is_failed) {
++      entry.type = "failed";
++    } else {
++      entry.type =  pd.m_dest_currency_type;
++    }
++
      entry.subaddr_index = { pd.m_subaddr_account, 0 };
      for (uint32_t i: pd.m_subaddr_indices)
        entry.subaddr_indices.push_back({pd.m_subaddr_account, i});
-@@ -415,7 +415,7 @@ namespace tools
+@@ -415,7 +424,7 @@ namespace tools
      entry.fee = pd.m_fee;
      entry.note = m_wallet->get_tx_note(pd.m_tx_hash);
      entry.double_spend_seen = ppd.m_double_spend_seen;
@@ -47,80 +74,56 @@ index 30eed07e7..74476dfe7 100644
      entry.subaddr_index = pd.m_subaddr_index;
      entry.subaddr_indices.push_back(pd.m_subaddr_index);
      entry.address = m_wallet->get_subaddress_as_str(pd.m_subaddr_index);
-@@ -487,6 +487,72 @@ namespace tools
-     return true;
-   }
-   //------------------------------------------------------------------------------------------------------------------------------
-+  bool wallet_rpc_server::on_get_offshore_balance(const wallet_rpc::COMMAND_RPC_GET_BALANCE::request& req, wallet_rpc::COMMAND_RPC_GET_BALANCE::response& res, epee::json_rpc::error& er, const connection_context *ctx)
-+  {
-+    if (!m_wallet) return not_open(er);
-+    try
-+    {
-+      res.balance = req.all_accounts ? m_wallet->offshore_balance_all(req.strict) : m_wallet->offshore_balance(req.account_index, req.strict);
-+      res.unlocked_balance = req.all_accounts ? m_wallet->unlocked_offshore_balance_all(req.strict, &res.blocks_to_unlock, &res.time_to_unlock) : m_wallet->unlocked_offshore_balance(req.account_index, req.strict, &res.blocks_to_unlock, &res.time_to_unlock);
-+      res.multisig_import_needed = m_wallet->multisig() && m_wallet->has_multisig_partial_key_images();
-+      std::map<uint32_t, std::map<uint32_t, uint64_t>> balance_per_subaddress_per_account;
-+      std::map<uint32_t, std::map<uint32_t, std::pair<uint64_t, std::pair<uint64_t, uint64_t>>>> unlocked_balance_per_subaddress_per_account;
-+
-+      if (req.all_accounts)
-+      {
-+        for (uint32_t account_index = 0; account_index < m_wallet->get_num_subaddress_accounts(); ++account_index)
-+        {
-+          balance_per_subaddress_per_account[account_index] = m_wallet->offshore_balance_per_subaddress(account_index, req.strict);
-+          unlocked_balance_per_subaddress_per_account[account_index] = m_wallet->unlocked_offshore_balance_per_subaddress(account_index, req.strict);
-+        }
-+      }
-+      else
-+      {
-+        balance_per_subaddress_per_account[req.account_index] = m_wallet->offshore_balance_per_subaddress(req.account_index, req.strict);
-+        unlocked_balance_per_subaddress_per_account[req.account_index] = m_wallet->unlocked_offshore_balance_per_subaddress(req.account_index, req.strict);
-+      }
-+      std::vector<tools::wallet2::transfer_details> transfers;
-+      m_wallet->get_offshore_transfers(transfers);
-+      for (const auto& p : balance_per_subaddress_per_account)
-+      {
-+        uint32_t account_index = p.first;
-+        std::map<uint32_t, uint64_t> balance_per_subaddress = p.second;
-+        std::map<uint32_t, std::pair<uint64_t, std::pair<uint64_t, uint64_t>>>  unlocked_balance_per_subaddress = unlocked_balance_per_subaddress_per_account[account_index];
-+        std::set<uint32_t> address_indices;
-+        if (!req.all_accounts && !req.address_indices.empty())
-+        {
-+          address_indices = req.address_indices;
-+        }
-+        else
-+        {
-+          for (const auto& i : balance_per_subaddress)
-+            address_indices.insert(i.first);
-+        }
-+        for (uint32_t i : address_indices)
-+        {
-+          wallet_rpc::COMMAND_RPC_GET_BALANCE::per_subaddress_info info;
-+          info.account_index = account_index;
-+          info.address_index = i;
-+          cryptonote::subaddress_index index = {info.account_index, info.address_index};
-+          info.address = m_wallet->get_subaddress_as_str(index);
-+          info.balance = balance_per_subaddress[i];
-+          info.unlocked_balance = unlocked_balance_per_subaddress[i].first;
-+          info.blocks_to_unlock = unlocked_balance_per_subaddress[i].second.first;
-+          info.time_to_unlock = unlocked_balance_per_subaddress[i].second.second;
-+          info.label = m_wallet->get_subaddress_label(index);
-+          info.num_unspent_outputs = std::count_if(transfers.begin(), transfers.end(), [&](const tools::wallet2::transfer_details& td) { return !td.m_spent && td.m_subaddr_index == index; });
-+          res.per_subaddress.emplace_back(std::move(info));
-+        }
-+      }
-+    }
-+    catch (const std::exception& e)
-+    {
-+      handle_rpc_exception(std::current_exception(), er, WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR);
-+      return false;
-+    }
-+    return true;
-+  }
-+  //------------------------------------------------------------------------------------------------------------------------------
-   bool wallet_rpc_server::on_getaddress(const wallet_rpc::COMMAND_RPC_GET_ADDRESS::request& req, wallet_rpc::COMMAND_RPC_GET_ADDRESS::response& res, epee::json_rpc::error& er, const connection_context *ctx)
-   {
+@@ -427,8 +436,16 @@ namespace tools
      if (!m_wallet) return not_open(er);
-@@ -857,17 +923,18 @@ namespace tools
+     try
+     {
+-      res.balance = req.all_accounts ? m_wallet->balance_all(req.strict) : m_wallet->balance(req.account_index, req.strict);
+-      res.unlocked_balance = req.all_accounts ? m_wallet->unlocked_balance_all(req.strict, &res.blocks_to_unlock, &res.time_to_unlock) : m_wallet->unlocked_balance(req.account_index, req.strict, &res.blocks_to_unlock, &res.time_to_unlock);
++      std::map<std::string, uint64_t> local_blocks_to_unlock, local_time_to_unlock;
++      res.balance = req.all_accounts ? m_wallet->balance_all(req.strict)[req.asset_type] : m_wallet->balance(req.asset_type, req.account_index, req.strict);
++      res.unlocked_balance = req.all_accounts ? m_wallet->unlocked_balance_all(req.strict, &local_blocks_to_unlock, &local_time_to_unlock)[req.asset_type] : m_wallet->unlocked_balance(req.asset_type, req.account_index, req.strict, &res.blocks_to_unlock, &res.time_to_unlock);
++
++      if (req.all_accounts) {
++	// Copy the values for the correct currency from the map to the response
++	res.blocks_to_unlock = local_blocks_to_unlock[req.asset_type];
++	res.time_to_unlock = local_time_to_unlock[req.asset_type];
++      }
++      
+       res.multisig_import_needed = m_wallet->multisig() && m_wallet->has_multisig_partial_key_images();
+       std::map<uint32_t, std::map<uint32_t, uint64_t>> balance_per_subaddress_per_account;
+       std::map<uint32_t, std::map<uint32_t, std::pair<uint64_t, std::pair<uint64_t, uint64_t>>>> unlocked_balance_per_subaddress_per_account;
+@@ -436,14 +453,14 @@ namespace tools
+       {
+         for (uint32_t account_index = 0; account_index < m_wallet->get_num_subaddress_accounts(); ++account_index)
+         {
+-          balance_per_subaddress_per_account[account_index] = m_wallet->balance_per_subaddress(account_index, req.strict);
+-          unlocked_balance_per_subaddress_per_account[account_index] = m_wallet->unlocked_balance_per_subaddress(account_index, req.strict);
++          balance_per_subaddress_per_account[account_index] = m_wallet->balance_per_subaddress(req.asset_type, account_index, req.strict);
++          unlocked_balance_per_subaddress_per_account[account_index] = m_wallet->unlocked_balance_per_subaddress(req.asset_type, account_index, req.strict);
+         }
+       }
+       else
+       {
+-        balance_per_subaddress_per_account[req.account_index] = m_wallet->balance_per_subaddress(req.account_index, req.strict);
+-        unlocked_balance_per_subaddress_per_account[req.account_index] = m_wallet->unlocked_balance_per_subaddress(req.account_index, req.strict);
++        balance_per_subaddress_per_account[req.account_index] = m_wallet->balance_per_subaddress(req.asset_type, req.account_index, req.strict);
++        unlocked_balance_per_subaddress_per_account[req.account_index] = m_wallet->unlocked_balance_per_subaddress(req.asset_type, req.account_index, req.strict);
+       }
+       std::vector<tools::wallet2::transfer_details> transfers;
+       m_wallet->get_transfers(transfers);
+@@ -622,8 +639,8 @@ namespace tools
+         wallet_rpc::COMMAND_RPC_GET_ACCOUNTS::subaddress_account_info info;
+         info.account_index = subaddr_index.major;
+         info.base_address = m_wallet->get_subaddress_as_str(subaddr_index);
+-        info.balance = m_wallet->balance(subaddr_index.major, req.strict_balances);
+-        info.unlocked_balance = m_wallet->unlocked_balance(subaddr_index.major, req.strict_balances);
++        info.balance = m_wallet->balance(req.asset_type, subaddr_index.major, req.strict_balances);
++        info.unlocked_balance = m_wallet->unlocked_balance(req.asset_type, subaddr_index.major, req.strict_balances);
+         info.label = m_wallet->get_subaddress_label(subaddr_index);
+         info.tag = account_tags.second[subaddr_index.major];
+         res.subaddress_accounts.push_back(info);
+@@ -857,17 +874,18 @@ namespace tools
      return true;
    }
    //------------------------------------------------------------------------------------------------------------------------------
@@ -143,7 +146,7 @@ index 30eed07e7..74476dfe7 100644
    {
      for (const auto & ptx : ptx_vector)
      {
-@@ -879,7 +946,8 @@ namespace tools
+@@ -879,7 +897,8 @@ namespace tools
          fill(tx_key, std::string(s.data(), s.size()));
        }
        // Compute amount leaving wallet in tx. By convention dests does not include change outputs
@@ -153,7 +156,7 @@ index 30eed07e7..74476dfe7 100644
        fill(fee, ptx.fee);
        fill(weight, cryptonote::get_transaction_weight(ptx.tx));
      }
-@@ -925,6 +993,229 @@ namespace tools
+@@ -925,6 +944,193 @@ namespace tools
      return true;
    }
    //------------------------------------------------------------------------------------------------------------------------------
@@ -441,7 +444,7 @@ index 30eed07e7..74476dfe7 100644
      }
      catch (const std::exception& e)
      {
-@@ -1376,8 +1691,8 @@ namespace tools
+@@ -1376,8 +1582,8 @@ namespace tools
      {
        std::vector<wallet2::pending_tx> ptx_vector = m_wallet->create_unmixable_sweep_transactions();
  
@@ -452,7 +455,7 @@ index 30eed07e7..74476dfe7 100644
      }
      catch (const std::exception& e)
      {
-@@ -1434,8 +1749,8 @@ namespace tools
+@@ -1434,8 +1640,8 @@ namespace tools
        uint32_t priority = m_wallet->adjust_priority(req.priority);
        std::vector<wallet2::pending_tx> ptx_vector = m_wallet->create_transactions_all(req.below_amount, dsts[0].addr, dsts[0].is_subaddress, req.outputs, mixin, req.unlock_time, priority, extra, req.account_index, subaddr_indices);
  
@@ -463,7 +466,7 @@ index 30eed07e7..74476dfe7 100644
      }
      catch (const std::exception& e)
      {
-@@ -1509,7 +1824,7 @@ namespace tools
+@@ -1509,7 +1715,7 @@ namespace tools
          return false;
        }
  
@@ -472,7 +475,7 @@ index 30eed07e7..74476dfe7 100644
            res.tx_hash, req.get_tx_hex, res.tx_blob, req.get_tx_metadata, res.tx_metadata, er);
      }
      catch (const std::exception& e)
-@@ -2224,7 +2539,7 @@ namespace tools
+@@ -2224,7 +2430,7 @@ namespace tools
  
      try
      {
@@ -481,16 +484,16 @@ index 30eed07e7..74476dfe7 100644
      }
      catch (const std::exception &e)
      {
-@@ -2290,7 +2605,7 @@ namespace tools
+@@ -2290,7 +2496,7 @@ namespace tools
  
      try
      {
 -      res.good = m_wallet->check_tx_proof(txid, info.address, info.is_subaddress, req.message, req.signature, res.received, res.in_pool, res.confirmations);
-+      res.good = m_wallet->check_tx_proof(txid, info.address, info.is_subaddress, req.message, req.signature, res.received, res.received_usd, res.in_pool, res.confirmations);
++      res.good = m_wallet->check_tx_proof(txid, info.address, info.is_subaddress, req.message, req.signature, res.received, res.received_usd, res.received_xasset, res.asset_type, res.in_pool, res.confirmations);
      }
      catch (const std::exception &e)
      {
-@@ -3462,6 +3777,9 @@ namespace tools
+@@ -3462,6 +3668,9 @@ namespace tools
        }
      }
  
@@ -500,7 +503,7 @@ index 30eed07e7..74476dfe7 100644
      try
      {
        if (!req.spendkey.empty())
-@@ -3526,6 +3844,12 @@ namespace tools
+@@ -3526,6 +3735,12 @@ namespace tools
      }
  
      // early check for mandatory fields
