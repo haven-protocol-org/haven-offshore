@@ -1,8 +1,6 @@
-diff --git a/src/cryptonote_core/tx_pool.cpp b/src/cryptonote_core/tx_pool.cpp
-index 696bc88d4..19d0f365a 100644
---- a/src/cryptonote_core/tx_pool.cpp
-+++ b/src/cryptonote_core/tx_pool.cpp
-@@ -107,8 +107,8 @@ namespace cryptonote
+--- monero/src/cryptonote_core/tx_pool.cpp	2021-03-01 16:23:25.992287807 +0000
++++ monero-build-h/src/cryptonote_core/tx_pool.cpp	2021-03-01 14:44:23.284204232 +0000
+@@ -107,8 +107,8 @@
  
      uint64_t get_transaction_weight_limit(uint8_t version)
      {
@@ -13,7 +11,7 @@ index 696bc88d4..19d0f365a 100644
          return get_min_block_weight(version) / 2 - CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE;
        else
          return get_min_block_weight(version) - CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE;
-@@ -155,7 +155,7 @@ namespace cryptonote
+@@ -155,7 +155,7 @@
      }
  
      // fee per kilobyte, size rounded up.
@@ -22,7 +20,7 @@ index 696bc88d4..19d0f365a 100644
  
      if (tx.version == 1)
      {
-@@ -166,7 +166,7 @@ namespace cryptonote
+@@ -166,7 +166,7 @@
          return false;
        }
  
@@ -31,7 +29,7 @@ index 696bc88d4..19d0f365a 100644
        if(outputs_amount > inputs_amount)
        {
          LOG_PRINT_L1("transaction use more money than it has: use " << print_money(outputs_amount) << ", have " << print_money(inputs_amount));
-@@ -187,15 +187,95 @@ namespace cryptonote
+@@ -187,15 +187,95 @@
      else
      {
        fee = tx.rct_signatures.txnFee;
@@ -128,45 +126,45 @@ index 696bc88d4..19d0f365a 100644
      size_t tx_weight_limit = get_transaction_weight_limit(version);
      if ((!kept_by_block || version >= HF_VERSION_PER_BYTE_FEE) && tx_weight > tx_weight_limit)
      {
-@@ -245,6 +325,9 @@ namespace cryptonote
+@@ -245,6 +325,11 @@
        {
          meta.weight = tx_weight;
          meta.fee = fee;
 +        meta.fee_usd = fee_usd;
++        meta.fee_xasset = fee_xasset;
 +        meta.offshore_fee = offshore_fee;
 +        meta.offshore_fee_usd = offshore_fee_usd;
++        meta.offshore_fee_xasset = offshore_fee_xasset;
          meta.max_used_block_id = null_hash;
          meta.max_used_block_height = 0;
          meta.last_failed_height = 0;
-@@ -314,6 +397,9 @@ namespace cryptonote
+@@ -314,6 +399,11 @@
            meta.receive_time = receive_time;
            meta.weight = tx_weight;
            meta.fee = fee;
-+	  meta.fee_usd = fee_usd;
-+	  meta.offshore_fee = offshore_fee;
-+	  meta.offshore_fee_usd = offshore_fee_usd;
++          meta.fee_usd = fee_usd;
++          meta.fee_xasset = fee_xasset;
++          meta.offshore_fee = offshore_fee;
++          meta.offshore_fee_usd = offshore_fee_usd;
++          meta.offshore_fee_xasset = offshore_fee_xasset;
            meta.max_used_block_id = max_used_block_id;
            meta.max_used_block_height = max_used_block_height;
            meta.last_failed_height = 0;
-@@ -341,8 +427,16 @@ namespace cryptonote
+@@ -341,8 +431,12 @@
        tvc.m_added_to_pool = true;
  
        static_assert(unsigned(relay_method::none) == 0, "expected relay_method::none value to be zero");
 -      if(meta.fee > 0)
-+      if(meta.fee > 0){
-         tvc.m_relay = tx_relay;
-+      }
-+      else if(meta.fee_usd > 0){
++      if(meta.fee > 0 || meta.fee_usd > 0 || meta.fee_xasset > 0){
 +        tvc.m_relay = tx_relay;
-+      }
-+      else if (tx_relay != relay_method::none && ((tx.version >= OFFSHORE_TRANSACTION_VERSION) && (tx.pricing_record_height != 0))) {
++      } else if (tx_relay != relay_method::none && ((tx.version >= OFFSHORE_TRANSACTION_VERSION) && (tx.pricing_record_height != 0))) {
 +	      LOG_PRINT_L1("tx meta.fee is 0, but this is an offshore TX, so relaying enabled");
-+        tvc.m_relay = tx_relay;
+         tvc.m_relay = tx_relay;
 +      }
      }
  
      tvc.m_verifivation_failed = false;
-@@ -350,12 +444,12 @@ namespace cryptonote
+@@ -350,12 +444,12 @@
  
      ++m_cookie;
  
@@ -181,7 +179,7 @@ index 696bc88d4..19d0f365a 100644
    //---------------------------------------------------------------------------------
    bool tx_memory_pool::add_tx(transaction &tx, tx_verification_context& tvc, relay_method tx_relay, bool relayed, uint8_t version)
    {
-@@ -441,28 +535,88 @@ namespace cryptonote
+@@ -441,28 +535,88 @@
    //---------------------------------------------------------------------------------
    bool tx_memory_pool::insert_key_images(const transaction_prefix &tx, const crypto::hash &id, relay_method tx_relay)
    {
@@ -282,7 +280,7 @@ index 696bc88d4..19d0f365a 100644
      ++m_cookie;
      return true;
    }
-@@ -475,32 +629,99 @@ namespace cryptonote
+@@ -475,32 +629,99 @@
      CRITICAL_REGION_LOCAL(m_transactions_lock);
      CRITICAL_REGION_LOCAL1(m_blockchain);
      // ND: Speedup
@@ -401,7 +399,7 @@ index 696bc88d4..19d0f365a 100644
    {
      CRITICAL_REGION_LOCAL(m_transactions_lock);
      CRITICAL_REGION_LOCAL1(m_blockchain);
-@@ -533,6 +754,9 @@ namespace cryptonote
+@@ -533,6 +754,9 @@
        }
        tx_weight = meta.weight;
        fee = meta.fee;
@@ -411,7 +409,7 @@ index 696bc88d4..19d0f365a 100644
        relayed = meta.relayed;
        do_not_relay = meta.do_not_relay;
        double_spend_seen = meta.double_spend_seen;
-@@ -728,7 +952,7 @@ namespace cryptonote
+@@ -728,7 +952,7 @@
      txs.reserve(m_blockchain.get_txpool_tx_count());
      m_blockchain.for_all_txpool_txes([this, now, &txs](const crypto::hash &txid, const txpool_tx_meta_t &meta, const cryptonote::blobdata *){
        // 0 fee transactions are never relayed
@@ -420,7 +418,7 @@ index 696bc88d4..19d0f365a 100644
        {
          if (!meta.dandelionpp_stem && now - meta.last_relayed_time <= get_relay_delay(now, meta.receive_time))
            return true;
-@@ -1102,11 +1326,37 @@ namespace cryptonote
+@@ -1102,11 +1326,37 @@
    {
      CRITICAL_REGION_LOCAL(m_transactions_lock);
      CRITICAL_REGION_LOCAL1(m_blockchain);
@@ -463,7 +461,7 @@ index 696bc88d4..19d0f365a 100644
      }
      return false;
    }
-@@ -1224,22 +1474,74 @@ namespace cryptonote
+@@ -1224,22 +1474,74 @@
    //---------------------------------------------------------------------------------
    bool tx_memory_pool::have_key_images(const std::unordered_set<crypto::key_image>& k_images, const transaction_prefix& tx)
    {
@@ -548,7 +546,7 @@ index 696bc88d4..19d0f365a 100644
      }
      return true;
    }
-@@ -1252,8 +1554,21 @@ namespace cryptonote
+@@ -1252,8 +1554,21 @@
      LockedTXN lock(m_blockchain.get_db());
      for(size_t i = 0; i!= tx.vin.size(); i++)
      {
@@ -572,7 +570,7 @@ index 696bc88d4..19d0f365a 100644
        if (it != m_spent_key_images.end())
        {
          for (const crypto::hash &txid: it->second)
-@@ -1267,7 +1582,7 @@ namespace cryptonote
+@@ -1267,7 +1582,7 @@
            }
            if (!meta.double_spend_seen)
            {
@@ -581,7 +579,7 @@ index 696bc88d4..19d0f365a 100644
              meta.double_spend_seen = true;
              changed = true;
              try
-@@ -1321,7 +1636,7 @@ namespace cryptonote
+@@ -1321,7 +1636,7 @@
    }
    //---------------------------------------------------------------------------------
    //TODO: investigate whether boolean return is appropriate
@@ -590,7 +588,7 @@ index 696bc88d4..19d0f365a 100644
    {
      CRITICAL_REGION_LOCAL(m_transactions_lock);
      CRITICAL_REGION_LOCAL1(m_blockchain);
-@@ -1329,6 +1644,9 @@ namespace cryptonote
+@@ -1329,6 +1644,9 @@
      uint64_t best_coinbase = 0, coinbase = 0;
      total_weight = 0;
      fee = 0;
@@ -600,7 +598,7 @@ index 696bc88d4..19d0f365a 100644
      
      //baseline empty block
      if (!get_block_reward(median_weight, total_weight, already_generated_coins, best_coinbase, version))
-@@ -1361,7 +1679,9 @@ namespace cryptonote
+@@ -1361,7 +1679,9 @@
        if (!meta.matches(relay_category::legacy) && !(m_mine_stem_txes && meta.get_relay_method() == relay_method::stem))
        {
          LOG_PRINT_L2("  tx relay method is " << (unsigned)meta.get_relay_method());
@@ -611,7 +609,7 @@ index 696bc88d4..19d0f365a 100644
        }
        if (meta.pruned)
        {
-@@ -1388,7 +1708,10 @@ namespace cryptonote
+@@ -1388,7 +1708,10 @@
            continue;
          }
          coinbase = block_reward + fee + meta.fee;
@@ -622,7 +620,7 @@ index 696bc88d4..19d0f365a 100644
          {
            LOG_PRINT_L2("  would decrease coinbase to " << print_money(coinbase));
            continue;
-@@ -1446,10 +1769,20 @@ namespace cryptonote
+@@ -1446,10 +1769,20 @@
          LOG_PRINT_L2("  key images already seen");
          continue;
        }

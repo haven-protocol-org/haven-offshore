@@ -1,8 +1,6 @@
-diff --git a/src/cryptonote_core/cryptonote_tx_utils.cpp b/src/cryptonote_core/cryptonote_tx_utils.cpp
-index 3dd29dd1b..241b6ccf0 100644
---- a/src/cryptonote_core/cryptonote_tx_utils.cpp
-+++ b/src/cryptonote_core/cryptonote_tx_utils.cpp
-@@ -75,8 +75,75 @@ namespace cryptonote
+--- monero/src/cryptonote_core/cryptonote_tx_utils.cpp	2021-03-01 16:23:25.992287807 +0000
++++ monero-build-h/src/cryptonote_core/cryptonote_tx_utils.cpp	2021-03-01 14:44:23.280204178 +0000
+@@ -75,8 +75,75 @@
      }
      LOG_PRINT_L2("destinations include " << num_stdaddresses << " standard addresses and " << num_subaddresses << " subaddresses");
    }
@@ -79,7 +77,7 @@ index 3dd29dd1b..241b6ccf0 100644
      tx.vin.clear();
      tx.vout.clear();
      tx.extra.clear();
-@@ -89,6 +156,8 @@ namespace cryptonote
+@@ -89,6 +156,8 @@
      if (!sort_tx_extra(tx.extra, tx.extra))
        return false;
  
@@ -88,7 +86,7 @@ index 3dd29dd1b..241b6ccf0 100644
      txin_gen in;
      in.height = height;
  
-@@ -103,68 +172,137 @@ namespace cryptonote
+@@ -103,68 +172,137 @@
      LOG_PRINT_L1("Creating block template: reward " << block_reward <<
        ", fee " << fee);
  #endif
@@ -102,28 +100,50 @@ index 3dd29dd1b..241b6ccf0 100644
 -    // masks, to they can be used as rct inputs.
 -    if (hard_fork_version >= 2 && hard_fork_version < 4) {
 -      block_reward = block_reward - block_reward % ::config::BASE_REWARD_CLAMP_THRESHOLD;
+-    }
+-
+-    std::vector<uint64_t> out_amounts;
+-    decompose_amount_into_digits(block_reward, hard_fork_version >= 2 ? 0 : ::config::DEFAULT_DUST_THRESHOLD,
+-      [&out_amounts](uint64_t a_chunk) { out_amounts.push_back(a_chunk); },
+-      [&out_amounts](uint64_t a_dust) { out_amounts.push_back(a_dust); });
+-
+-    CHECK_AND_ASSERT_MES(1 <= max_outs, false, "max_out must be non-zero");
+-    if (height == 0 || hard_fork_version >= 4)
+-    {
+-      // the genesis block was not decomposed, for unknown reasons
+-      while (max_outs < out_amounts.size())
+-      {
+-        //out_amounts[out_amounts.size() - 2] += out_amounts.back();
+-        //out_amounts.resize(out_amounts.size() - 1);
+-        out_amounts[1] += out_amounts[0];
+-        for (size_t n = 1; n < out_amounts.size(); ++n)
+-          out_amounts[n - 1] = out_amounts[n];
+-        out_amounts.pop_back();
 +    uint64_t governance_reward = 0;
 +    if (hard_fork_version >= 3) {
 +      if (already_generated_coins != 0)
 +      {
 +        governance_reward = get_governance_reward(height, block_reward);
 +        block_reward -= governance_reward;
-+      }
+       }
      }
- 
--    std::vector<uint64_t> out_amounts;
--    decompose_amount_into_digits(block_reward, hard_fork_version >= 2 ? 0 : ::config::DEFAULT_DUST_THRESHOLD,
--      [&out_amounts](uint64_t a_chunk) { out_amounts.push_back(a_chunk); },
--      [&out_amounts](uint64_t a_dust) { out_amounts.push_back(a_dust); });
+-    else
+-    {
+-      CHECK_AND_ASSERT_MES(max_outs >= out_amounts.size(), false, "max_out exceeded");
+-    }
++
 +    block_reward += fee;
  
--    CHECK_AND_ASSERT_MES(1 <= max_outs, false, "max_out must be non-zero");
--    if (height == 0 || hard_fork_version >= 4)
+     uint64_t summary_amounts = 0;
+-    for (size_t no = 0; no < out_amounts.size(); no++)
 -    {
--      // the genesis block was not decomposed, for unknown reasons
--      while (max_outs < out_amounts.size())
-+    uint64_t summary_amounts = 0;
-+
+-      crypto::key_derivation derivation = AUTO_VAL_INIT(derivation);
+-      crypto::public_key out_eph_public_key = AUTO_VAL_INIT(out_eph_public_key);
+-      bool r = crypto::generate_key_derivation(miner_address.m_view_public_key, txkey.sec, derivation);
+-      CHECK_AND_ASSERT_MES(r, false, "while creating outs: failed to generate_key_derivation(" << miner_address.m_view_public_key << ", " << txkey.sec << ")");
+ 
+-      r = crypto::derive_public_key(derivation, no, miner_address.m_spend_public_key, out_eph_public_key);
+-      CHECK_AND_ASSERT_MES(r, false, "while creating outs: failed to derive_public_key(" << derivation << ", " << no << ", "<< miner_address.m_spend_public_key << ")");
 +    crypto::key_derivation derivation = AUTO_VAL_INIT(derivation);;
 +    crypto::public_key out_eph_public_key = AUTO_VAL_INIT(out_eph_public_key);
 +    bool r = crypto::generate_key_derivation(miner_address.m_view_public_key, txkey.sec, derivation);
@@ -139,18 +159,18 @@ index 3dd29dd1b..241b6ccf0 100644
 +    summary_amounts += out.amount = block_reward;
 +    out.target = tk;
 +    tx.vout.push_back(out);
-+
+ 
+-      txout_to_key tk;
+-      tk.key = out_eph_public_key;
 +    cryptonote::address_parse_info governance_wallet_address;
-+
+ 
+-      tx_out out;
+-      summary_amounts += out.amount = out_amounts[no];
+-      out.target = tk;
+-      tx.vout.push_back(out);
 +    if (hard_fork_version >= 3) {
 +      if (already_generated_coins != 0)
-       {
--        //out_amounts[out_amounts.size() - 2] += out_amounts.back();
--        //out_amounts.resize(out_amounts.size() - 1);
--        out_amounts[1] += out_amounts[0];
--        for (size_t n = 1; n < out_amounts.size(); ++n)
--          out_amounts[n - 1] = out_amounts[n];
--        out_amounts.pop_back();
++      {
 +        add_tx_pub_key_to_extra(tx, gov_key.pub);
 +
 +        if (hard_fork_version >= 4) {
@@ -195,12 +215,8 @@ index 3dd29dd1b..241b6ccf0 100644
 +
 +        CHECK_AND_ASSERT_MES(summary_amounts == (block_reward + governance_reward), false, "Failed to construct miner tx, summary_amounts = " << summary_amounts << " not equal total block_reward = " << (block_reward + governance_reward));
 +
-       }
++      }
      }
--    else
--    {
--      CHECK_AND_ASSERT_MES(max_outs >= out_amounts.size(), false, "max_out exceeded");
--    }
 +    if (hard_fork_version >= HF_VERSION_OFFSHORE_FULL) {
 +      
 +      // Add outputs for the xUSD amounts
@@ -215,35 +231,20 @@ index 3dd29dd1b..241b6ccf0 100644
 +          governance_reward_usd += offshore_fee_usd;
 +        }
  
--    uint64_t summary_amounts = 0;
--    for (size_t no = 0; no < out_amounts.size(); no++)
--    {
--      crypto::key_derivation derivation = AUTO_VAL_INIT(derivation);
--      crypto::public_key out_eph_public_key = AUTO_VAL_INIT(out_eph_public_key);
--      bool r = crypto::generate_key_derivation(miner_address.m_view_public_key, txkey.sec, derivation);
--      CHECK_AND_ASSERT_MES(r, false, "while creating outs: failed to generate_key_derivation(" << miner_address.m_view_public_key << ", " << txkey.sec << ")");
+-    CHECK_AND_ASSERT_MES(summary_amounts == block_reward, false, "Failed to construct miner tx, summary_amounts = " << summary_amounts << " not equal block_reward = " << block_reward);
 +        // Miner component of the offshore fee
 +        r = crypto::derive_public_key(derivation, 2, miner_address.m_spend_public_key, out_eph_public_key);
 +        CHECK_AND_ASSERT_MES(r, false, "while creating outs: failed to derive_public_key(" << derivation << ", " << "2" << ", "<< miner_address.m_spend_public_key << ")");
- 
--      r = crypto::derive_public_key(derivation, no, miner_address.m_spend_public_key, out_eph_public_key);
--      CHECK_AND_ASSERT_MES(r, false, "while creating outs: failed to derive_public_key(" << derivation << ", " << no << ", "<< miner_address.m_spend_public_key << ")");
++
 +        txout_offshore tk_off;
 +        tk_off.key = out_eph_public_key;
 +      
- 
--      txout_to_key tk;
--      tk.key = out_eph_public_key;
++
 +      tx_out out_off;
 +      out_off.amount = block_reward_usd;
 +      out_off.target = tk_off;
 +      tx.vout.push_back(out_off);
- 
--      tx_out out;
--      summary_amounts += out.amount = out_amounts[no];
--      out.target = tk;
--      tx.vout.push_back(out);
--    }
++
 +      crypto::public_key out_eph_public_key_usd = AUTO_VAL_INIT(out_eph_public_key_usd);
 +
 +      if (!get_deterministic_output_key(governance_wallet_address.address, gov_key, 3 /* fourth output in miner tx */, out_eph_public_key_usd))
@@ -252,11 +253,10 @@ index 3dd29dd1b..241b6ccf0 100644
 +        return false;
 +      }
  
--    CHECK_AND_ASSERT_MES(summary_amounts == block_reward, false, "Failed to construct miner tx, summary_amounts = " << summary_amounts << " not equal block_reward = " << block_reward);
+-    if (hard_fork_version >= 4)
 +      txout_offshore tk_gov;
 +      tk_gov.key = out_eph_public_key_usd;
- 
--    if (hard_fork_version >= 4)
++
 +      tx_out out_gov;
 +      out_gov.amount = governance_reward_usd;
 +      out_gov.target = tk_gov;
@@ -274,7 +274,7 @@ index 3dd29dd1b..241b6ccf0 100644
  
      //lock
      tx.unlock_time = height + CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW;
-@@ -199,8 +337,466 @@ namespace cryptonote
+@@ -199,8 +337,466 @@
      return addr.m_view_public_key;
    }
    //---------------------------------------------------------------
@@ -743,7 +743,7 @@ index 3dd29dd1b..241b6ccf0 100644
      hw::device &hwdev = sender_account_keys.get_device();
  
      if (sources.empty())
-@@ -217,95 +813,171 @@ namespace cryptonote
+@@ -217,12 +813,87 @@
        msout->c.clear();
      }
  
@@ -761,24 +761,6 @@ index 3dd29dd1b..241b6ccf0 100644
      tx.extra = extra;
      crypto::public_key txkey_pub;
  
--    // if we have a stealth payment id, find it and encrypt it with the tx key now
--    std::vector<tx_extra_field> tx_extra_fields;
--    if (parse_tx_extra(tx.extra, tx_extra_fields))
--    {
--      bool add_dummy_payment_id = true;
--      tx_extra_nonce extra_nonce;
--      if (find_tx_extra_field_by_type(tx_extra_fields, extra_nonce))
--      {
--        crypto::hash payment_id = null_hash;
--        crypto::hash8 payment_id8 = null_hash8;
--        if (get_encrypted_payment_id_from_tx_extra_nonce(extra_nonce.nonce, payment_id8))
--        {
--          LOG_PRINT_L2("Encrypting payment id " << payment_id8);
--          crypto::public_key view_key_pub = get_destination_view_key_pub(destinations, change_addr);
--          if (view_key_pub == null_pkey)
--          {
--            LOG_ERROR("Destinations have to have exactly one output to support encrypted payment ids");
--            return false;
 +    bool offshore = false;
 +    bool onshore = false;
 +    bool offshore_transfer = false;
@@ -807,7 +789,7 @@ index 3dd29dd1b..241b6ccf0 100644
 +            xusd_to_xasset = true;
 +          } else {
 +            xasset_to_xusd = true;
-           }
++          }
 +        }
 +      } else {
 +        // Pre-xAsset format of offshore_data
@@ -826,19 +808,10 @@ index 3dd29dd1b..241b6ccf0 100644
 +	}
 +      }
 +    }
- 
--          if (!hwdev.encrypt_payment_id(payment_id8, view_key_pub, tx_key))
--          {
--            LOG_ERROR("Failed to encrypt payment id");
--            return false;
--          }
++
 +    const bool use_offshore_outputs = onshore || offshore_transfer || xusd_to_xasset;
 +    const bool use_xasset_outputs = xasset_transfer || xasset_to_xusd;
- 
--          std::string extra_nonce;
--          set_encrypted_payment_id_to_tx_extra_nonce(extra_nonce, payment_id8);
--          remove_field_from_tx_extra(tx.extra, typeid(tx_extra_nonce));
--          if (!add_extra_nonce_to_tx_extra(tx.extra, extra_nonce))
++
 +    if (bOffshoreTx) {
 +
 +      if (offshore || onshore || xasset_to_xusd || xusd_to_xasset) {
@@ -854,122 +827,15 @@ index 3dd29dd1b..241b6ccf0 100644
 +      shuffle_outs = false;
 +      // LAND AHOY!!!
 +      
-+    } else {
-+      
-+      // if we have a stealth payment id, find it and encrypt it with the tx key now
-+      std::vector<tx_extra_field> tx_extra_fields;
-+      if (parse_tx_extra(tx.extra, tx_extra_fields))
-+	    {
-+        bool add_dummy_payment_id = true;
-+        tx_extra_nonce extra_nonce;
-+        if (find_tx_extra_field_by_type(tx_extra_fields, extra_nonce))
-+	      {
-+          crypto::hash payment_id = null_hash;
-+          crypto::hash8 payment_id8 = null_hash8;
-+          if (get_encrypted_payment_id_from_tx_extra_nonce(extra_nonce.nonce, payment_id8))
-+		      {
-+            LOG_PRINT_L2("Encrypting payment id " << payment_id8);
-+            crypto::public_key view_key_pub = get_destination_view_key_pub(destinations, change_addr);
-+		        if (view_key_pub == null_pkey)
-+            {
-+              LOG_ERROR("Destinations have to have exactly one output to support encrypted payment ids");
-+              return false;
-+            }
++    }
 +
-+            if (!hwdev.encrypt_payment_id(payment_id8, view_key_pub, tx_key))
-+            {
-+              LOG_ERROR("Failed to encrypt payment id");
-+              return false;
-+            }
-+
-+            std::string extra_nonce;
-+            set_encrypted_payment_id_to_tx_extra_nonce(extra_nonce, payment_id8);
-+            remove_field_from_tx_extra(tx.extra, typeid(tx_extra_nonce));
-+            if (!add_extra_nonce_to_tx_extra(tx.extra, extra_nonce))
-+            {
-+              LOG_ERROR("Failed to add encrypted payment id to tx extra");
-+              return false;
-+            }
-+            LOG_PRINT_L1("Encrypted payment ID: " << payment_id8);
-+            add_dummy_payment_id = false;
-+		      }
-+	        else if (get_payment_id_from_tx_extra_nonce(extra_nonce.nonce, payment_id))
-           {
--            LOG_ERROR("Failed to add encrypted payment id to tx extra");
--            return false;
-+            add_dummy_payment_id = false;
-           }
--          LOG_PRINT_L1("Encrypted payment ID: " << payment_id8);
--          add_dummy_payment_id = false;
--        }
--        else if (get_payment_id_from_tx_extra_nonce(extra_nonce.nonce, payment_id))
--        {
--          add_dummy_payment_id = false;
--        }
--      }
-+	      }
- 
--      // we don't add one if we've got more than the usual 1 destination plus change
--      if (destinations.size() > 2)
--        add_dummy_payment_id = false;
-+        // we don't add one if we've got more than the usual 1 destination plus change
-+        if (destinations.size() > 2)
-+          add_dummy_payment_id = false;
- 
--      if (add_dummy_payment_id)
-+	      if (add_dummy_payment_id)
-+	      {
-+          // if we have neither long nor short payment id, add a dummy short one,
-+          // this should end up being the vast majority of txes as time goes on
-+          std::string extra_nonce;
-+          crypto::hash8 payment_id8 = null_hash8;
-+          crypto::public_key view_key_pub = get_destination_view_key_pub(destinations, change_addr);
-+          if (view_key_pub == null_pkey)
-+		      {
-+		        LOG_ERROR("Failed to get key to encrypt dummy payment id with");
-+		      }
-+	        else
-+	    	  {
-+            hwdev.encrypt_payment_id(payment_id8, view_key_pub, tx_key);
-+            set_encrypted_payment_id_to_tx_extra_nonce(extra_nonce, payment_id8);
-+            if (!add_extra_nonce_to_tx_extra(tx.extra, extra_nonce))
-+            {
-+              LOG_ERROR("Failed to add dummy encrypted payment id to tx extra");
-+              // continue anyway
-+            }
-+		      }
-+	      }
-+	    }
-+      else
-       {
--        // if we have neither long nor short payment id, add a dummy short one,
--        // this should end up being the vast majority of txes as time goes on
--        std::string extra_nonce;
--        crypto::hash8 payment_id8 = null_hash8;
--        crypto::public_key view_key_pub = get_destination_view_key_pub(destinations, change_addr);
--        if (view_key_pub == null_pkey)
--        {
--          LOG_ERROR("Failed to get key to encrypt dummy payment id with");
--        }
--        else
--        {
--          hwdev.encrypt_payment_id(payment_id8, view_key_pub, tx_key);
--          set_encrypted_payment_id_to_tx_extra_nonce(extra_nonce, payment_id8);
--          if (!add_extra_nonce_to_tx_extra(tx.extra, extra_nonce))
--          {
--            LOG_ERROR("Failed to add dummy encrypted payment id to tx extra");
--            // continue anyway
--          }
--        }
-+        MWARNING("Failed to parse tx extra");
-+        tx_extra_fields.clear();
-       }
+     // if we have a stealth payment id, find it and encrypt it with the tx key now
+     std::vector<tx_extra_field> tx_extra_fields;
+     if (parse_tx_extra(tx.extra, tx_extra_fields))
+@@ -298,14 +969,14 @@
+       MWARNING("Failed to parse tx extra");
+       tx_extra_fields.clear();
      }
--    else
--    {
--      MWARNING("Failed to parse tx extra");
--      tx_extra_fields.clear();
--    }
 -
 +    
      struct input_generation_context_data
@@ -983,7 +849,7 @@ index 3dd29dd1b..241b6ccf0 100644
      //fill inputs
      int idx = -1;
      for(const tx_source_entry& src_entr:  sources)
-@@ -316,8 +988,15 @@ namespace cryptonote
+@@ -316,8 +987,15 @@
          LOG_ERROR("real_output index (" << src_entr.real_output << ")bigger than output_keys.size()=" << src_entr.outputs.size());
          return false;
        }
@@ -1000,7 +866,7 @@ index 3dd29dd1b..241b6ccf0 100644
        //key_derivation recv_derivation;
        in_contexts.push_back(input_generation_context_data());
        keypair& in_ephemeral = in_contexts.back().in_ephemeral;
-@@ -341,16 +1020,63 @@ namespace cryptonote
+@@ -341,16 +1019,63 @@
        }
  
        //put key image into tx input
@@ -1011,11 +877,10 @@ index 3dd29dd1b..241b6ccf0 100644
 -      //fill outputs array and use relative offsets
 -      for(const tx_source_entry::output_entry& out_entry: src_entr.outputs)
 -        input_to_key.key_offsets.push_back(out_entry.first);
--
++      if (offshore_transfer || xusd_to_xasset) {  // input is xUSD
+ 
 -      input_to_key.key_offsets = absolute_output_offsets_to_relative(input_to_key.key_offsets);
 -      tx.vin.push_back(input_to_key);
-+      if (offshore_transfer || xusd_to_xasset) {  // input is xUSD
-+
 +        // In-wallet swap
 +        txin_offshore input_to_key;
 +        input_to_key.amount = src_entr.amount;
@@ -1074,7 +939,7 @@ index 3dd29dd1b..241b6ccf0 100644
      }
  
      if (shuffle_outs)
-@@ -363,9 +1089,23 @@ namespace cryptonote
+@@ -363,9 +1088,23 @@
      for (size_t n = 0; n < sources.size(); ++n)
        ins_order[n] = n;
      std::sort(ins_order.begin(), ins_order.end(), [&](const size_t i0, const size_t i1) {
@@ -1101,7 +966,7 @@ index 3dd29dd1b..241b6ccf0 100644
      });
      tools::apply_permutation(ins_order, [&] (size_t i0, size_t i1) {
        std::swap(tx.vin[i0], tx.vin[i1]);
-@@ -400,7 +1140,13 @@ namespace cryptonote
+@@ -400,7 +1139,13 @@
      if (need_additional_txkeys)
        CHECK_AND_ASSERT_MES(destinations.size() == additional_tx_keys.size(), false, "Wrong amount of additional tx keys");
  
@@ -1116,7 +981,7 @@ index 3dd29dd1b..241b6ccf0 100644
      //fill outputs
      size_t output_index = 0;
      for(const tx_destination_entry& dst_entr: destinations)
-@@ -408,19 +1154,54 @@ namespace cryptonote
+@@ -408,19 +1153,54 @@
        CHECK_AND_ASSERT_MES(dst_entr.amount > 0 || tx.version > 1, false, "Destination with wrong amount: " << dst_entr.amount);
        crypto::public_key out_eph_public_key;
  
@@ -1180,7 +1045,7 @@ index 3dd29dd1b..241b6ccf0 100644
      }
      CHECK_AND_ASSERT_MES(additional_tx_public_keys.size() == additional_tx_keys.size(), false, "Internal error creating additional public keys");
  
-@@ -435,16 +1216,19 @@ namespace cryptonote
+@@ -435,16 +1215,19 @@
        add_additional_tx_pub_keys_to_extra(tx.extra, additional_tx_public_keys);
      }
  
@@ -1207,7 +1072,7 @@ index 3dd29dd1b..241b6ccf0 100644
      // check for watch only wallet
      bool zero_secret_key = true;
      for (size_t i = 0; i < sizeof(sender_account_keys.m_spend_secret_key); ++i)
-@@ -518,24 +1302,25 @@ namespace cryptonote
+@@ -518,24 +1301,25 @@
          }
        }
  
@@ -1238,7 +1103,7 @@ index 3dd29dd1b..241b6ccf0 100644
          inSk.push_back(ctkey);
          memwipe(&ctkey, sizeof(rct::ctkey));
          // inPk: (public key, commitment)
-@@ -545,13 +1330,7 @@ namespace cryptonote
+@@ -545,13 +1329,7 @@
            kLRki.push_back(sources[i].multisig_kLRki);
          }
        }
@@ -1253,7 +1118,7 @@ index 3dd29dd1b..241b6ccf0 100644
        if (use_simple_rct)
        {
          // mixRing indexing is done the other way round for simple
-@@ -575,28 +1354,115 @@ namespace cryptonote
+@@ -575,28 +1353,115 @@
            }
          }
        }
@@ -1378,7 +1243,7 @@ index 3dd29dd1b..241b6ccf0 100644
  
        CHECK_AND_ASSERT_MES(tx.vout.size() == outSk.size(), false, "outSk size does not match vout");
  
-@@ -608,7 +1474,7 @@ namespace cryptonote
+@@ -608,7 +1473,7 @@
      return true;
    }
    //---------------------------------------------------------------
@@ -1387,7 +1252,7 @@ index 3dd29dd1b..241b6ccf0 100644
    {
      hw::device &hwdev = sender_account_keys.get_device();
      hwdev.open_tx(tx_key);
-@@ -626,7 +1492,7 @@ namespace cryptonote
+@@ -626,7 +1491,7 @@
            additional_tx_keys.push_back(keypair::generate(sender_account_keys.get_device()).sec);
        }
  
@@ -1396,7 +1261,7 @@ index 3dd29dd1b..241b6ccf0 100644
        hwdev.close_tx();
        return r;
      } catch(...) {
-@@ -640,22 +1506,31 @@ namespace cryptonote
+@@ -640,22 +1505,31 @@
       std::unordered_map<crypto::public_key, cryptonote::subaddress_index> subaddresses;
       subaddresses[sender_account_keys.m_account_address.m_spend_public_key] = {0,0};
       crypto::secret_key tx_key;
@@ -1430,7 +1295,7 @@ index 3dd29dd1b..241b6ccf0 100644
      CHECK_AND_ASSERT_MES(r, false, "failed to parse coinbase tx from hard coded blob");
      r = parse_and_validate_tx_from_blob(tx_bl, bl.miner_tx);
      CHECK_AND_ASSERT_MES(r, false, "failed to parse coinbase tx from hard coded blob");
-@@ -678,33 +1553,22 @@ namespace cryptonote
+@@ -678,33 +1552,22 @@
  
    bool get_block_longhash(const Blockchain *pbc, const block& b, crypto::hash& res, const uint64_t height, const int miners)
    {
