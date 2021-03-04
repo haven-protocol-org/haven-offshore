@@ -1,5 +1,5 @@
 diff --git a/src/ringct/rctSigs.cpp b/src/ringct/rctSigs.cpp
-index 2e3e7007e..860070ace 100644
+index 2e3e7007e..0ca576326 100644
 --- a/src/ringct/rctSigs.cpp
 +++ b/src/ringct/rctSigs.cpp
 @@ -36,6 +36,8 @@
@@ -595,7 +595,7 @@ index 2e3e7007e..860070ace 100644
          }
          else
          {
-@@ -743,170 +1225,409 @@ namespace rct {
+@@ -743,171 +1225,410 @@ namespace rct {
          rv.mixRing = mixRing;
          if (msout)
            msout->c.resize(1);
@@ -908,7 +908,7 @@ index 2e3e7007e..860070ace 100644
 +            rv.outPk_xasset[i].mask = rct::scalarmult8(C[i]);
 +		      }
 +		      outSk[i].mask = masks[i];
-         }
++        }
 +      }
 +      else while (amounts_proved < n_amounts)
 +      {
@@ -926,7 +926,7 @@ index 2e3e7007e..860070ace 100644
 +        {
 +          // use a fake bulletproof for speed
 +          rv.p.bulletproofs.push_back(make_dummy_bulletproof(batch_amounts, C, masks));
-+        }
+         }
 +        else
 +        {
 +          const epee::span<const key> keys{&amount_keys[amounts_proved], batch_size};
@@ -1092,8 +1092,8 @@ index 2e3e7007e..860070ace 100644
 +    {
 +      msout->c.resize(inamounts.size());
 +      msout->mu_p.resize((rv.type == RCTTypeCLSAG || rv.type == RCTTypeCLSAGN) ? inamounts.size() : 0);
-+    }
-+
+     }
+ 
 +    // do a CLSAG signing for each input
 +    for (i = 0 ; i < inamounts.size(); i++)
 +    {
@@ -1140,12 +1140,13 @@ index 2e3e7007e..860070ace 100644
 +    for (size_t i = 0; i < inPk.size(); ++i) {
 +      mixRing[i].resize(mixin+1);
 +      index[i] = populateFromBlockchainSimple(mixRing[i], inPk[i], mixin);
-     }
++    }
 +    return genRctSimple(message, inSk, destinations, inamounts, in_asset_type, outamounts, txnFee, txnFee_usd, txnFee_xasset, txnOffshoreFee, txnOffshoreFee_usd, txnOffshoreFee_xasset, mixRing, amount_keys, kLRki, msout, index, outSk, rct_config, hwdev, pr);
 +  }
- 
++
      //RingCT protocol
      //genRct: 
+     //   creates an rctSig with all data necessary to verify the rangeProofs and that the signer owns one of the
 @@ -978,124 +1699,266 @@ namespace rct {
          }
      }
@@ -1590,7 +1591,7 @@ index 2e3e7007e..860070ace 100644
          for (size_t n = 0; n < indices.size(); ++n) {
              rct::key diff;
              sc_mulsub(diff.bytes, msout.c[n].bytes, secret_key.bytes, k[n].bytes);
-@@ -1237,4 +2111,71 @@ namespace rct {
+@@ -1237,4 +2111,84 @@ namespace rct {
          }
          return true;
      }
@@ -1624,37 +1625,50 @@ index 2e3e7007e..860070ace 100644
 +            return signMultisigMLSAG(rv, indices, k, msout, secret_key);
 +    }
 +
-+  bool checkBurntAndMinted(const rctSig &rv, const xmr_amount amount_burnt, const xmr_amount amount_minted, const offshore::pricing_record pr, bool offshore, bool onshore) {
++  bool checkBurntAndMinted(const rctSig &rv, const xmr_amount amount_burnt, const xmr_amount amount_minted, const offshore::pricing_record pr, bool offshore, bool onshore, bool xusd_to_xasset, bool xasset_to_xusd, std::string xasset_type) {
 +
 +    if (offshore) {
-+
 +      boost::multiprecision::uint128_t xhv_128 = amount_burnt;
 +      boost::multiprecision::uint128_t exchange_128 = pr.unused1;
 +      boost::multiprecision::uint128_t xusd_128 = xhv_128 * exchange_128;
 +      xusd_128 /= 1000000000000;
 +      boost::multiprecision::uint128_t minted_128 = amount_minted;
 +      if (xusd_128 != minted_128) {
-+
-+	LOG_PRINT_L1("Sum check failed (offshore)");
-+	return false;
++        LOG_PRINT_L1("Minted/burnt verification failed (offshore)");
++        return false;
 +      }
-+      
 +    } else if (onshore) {
-+
 +      boost::multiprecision::uint128_t xusd_128 = amount_burnt;
 +      boost::multiprecision::uint128_t exchange_128 = pr.unused1;
 +      boost::multiprecision::uint128_t xhv_128 = xusd_128 * 1000000000000;
 +      xhv_128 /= exchange_128;
 +      boost::multiprecision::uint128_t minted_128 = amount_minted;
 +      if ((uint64_t)xhv_128 != minted_128) {
-+
-+	LOG_PRINT_L1("Sum check failed (onshore)");
-+	return false;
++        LOG_PRINT_L1("Minted/burnt verification failed (onshore)");
++        return false;
 +      }
-+
++    } else if (xusd_to_xasset) {
++      boost::multiprecision::uint128_t xusd_128 = amount_burnt;
++      boost::multiprecision::uint128_t exchange_128 = pr[xasset_type];
++      boost::multiprecision::uint128_t xasset_128 = xusd_128 * exchange_128;
++      xasset_128 /= 1000000000000;
++      boost::multiprecision::uint128_t minted_128 = amount_minted;
++      if (xasset_128 != minted_128) {
++        LOG_PRINT_L1("Minted/burnt verification failed (xusd_to_xasset)");
++        return false;
++      }
++    } else if (xasset_to_xusd) {
++      boost::multiprecision::uint128_t xasset_128 = amount_burnt;
++      boost::multiprecision::uint128_t exchange_128 = pr[xasset_type];
++      boost::multiprecision::uint128_t xusd_128 = xasset_128 * 1000000000000;
++      xusd_128 /= exchange_128;
++      boost::multiprecision::uint128_t minted_128 = amount_minted;
++      if ((uint64_t)xusd_128 != minted_128) {
++        LOG_PRINT_L1("Minted/burnt verification failed (xasset_to_xusd)");
++        return false;
++      }
 +    } else {
-+
-+      LOG_PRINT_L1("Invalid request - minted/burnt values only valid for offshore/onshore TXs");
++      LOG_PRINT_L1("Invalid request - minted/burnt values only valid for offshore/onshore/xusd_to_xasset/xasset_to_xusd TXs");
 +      return false;
 +    }
 +

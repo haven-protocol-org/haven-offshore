@@ -1,5 +1,5 @@
 diff --git a/src/ringct/rctSigs.h b/src/ringct/rctSigs.h
-index 9227eab1e..315f95a56 100644
+index 9227eab1e..363993a2e 100644
 --- a/src/ringct/rctSigs.h
 +++ b/src/ringct/rctSigs.h
 @@ -47,6 +47,7 @@ extern "C" {
@@ -63,7 +63,7 @@ index 9227eab1e..315f95a56 100644
      key get_pre_mlsag_hash(const rctSig &rv, hw::device &hwdev);
      bool signMultisig(rctSig &rv, const std::vector<unsigned int> &indices, const keyV &k, const multisig_out &msout, const key &secret_key);
 +
-+  bool checkBurntAndMinted(const rctSig &rv, const xmr_amount amount_burnt, const xmr_amount amount_minted, const offshore::pricing_record pr, bool offshore, bool onshore);
++  bool checkBurntAndMinted(const rctSig &rv, const xmr_amount amount_burnt, const xmr_amount amount_minted, const offshore::pricing_record pr, bool offshore, bool onshore, bool xusd_to_xasset, bool xasset_to_xusd, std::string xasset_type);
  }
  #endif  /* RCTSIGS_H */
  
