@@ -42,8 +42,8 @@ jobs:
         sudo mv *.hpp /usr/local/include
     - name: build Haven
       run: |
-        make release-static -j3
-        chmod +x build/release/bin/*
+        ./build-haven.sh release-static -j3
+        chmod +x monero/build/release/bin/*
     - name: build haven explorer
       run: |
         cd haven-blockchain-explorer
@@ -52,7 +52,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: Haven-Linux-x64 (glibc 2.29)
-        path: build/release/bin/
+        path: monero/build/release/bin/
     - name: Upload Haven Explorer
       uses: actions/upload-artifact@v2
       with:
@@ -99,10 +99,10 @@ jobs:
         sudo mv *.hpp /usr/local/include
     - name: build Haven
       run: |
-        make release-static -j3
-        chmod +x build/release/bin/*
+        ./build-haven.sh release-static -j3
+        chmod +x monero/build/release/bin/*
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
         name: Haven-Linux-x64 (glibc 2.27)
-        path: build/release/bin/
+        path: monero/build/release/bin/

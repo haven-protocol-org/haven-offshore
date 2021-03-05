@@ -23,9 +23,9 @@ jobs:
         msys2do wget http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-icu-66.1-1-any.pkg.tar.zst
         msys2do pacman -U --noconfirm *.tar.zst
     - name: build Haven
-      run: msys2do make release-static-win64
+      run: msys2do ./build-haven.sh release-static-win64
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
         name: Haven-Windows-x64
-        path: build/release/bin/
+        path: monero/build/release/bin/

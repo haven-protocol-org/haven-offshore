@@ -28,10 +28,10 @@ jobs:
         ./b2 install
     - name: build
       run: |
-        make release-static-mac-x86_64 -j${nproc}
-        chmod +x build/release/bin/*
+        ./build-haven.sh release-static-mac-x86_64 -j${nproc}
+        chmod +x monero/build/release/bin/*
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
         name: Haven-MacOS
-        path: build/release/bin/
+        path: monero/build/release/bin/
