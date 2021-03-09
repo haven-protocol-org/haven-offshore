@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_config.h b/src/cryptonote_config.h
-index 81dc15dee..be71d634a 100644
+index 81dc15dee..c1a9997d0 100644
 --- a/src/cryptonote_config.h
 +++ b/src/cryptonote_config.h
 @@ -33,18 +33,23 @@
@@ -139,8 +139,8 @@ index 81dc15dee..be71d634a 100644
 +#define HF_VERSION_OFFSHORE_FEES_V3             16
 +#define HF_VERSION_XASSET_FULL                  16
 +
-+#define STAGENET_VERSION                        0x0a
-+#define TESTNET_VERSION                         0x0a
++#define STAGENET_VERSION                        0x0b
++#define TESTNET_VERSION                         0x0b
 +
 +#define OFFSHORE_PRICING_BLOCKS_TO_AVERAGE      30
  

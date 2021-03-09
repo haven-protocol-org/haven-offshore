@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/cryptonote_tx_utils.cpp b/src/cryptonote_core/cryptonote_tx_utils.cpp
-index 3dd29dd1b..fa7a05b23 100644
+index 3dd29dd1b..ba6c7f9f8 100644
 --- a/src/cryptonote_core/cryptonote_tx_utils.cpp
 +++ b/src/cryptonote_core/cryptonote_tx_utils.cpp
 @@ -75,8 +75,75 @@ namespace cryptonote
@@ -781,8 +781,8 @@ index 3dd29dd1b..fa7a05b23 100644
 +      amount_xasset += dt.amount_xasset;
 +    }
 +
-+    // Calculate 0.2% of the total being sent
-+    fee_estimate = amount_xasset / 500;
++    // Calculate 0.3% of the total being sent
++    fee_estimate = (amount_xasset * 3) / 1000;
 +
 +    // Return success
 +    return true;
@@ -803,8 +803,8 @@ index 3dd29dd1b..fa7a05b23 100644
 +      amount_usd += dt.amount_usd;
 +    }
 +
-+    // Calculate 0.2% of the total being sent
-+    fee_estimate = amount_usd / 500;
++    // Calculate 0.3% of the total being sent
++    fee_estimate = (amount_usd * 3) / 1000;
 +
 +    // Return success
 +    return true;

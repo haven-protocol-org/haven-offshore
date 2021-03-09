@@ -1,5 +1,5 @@
 diff --git a/src/wallet/wallet2.cpp b/src/wallet/wallet2.cpp
-index c3ba34260..bf6d75e24 100644
+index c3ba34260..d46003660 100644
 --- a/src/wallet/wallet2.cpp
 +++ b/src/wallet/wallet2.cpp
 @@ -29,6 +29,7 @@
@@ -5350,7 +5350,7 @@ index c3ba34260..bf6d75e24 100644
 +  }
 +
 +  if (use_fork_rules(HF_VERSION_OFFSHORE_FEES_V3, 0)) {
-+    return amount_xasset / 500;
++    return (amount_xasset * 3) / 1000;
 +  }
 +
 +  return 0;
@@ -5371,7 +5371,7 @@ index c3ba34260..bf6d75e24 100644
 +  }
 +
 +  if (use_fork_rules(HF_VERSION_OFFSHORE_FEES_V3, 0)) {
-+    return amount_usd / 500;
++    return (amount_usd * 3) / 1000;
 +  }
 +
 +  return 0;
