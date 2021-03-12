@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/tx_pool.cpp b/src/cryptonote_core/tx_pool.cpp
-index 696bc88d4..a93558d3e 100644
+index 696bc88d4..aa3fdd30d 100644
 --- a/src/cryptonote_core/tx_pool.cpp
 +++ b/src/cryptonote_core/tx_pool.cpp
 @@ -107,8 +107,8 @@ namespace cryptonote
@@ -228,21 +228,15 @@ index 696bc88d4..a93558d3e 100644
      }
  
      tvc.m_verifivation_failed = false;
-@@ -350,12 +481,12 @@ namespace cryptonote
+@@ -350,7 +481,7 @@ namespace cryptonote
  
      ++m_cookie;
  
 -    MINFO("Transaction added to pool: txid " << id << " weight: " << tx_weight << " fee/byte: " << (fee / (double)(tx_weight ? tx_weight : 1)));
-+    MINFO("Transaction added to pool: txid " << id << " weight: " << tx_weight << " fee/byte: " << ((fee > 0 ? fee : fee_usd) / (double)(tx_weight ? tx_weight : 1)));
++    MINFO("Transaction added to pool: txid " << id << " weight: " << tx_weight << " fee/byte: " << (meta.fee / (double)(tx_weight ? tx_weight : 1)) << " " << meta.fee_asset_type);
  
      prune(m_txpool_max_weight);
  
-     return true;
--  }
-+    }
-   //---------------------------------------------------------------------------------
-   bool tx_memory_pool::add_tx(transaction &tx, tx_verification_context& tvc, relay_method tx_relay, bool relayed, uint8_t version)
-   {
 @@ -441,28 +572,88 @@ namespace cryptonote
    //---------------------------------------------------------------------------------
    bool tx_memory_pool::insert_key_images(const transaction_prefix &tx, const crypto::hash &id, relay_method tx_relay)

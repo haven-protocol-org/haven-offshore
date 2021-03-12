@@ -1,5 +1,5 @@
 diff --git a/src/ringct/rctSigs.cpp b/src/ringct/rctSigs.cpp
-index 2e3e7007e..0ca576326 100644
+index 2e3e7007e..a633b34c7 100644
 --- a/src/ringct/rctSigs.cpp
 +++ b/src/ringct/rctSigs.cpp
 @@ -36,6 +36,8 @@
@@ -595,7 +595,7 @@ index 2e3e7007e..0ca576326 100644
          }
          else
          {
-@@ -743,171 +1225,410 @@ namespace rct {
+@@ -743,171 +1225,407 @@ namespace rct {
          rv.mixRing = mixRing;
          if (msout)
            msout->c.resize(1);
@@ -876,12 +876,9 @@ index 2e3e7007e..0ca576326 100644
 -            }
 +          const epee::span<const key> keys{&amount_keys[0], amount_keys.size()};
 +          rv.p.bulletproofs.push_back(proveRangeBulletproof(C, masks, outamounts_flat_amounts, keys, hwdev));
-+          // HERE BE DRAGONS!!!
-+          // NEAC: disable these checks again in the final builds
-+          //#ifdef DBG
++          #ifdef DBG
 +		      CHECK_AND_ASSERT_THROW_MES(verBulletproof(rv.p.bulletproofs.back()), "verBulletproof failed on newly created proof");
-+          //#endif
-+		      // LAND AHOY!!!
++          #endif
          }
  
 -        key sumout = zero();
@@ -931,9 +928,9 @@ index 2e3e7007e..0ca576326 100644
 +        {
 +          const epee::span<const key> keys{&amount_keys[amounts_proved], batch_size};
 +          rv.p.bulletproofs.push_back(proveRangeBulletproof(C, masks, batch_amounts, keys, hwdev));
-+          //#ifdef DBG
++          #ifdef DBG
 +          CHECK_AND_ASSERT_THROW_MES(verBulletproof(rv.p.bulletproofs.back()), "verBulletproof failed on newly created proof");
-+          //#endif
++          #endif
 +        }
 +        for (i = 0; i < batch_size; ++i)
 +        {
@@ -1147,7 +1144,7 @@ index 2e3e7007e..0ca576326 100644
      //RingCT protocol
      //genRct: 
      //   creates an rctSig with all data necessary to verify the rangeProofs and that the signer owns one of the
-@@ -978,124 +1699,266 @@ namespace rct {
+@@ -978,124 +1696,266 @@ namespace rct {
          }
      }
  
@@ -1513,7 +1510,7 @@ index 2e3e7007e..0ca576326 100644
              false, "verRctNonSemanticsSimple called on non simple rctSig");
          const bool bulletproof = is_rct_bulletproof(rv.type);
          // semantics check is early, and mixRing/MGs aren't resolved yet
-@@ -1118,14 +1981,19 @@ namespace rct {
+@@ -1118,14 +1978,19 @@ namespace rct {
          results.resize(rv.mixRing.size());
          for (size_t i = 0 ; i < rv.mixRing.size() ; i++) {
            tpool.submit(&waiter, [&, i] {
@@ -1535,7 +1532,7 @@ index 2e3e7007e..0ca576326 100644
              return false;
            }
          }
-@@ -1162,7 +2030,7 @@ namespace rct {
+@@ -1162,7 +2027,7 @@ namespace rct {
  
          //mask amount and mask
          ecdhTuple ecdh_info = rv.ecdhInfo[i];
@@ -1544,7 +1541,7 @@ index 2e3e7007e..0ca576326 100644
          mask = ecdh_info.mask;
          key amount = ecdh_info.amount;
          key C = rv.outPk[i].mask;
-@@ -1186,16 +2054,19 @@ namespace rct {
+@@ -1186,16 +2051,19 @@ namespace rct {
      }
  
      xmr_amount decodeRctSimple(const rctSig & rv, const key & sk, unsigned int i, key &mask, hw::device &hwdev) {
@@ -1567,7 +1564,7 @@ index 2e3e7007e..0ca576326 100644
          DP("C");
          DP(C);
          key Ctmp;
-@@ -1215,12 +2086,13 @@ namespace rct {
+@@ -1215,12 +2083,13 @@ namespace rct {
        return decodeRctSimple(rv, sk, i, mask, hwdev);
      }
  
@@ -1582,7 +1579,7 @@ index 2e3e7007e..0ca576326 100644
          if (rv.type == RCTTypeFull)
          {
            CHECK_AND_ASSERT_MES(rv.p.MGs.size() == 1, false, "MGs not a single element");
-@@ -1230,6 +2102,8 @@ namespace rct {
+@@ -1230,6 +2099,8 @@ namespace rct {
              CHECK_AND_ASSERT_MES(!rv.p.MGs[n].ss[indices[n]].empty(), false, "empty ss line");
          }
  
@@ -1591,7 +1588,7 @@ index 2e3e7007e..0ca576326 100644
          for (size_t n = 0; n < indices.size(); ++n) {
              rct::key diff;
              sc_mulsub(diff.bytes, msout.c[n].bytes, secret_key.bytes, k[n].bytes);
-@@ -1237,4 +2111,84 @@ namespace rct {
+@@ -1237,4 +2108,84 @@ namespace rct {
          }
          return true;
      }
