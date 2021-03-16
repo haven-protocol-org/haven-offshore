@@ -1,6 +1,6 @@
 --- monero/src/daemon/command_server.cpp	2019-12-20 13:52:25.288151367 +0000
 +++ monero-offshore/src/daemon/command_server.cpp	2019-11-27 08:35:55.996826717 +0000
-@@ -363,7 +363,7 @@ bool t_command_server::help(const std::v
+@@ -377,7 +377,7 @@ bool t_command_server::help(const std::v
  std::string t_command_server::get_commands_str()
  {
    std::stringstream ss;

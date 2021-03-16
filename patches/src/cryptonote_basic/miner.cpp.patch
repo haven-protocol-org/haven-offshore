@@ -17,7 +17,7 @@
      ++m_threads_active;
      while(!m_stop)
      {
-@@ -582,7 +579,6 @@ namespace cryptonote
+@@ -594,7 +591,6 @@ namespace cryptonote
        ++m_hashes;
        ++m_total_hashes;
      }
