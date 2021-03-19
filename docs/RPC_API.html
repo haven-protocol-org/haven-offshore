@@ -140,8 +140,9 @@
 <p>Outputs:</p>
 <ul>
 <li><em>amount</em> - Amount transferred for the transaction.</li>
-<li><em>amount_usd</em> - Amount transferred for the transaction.</li>
+<li><em>amount_asset</em> - string. The asset type for the amounts in the amount list.</li>
 <li><em>fee</em> - Integer value of the fee charged for the txn.</li>
+<li><em>fee_asset</em> - string. The asset type for the fees in the fee_list.</li>
 <li><em>multisig_txset</em> - Set of multisig transactions in the process of being signed (empty for non-multisig).</li>
 <li><em>tx_blob</em> - Raw transaction represented as hex string, if get_tx_hex is true.</li>
 <li><em>tx_hash</em> - String for the publically searchable transaction hash.</li>
@@ -156,6 +157,8 @@
   "jsonrpc": "2.0",
   "result": {
     "amount": 300000000000,
+    "amount_asset": "XHV",
+    "fee_asset": "XHV",
     "fee": 86897600000,
     "multisig_txset": "",
     "tx_blob": "",
@@ -194,8 +197,9 @@
 <li><em>tx_hash_list</em> - array of: string. The tx hashes of every transaction.</li>
 <li><em>tx_key_list</em> - array of: string. The transaction keys for every transaction.</li>
 <li><em>amount_list</em> - array of: integer. The amount transferred for every transaction.</li>
-<li><em>amount_usd_list</em> - array of: integer. The amount transferred for every transaction.</li>
+<li><em>amount_asset</em> - string. The asset type for the amounts in the amount list.</li>
 <li><em>fee_list</em> - array of: integer. The amount of fees paid for every transaction.</li>
+<li><em>fee_asset</em> - string. The asset type for the fees in the fee_list.</li>
 <li><em>tx_blob_list</em> - array of: string. The tx as hex string for every transaction.</li>
 <li><em>tx_metadata_list</em> - array of: string. List of transaction metadata needed to relay the transactions later.</li>
 <li><em>multisig_txset</em> - string. The set of signing keys used in a multisig transaction (empty for non-multisig).</li>
@@ -207,6 +211,8 @@
   "id": "0",
   "jsonrpc": "2.0",
   "result": {
+    "amount_asset": "XHV",
+    "fee_asset": "XHV",
     "amount_list": [3000000000000],
     "fee_list": [473710000],
     "multisig_txset": "",
@@ -244,8 +250,9 @@
 <li><em>tx_hash_list</em> - array of: string. The tx hashes of every transaction.</li>
 <li><em>tx_key_list</em> - array of: string. The transaction keys for every transaction.</li>
 <li><em>amount_list</em> - array of: integer. The amount transferred for every transaction.</li>
-<li><em>amount_usd_list</em> - array of: integer. The amount transferred for every transaction.</li>
+<li><em>amount_asset</em> - string. The asset type for the amounts in the amount list.</li>
 <li><em>fee_list</em> - array of: integer. The amount of fees paid for every transaction.</li>
+<li><em>fee_asset</em> - string. The asset type for the fees in the fee_list.</li>
 <li><em>tx_blob_list</em> - array of: string. The tx as hex string for every transaction.</li>
 <li><em>tx_metadata_list</em> - array of: string. List of transaction metadata needed to relay the transactions later.</li>
 <li><em>multisig_txset</em> - string. The set of signing keys used in a multisig transaction (empty for non-multisig).</li>
@@ -258,7 +265,8 @@
   "jsonrpc": "2.0",
   "result": {
     "amount_list": [3000000000000],
-    "amount_usd_list": [3000000000000],
+    "amount_asset": "XUSD",
+    "fee_asset": "XHV",
     "fee_list": [473710000],
     "multisig_txset": "",
     "tx_hash_list": ["4adcdc1af3f665770cdf8fb7a380887cd07ac53c2b771bd18df5ca375d5e7540"],
@@ -295,8 +303,9 @@
 <li><em>tx_hash_list</em> - array of: string. The tx hashes of every transaction.</li>
 <li><em>tx_key_list</em> - array of: string. The transaction keys for every transaction.</li>
 <li><em>amount_list</em> - array of: integer. The amount transferred in XHV for every transaction.</li>
-<li><em>amount_usd_list</em> - array of: integer. The amount transferred in xUSD for every transaction.</li>
+<li><em>amount_asset</em> - string. The asset type for the amounts in the amount list.</li>
 <li><em>fee_list</em> - array of: integer. The amount of fees paid for every transaction.</li>
+<li><em>fee_asset</em> - string. The asset type for the fees in the fee_list.</li>
 <li><em>tx_blob_list</em> - array of: string. The tx as hex string for every transaction.</li>
 <li><em>tx_metadata_list</em> - array of: string. List of transaction metadata needed to relay the transactions later.</li>
 <li><em>multisig_txset</em> - string. The set of signing keys used in a multisig transaction (empty for non-multisig).</li>
@@ -309,7 +318,8 @@
   "jsonrpc": "2.0",
   "result": {
     "amount_list": [3000000000000],
-    "amount_usd_list": [3000000000000],
+    "amount_asset": "XHV",
+    "fee_asset": "XUSD",
     "fee_list": [473710000],
     "multisig_txset": "",
     "tx_hash_list": ["4adcdc1af3f665770cdf8fb7a380887cd07ac53c2b771bd18df5ca375d5e7540"],
@@ -511,8 +521,9 @@
 <li><em>tx_hash_list</em> - array of: string. The tx hashes of every transaction.</li>
 <li><em>tx_key_list</em> - array of: string. The transaction keys for every transaction.</li>
 <li><em>amount_list</em> - array of: integer. The amount transferred for every transaction.</li>
-<li><em>amount_usd_list</em> - array of: integer. The amount transferred for every transaction.</li>
+<li><em>amount_asset</em> - string. The asset type for the amounts in the amount list.</li>
 <li><em>fee_list</em> - array of: integer. The amount of fees paid for every transaction.</li>
+<li><em>fee_asset</em> - string. The asset type for the fees in the fee_list.</li>
 <li><em>tx_blob_list</em> - array of: string. The tx as hex string for every transaction.</li>
 <li><em>tx_metadata_list</em> - array of: string. List of transaction metadata needed to relay the transactions later.</li>
 <li><em>multisig_txset</em> - string. The set of signing keys used in a multisig transaction (empty for non-multisig).</li>
@@ -525,7 +536,8 @@
   "jsonrpc": "2.0",
   "result": {
     "amount_list": [3000000000000],
-    "amount_usd_list": [3000000000000],
+    "amount_asset": "XUSD",
+    "fee_asset": "XUSD",
     "fee_list": [473710000],
     "multisig_txset": "",
     "tx_hash_list": ["4adcdc1af3f665770cdf8fb7a380887cd07ac53c2b771bd18df5ca375d5e7540"],
