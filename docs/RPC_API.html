@@ -39,20 +39,82 @@
 <div>
 <h1 id="wallet-rpc">Wallet RPC</h1>
 <h3 id="index-of-json-rpc-methods">Index of JSON RPC Methods:</h3>
-<ul>
+<li><a href="#get_balance">get_balance</a></li>
 <li><a href="#transfer">transfer</a></li>
 <li><a href="#transfer_split">transfer_split</a></li>
 <li><a href="#offshore">offshore</a></li>
 <li><a href="#onshore">onshore</a></li>
+<li><a href="#xusd_to_xasset">xusd_to_xasset</a></li>
+<li><a href="#xasset_to_xusd">xasset_to_xusd</a></li>
+<li><a href="#xasset_transfer">xasset_transfer</a></li>
 <li><a href="#offshore_transfer">offshore_transfer</a></li>
 <li><a href="#offshore_sweep_all">offshore_sweep_all</a></li>
-<li><a href="#get_offshore_balance">get_offshore_balance</a></li>
 <li><a href="#get_transfers">get_transfers</a></li>
+<li><a href="#get_payments">get_payments</a></li>
+<li><a href="#get_bulk_payments">get_bulk_payments</a></li>
 </ul>
 <br />
 <hr />
 <br />
 <h2 id="json-rpc-methods">JSON RPC Methods:</h2>
+<h3 id="get_balance"><strong>get_balance</strong></h3>
+
+<p>Return the wallet's balance.</p>
+
+<p>Alias: <em>getbalance</em>.</p>
+
+<p>Inputs:</p>
+
+<ul>
+  <li><em>asset_type</em> - string; (Optional) Return balance for this asset type.(e.g. "XUSD" or "XBTC")(Defaults to "XHV") </li>
+  <li><em>account_index</em> - unsigned int; Return balance for this account.</li>
+  <li><em>address_indices</em> - array of unsigned int; (Optional) Return balance detail for those subaddresses.</li>
+</ul>
+
+<p>Outputs:</p>
+
+<ul>
+  <li><em>balance</em> - unsigned int; The total balance of the current monero-wallet-rpc in session.</li>
+  <li><em>unlocked_balance</em> - unsigned int; Unlocked funds are those funds that are sufficiently deep enough in the Monero blockchain to be considered safe to spend.</li>
+  <li><em>multisig_import_needed</em> - boolean; True if importing multisig data is needed for returning a correct balance.</li>
+  <li><em>per_subaddress</em> - array of subaddress information; Balance information for each subaddress in an account.
+    <ul>
+      <li><em>address_index</em> - unsigned int; Index of the subaddress in the account.</li>
+      <li><em>address</em> - string; Address at this index. Base58 representation of the public keys.</li>
+      <li><em>balance</em> - unsigned int; Balance for the subaddress (locked or unlocked).</li>
+      <li><em>unlocked_balance</em> - unsigned int; Unlocked balance for the subaddress.</li>
+      <li><em>label</em> - string; Label for the subaddress.</li>
+      <li><em>num_unspent_outputs</em> - unsigned int; Number of unspent outputs available for the subaddress.</li>
+    </ul>
+  </li>
+</ul>
+
+<p>Example:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ curl http://127.0.0.1:12345/json_rpc -d '{"jsonrpc":"2.0","id":"0","method":"get_balance","params":{"account_index":0,"address_indices":[0], "asset_type":"XBTC"}}' -H 'Content-Type: application/json'
+{
+  "id": "0",
+  "jsonrpc": "2.0",
+  "result": {
+    "balance": 1799072700,
+    "blocks_to_unlock": 0,
+    "multisig_import_needed": false,
+    "per_subaddress": [{
+      "account_index": 0,
+      "address": "hvtZwRBNUNMWMaBVaLDcHbUA24YMEgLgj18bAAB9pr5fcFsGb1bXrXBJ5JJGd7Tdpa51t8uur74tBWwXJeKsruHf4znwmvJTnY",
+      "address_index": 0,
+      "balance": 1799072700,
+      "blocks_to_unlock": 0,
+      "label": "Primary account",
+      "num_unspent_outputs": 0,
+      "time_to_unlock": 0,
+      "unlocked_balance": 1799072700
+    }],
+    "time_to_unlock": 0,
+    "unlocked_balance": 1799072700
+  }
+}
+</code></pre></div></div>
 <h3 id="transfer"><strong>transfer</strong></h3>
 <p>Send XHV to a number of recipients.</p>
 <p>Alias: <em>None</em>.</p>
@@ -256,6 +318,171 @@
   }
 }
 </code></pre></div></div>
+<h3 id="xusd_to_xasset"><strong>xusd_to_xasset</strong></h3>
+<p>Same as transfer_split, but sends xAsset by burning xUSD.</p>
+<p>Alias: <em>None</em>.</p>
+<p>Inputs:</p>
+<ul>
+<li><em>destinations</em> - array of destinations to receive xAsset:
+<ul>
+<li><em>amount</em> - unsigned int; Amount in xUSD to send to each destination, in @atomic-units.</li>
+<li><em>address</em> - string; Destination public address.</li>
+</ul>
+</li>
+<li><em>asset_type</em> - string; xAsset type to convert to.</li>
+<li><em>account_index</em> - unsigned int; (Optional) Transfer from this account index. (Defaults to 0)</li>
+<li><em>subaddr_indices</em> - array of unsigned int; (Optional) Transfer from this set of subaddresses. (Defaults to empty - all indices)</li>
+<li><em>mixin</em> - unsigned int; Number of outputs from the blockchain to mix with (0 means no mixing).</li>
+<li><em>ring_size</em> - unsigned int; Sets ringsize to n (mixin + 1).</li>
+<li><em>unlock_time</em> - unsigned int; Number of blocks before the haven can be spent (0 to not add a lock).</li>
+<li><em>get_tx_keys</em> - boolean; (Optional) Return the transaction keys after sending.</li>
+<li><em>priority</em> - unsigned int; Set a priority for the transactions. Accepted Values are: 0-3 for: default, unimportant, normal, elevated, priority.</li>
+<li><em>do_not_relay</em> - boolean; (Optional) If true, the newly created transaction will not be relayed to the haven network. (Defaults to false)</li>
+<li><em>get_tx_hex</em> - boolean; Return the transactions as hex string after sending</li>
+<li><em>new_algorithm</em> - boolean; True to use the new transaction construction algorithm, defaults to false.</li>
+<li><em>get_tx_metadata</em> - boolean; Return list of transaction metadata needed to relay the transfer later.</li>
+</ul>
+<p>Outputs:</p>
+<ul>
+<li><em>tx_hash_list</em> - array of: string. The tx hashes of every transaction.</li>
+<li><em>tx_key_list</em> - array of: string. The transaction keys for every transaction.</li>
+<li><em>amount_list</em> - array of: integer. The amount transferred in XHV for every transaction.</li>
+<li><em>amount_asset</em> - string. The asset type for the amounts in the amount list.</li>
+<li><em>fee_list</em> - array of: integer. The amount of fees paid for every transaction.</li>
+<li><em>fee_asset</em> - string. The asset type for the fees in the fee_list.</li>
+<li><em>tx_blob_list</em> - array of: string. The tx as hex string for every transaction.</li>
+<li><em>tx_metadata_list</em> - array of: string. List of transaction metadata needed to relay the transactions later.</li>
+<li><em>multisig_txset</em> - string. The set of signing keys used in a multisig transaction (empty for non-multisig).</li>
+<li><em>unsigned_txset</em> - string. Set of unsigned tx for cold-signing purposes.</li>
+</ul>
+<p>Example:</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ curl http://127.0.0.1:12345/json_rpc -d '{"jsonrpc":"2.0","id":"0","method":"xusd_to_xasset","params":{"destinations":[{"amount":20000000000000,"address":"hvtZwRBNUNMWMaBVaLDcHbUA24YMEgLgj18bAAB9pr5fcFsGb1bXrXBJ5JJGd7Tdpa51t8uur74tBWwXJeKsruHf4znwmvJTnY"}],"account_index":0,"subaddr_indices":[0],"asset_type":"XGBP","priority":0,"ring_size":7,"get_tx_keys": true}}' -H 'Content-Type: application/json'
+{
+  "id": "0",
+  "jsonrpc": "2.0",
+  "result": {
+    "amount_asset": "XGBP",
+    "amount_list": [14364720200000],
+    "fee_asset": "XUSD",
+    "fee_list": [60638400000],
+    "multisig_txset": "",
+    "tx_hash_list": ["7d12122366b7469a7c42ea4ee1af730c41f913c9700d5393f5cb76bc99d5034e"],
+    "tx_key_list": ["2a8185e8486503899fa56fb2eb1dda60960c40fff397b478dc941f505a6e6b0f"],
+    "unsigned_txset": "",
+    "weight_list": [2128]
+  }
+}
+</code></pre></div></div>
+<h3 id="xasset_to_xusd"><strong>xasset_to_xusd</strong></h3>
+<p>Same as transfer_split, but sends xUSD by burning xAsset.</p>
+<p>Alias: <em>None</em>.</p>
+<p>Inputs:</p>
+<ul>
+<li><em>destinations</em> - array of destinations to receive xUSD:
+<ul>
+<li><em>amount</em> - unsigned int; Amount in xUSD to send to each destination, in @atomic-units.</li>
+<li><em>address</em> - string; Destination public address.</li>
+</ul>
+</li>
+<li><em>asset_type</em> - string; From xAsset type to convert to xUSD.</li>
+<li><em>account_index</em> - unsigned int; (Optional) Transfer from this account index. (Defaults to 0)</li>
+<li><em>subaddr_indices</em> - array of unsigned int; (Optional) Transfer from this set of subaddresses. (Defaults to empty - all indices)</li>
+<li><em>mixin</em> - unsigned int; Number of outputs from the blockchain to mix with (0 means no mixing).</li>
+<li><em>ring_size</em> - unsigned int; Sets ringsize to n (mixin + 1).</li>
+<li><em>unlock_time</em> - unsigned int; Number of blocks before the haven can be spent (0 to not add a lock).</li>
+<li><em>get_tx_keys</em> - boolean; (Optional) Return the transaction keys after sending.</li>
+<li><em>priority</em> - unsigned int; Set a priority for the transactions. Accepted Values are: 0-3 for: default, unimportant, normal, elevated, priority.</li>
+<li><em>do_not_relay</em> - boolean; (Optional) If true, the newly created transaction will not be relayed to the haven network. (Defaults to false)</li>
+<li><em>get_tx_hex</em> - boolean; Return the transactions as hex string after sending</li>
+<li><em>new_algorithm</em> - boolean; True to use the new transaction construction algorithm, defaults to false.</li>
+<li><em>get_tx_metadata</em> - boolean; Return list of transaction metadata needed to relay the transfer later.</li>
+</ul>
+<p>Outputs:</p>
+<ul>
+<li><em>tx_hash_list</em> - array of: string. The tx hashes of every transaction.</li>
+<li><em>tx_key_list</em> - array of: string. The transaction keys for every transaction.</li>
+<li><em>amount_list</em> - array of: integer. The amount transferred in XHV for every transaction.</li>
+<li><em>amount_asset</em> - string. The asset type for the amounts in the amount list.</li>
+<li><em>fee_list</em> - array of: integer. The amount of fees paid for every transaction.</li>
+<li><em>fee_asset</em> - string. The asset type for the fees in the fee_list.</li>
+<li><em>tx_blob_list</em> - array of: string. The tx as hex string for every transaction.</li>
+<li><em>tx_metadata_list</em> - array of: string. List of transaction metadata needed to relay the transactions later.</li>
+<li><em>multisig_txset</em> - string. The set of signing keys used in a multisig transaction (empty for non-multisig).</li>
+<li><em>unsigned_txset</em> - string. Set of unsigned tx for cold-signing purposes.</li>
+</ul>
+<p>Example:</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ curl http://127.0.0.1:12345/json_rpc -d '{"jsonrpc":"2.0","id":"0","method":"xasset_to_xusd","params":{"destinations":[{"amount":20000000000000,"address":"hvtZwRBNUNMWMaBVaLDcHbUA24YMEgLgj18bAAB9pr5fcFsGb1bXrXBJ5JJGd7Tdpa51t8uur74tBWwXJeKsruHf4znwmvJTnY"}],"account_index":0,"subaddr_indices":[0],"asset_type":"XBTC","priority":0,"ring_size":7,"get_tx_keys": true}}' -H 'Content-Type: application/json'
+{
+  "id": "0",
+  "jsonrpc": "2.0",
+  "result": {
+    "amount_asset": "XUSD",
+    "amount_list": [20000000000000],
+    "fee_asset": "XBTC",
+    "fee_list": [1189800],
+    "multisig_txset": "",
+    "tx_hash_list": ["e090b3a06c222ebba489c04e8f97a0d0f53751882d6eddbc0d53565dc9feb2cf"],
+    "tx_key_list": ["7ee71f9967edbe59b9ec04ee24975b02d59e2a7251a4245ebbe7c8eeba3ff401"],
+    "unsigned_txset": "",
+    "weight_list": [2130]
+  }
+}
+</code></pre></div></div>
+<h3 id="xasset_transfer"><strong>xasset_transfer</strong></h3>
+<p>Same as transfer_split, but sends xAsset.</p>
+<p>Alias: <em>None</em>.</p>
+<p>Inputs:</p>
+<ul>
+<li><em>destinations</em> - array of destinations to receive xAsset:
+<ul>
+<li><em>amount</em> - unsigned int; Amount in xAsset to send to each destination, in @atomic-units.</li>
+<li><em>address</em> - string; Destination public address.</li>
+</ul>
+</li>
+<li><em>asset_type</em> - string; xAsset type to send to.</li>
+<li><em>account_index</em> - unsigned int; (Optional) Transfer from this account index. (Defaults to 0)</li>
+<li><em>subaddr_indices</em> - array of unsigned int; (Optional) Transfer from this set of subaddresses. (Defaults to empty - all indices)</li>
+<li><em>mixin</em> - unsigned int; Number of outputs from the blockchain to mix with (0 means no mixing).</li>
+<li><em>ring_size</em> - unsigned int; Sets ringsize to n (mixin + 1).</li>
+<li><em>unlock_time</em> - unsigned int; Number of blocks before the haven can be spent (0 to not add a lock).</li>
+<li><em>get_tx_keys</em> - boolean; (Optional) Return the transaction keys after sending.</li>
+<li><em>priority</em> - unsigned int; Set a priority for the transactions. Accepted Values are: 0-3 for: default, unimportant, normal, elevated, priority.</li>
+<li><em>do_not_relay</em> - boolean; (Optional) If true, the newly created transaction will not be relayed to the haven network. (Defaults to false)</li>
+<li><em>get_tx_hex</em> - boolean; Return the transactions as hex string after sending</li>
+<li><em>new_algorithm</em> - boolean; True to use the new transaction construction algorithm, defaults to false.</li>
+<li><em>get_tx_metadata</em> - boolean; Return list of transaction metadata needed to relay the transfer later.</li>
+</ul>
+<p>Outputs:</p>
+<ul>
+<li><em>tx_hash_list</em> - array of: string. The tx hashes of every transaction.</li>
+<li><em>tx_key_list</em> - array of: string. The transaction keys for every transaction.</li>
+<li><em>amount_list</em> - array of: integer. The amount transferred in XHV for every transaction.</li>
+<li><em>amount_asset</em> - string. The asset type for the amounts in the amount list.</li>
+<li><em>fee_list</em> - array of: integer. The amount of fees paid for every transaction.</li>
+<li><em>fee_asset</em> - string. The asset type for the fees in the fee_list.</li>
+<li><em>tx_blob_list</em> - array of: string. The tx as hex string for every transaction.</li>
+<li><em>tx_metadata_list</em> - array of: string. List of transaction metadata needed to relay the transactions later.</li>
+<li><em>multisig_txset</em> - string. The set of signing keys used in a multisig transaction (empty for non-multisig).</li>
+<li><em>unsigned_txset</em> - string. Set of unsigned tx for cold-signing purposes.</li>
+</ul>
+<p>Example:</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ curl http://127.0.0.1:12345/json_rpc -d '{"jsonrpc":"2.0","id":"0","method":"xasset_transfer","params":{"destinations":[{"amount":90876270,"address":"hvtZvzJa8Ftf5jzckLVgbJG3GBwwgWEHiPtjtbURvfnaDsFL1hPHyzGVS3Y49AwdJwUKCDjHGfZfdDtiwDBJG21X8WPUABqEFi"}],"account_index":0,"subaddr_indices":[0],"asset_type":"XBTC","priority":0,"ring_size":7,"get_tx_keys": true}}' -H 'Content-Type: application/json'
+{
+  "id": "0",
+  "jsonrpc": "2.0",
+  "result": {
+    "amount_asset": "XBTC",
+    "amount_list": [90876270],
+    "fee_asset": "XBTC",
+    "fee_list": [637800000],
+    "multisig_txset": "",
+    "tx_hash_list": ["ea824dc65e5478de77f3fbb13d6dffaf096a97393328118242b1ac58359be272"],
+    "tx_key_list": ["11de265d7cb01cbf4326f15784896436deee4559845b7b0ad83f742a39f45803"],
+    "unsigned_txset": "",
+    "weight_list": [2126]
+  }
+}
+</code></pre></div></div>
 <h3 id="offshore_transfer"><strong>offshore_transfer</strong></h3>
 <p>Same as transfer_split, but sends xUSD between wallets.</p>
 <p>Alias: <em>None</em>.</p>
@@ -352,57 +579,6 @@
   }
 }
 </code></pre></div></div>
-<h3 id="get_offshore_balance"><strong>get_offshore_balance</strong></h3>
-<p>Return the wallet's balance in xUSD.</p>
-<p>Alias: <em>None</em>.</p>
-<p>Inputs:</p>
-<ul>
-<li><em>account_index</em> - unsigned int; Return xUSD balance for this account.</li>
-<li><em>address_indices</em> - array of unsigned int; (Optional) Return balance detail for those subaddresses.</li>
-</ul>
-<p>Outputs:</p>
-<ul>
-<li><em>balance</em> - unsigned int; The total balance in xUSD of the current haven-wallet-rpc in session.</li>
-<li><em>unlocked_balance</em> - unsigned int; Unlocked funds are those funds that are sufficiently deep enough in the Haven blockchain to be considered safe to spend.</li>
-<li><em>multisig_import_needed</em> - boolean; True if importing multisig data is needed for returning a correct balance.</li>
-<li><em>per_subaddress</em> - array of subaddress information; Balance information for each subaddress in an account.
-<ul>
-<li><em>address_index</em> - unsigned int; Index of the subaddress in the account.</li>
-<li><em>address</em> - string; Address at this index. Base58 representation of the public keys.</li>
-<li><em>balance</em> - unsigned int; Balance for the subaddress (locked or unlocked).</li>
-<li><em>unlocked_balance</em> - unsigned int; Unlocked balance for the subaddress.</li>
-<li><em>label</em> - string; Label for the subaddress.</li>
-<li><em>num_unspent_outputs</em> - unsigned int; Number of unspent outputs available for the subaddress.</li>
-</ul>
-</li>
-</ul>
-<p>Example:</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ curl http://127.0.0.1:17751/json_rpc -d '{"jsonrpc":"2.0","id":"0","method":"get_ofshore_balance","params":{"account_index":0,"address_indices":[0,1]}}' -H 'Content-Type: application/json'
-{
-  "id": "0",
-  "jsonrpc": "2.0",
-  "result": {
-    "balance": 157443303037455077,
-    "multisig_import_needed": false,
-    "per_subaddress": [{
-      "address": "55LTR8KniP4LQGJSPtbYDacR7dz8RBFnsfAKMaMuwUNYX6aQbBcovzDPyrQF9KXF9tVU6Xk3K8no1BywnJX6GvZX8yJsXvt",
-      "address_index": 0,
-      "balance": 157360317826255077,
-      "label": "Primary account",
-      "num_unspent_outputs": 5281,
-      "unlocked_balance": 157360317826255077
-    },{
-      "address": "7BnERTpvL5MbCLtj5n9No7J5oE5hHiB3tVCK5cjSvCsYWD2WRJLFuWeKTLiXo5QJqt2ZwUaLy2Vh1Ad51K7FNgqcHgjW85o",
-      "address_index": 1,
-      "balance": 59985211200000,
-      "label": "",
-      "num_unspent_outputs": 1,
-      "unlocked_balance": 59985211200000
-    }],
-    "unlocked_balance": 157443303037455077
-  }
-}
-</code></pre></div></div>
 <h3 id="get_transfers"><strong>get_transfers</strong></h3>
 <p>Returns a list of transfers.</p>
 <p>Alias: <em>None</em>.</p>
@@ -425,6 +601,7 @@
 <ul>
 <li><em>address</em> - string; Public address of the transfer.</li>
 <li><em>amount</em> - unsigned int; Amount transferred.</li>
+<li><em>asset_type</em> - string; The type of the asset for all amounts(amount, fee, per destination amount etc.) in the out and pending transfers, and type of the received amount in the in and pool transfers.</li>
 <li><em>confirmations</em> - unsigned int; Number of block mined since the block containing this transaction (or block height at which the transaction should be added to a block if not yet confirmed).</li>
 <li><em>double_spend_seen</em> - boolean; True if the key image(s) for the transfer have been seen before.</li>
 <li><em>fee</em> - unsigned int; Transaction fee for this transfer.</li>
@@ -440,7 +617,7 @@
 <li><em>suggested_confirmations_threshold</em> - unsigned int; Estimation of the confirmations needed for the transaction to be included in a block.</li>
 <li><em>timestamp</em> - unsigned int; POSIX timestamp for when this transfer was first confirmed in a block (or timestamp submission if not mined yet).</li>
 <li><em>txid</em> - string; Transaction ID for this transfer.</li>
-<li><em>type</em> - string; Transfer type: (one of "block", "in", "XUSD in", "out" and "XUSD out"</li>
+<li><em>type</em> - string; Transfer type: (one of "block", "in", "out", "pending", "failed", "pool"</li>
 <li><em>unlock_time</em> - unsigned int; Number of blocks until transfer is safely spendable.</li>
 </ul>
 </li>
@@ -450,29 +627,212 @@
 <li><em>pool</em> array of transfers (see above).</li>
 </ul>
 <p>Example:</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ curl http://127.0.0.1:17751/json_rpc -d '{"jsonrpc":"2.0","id":"0","method":"get_transfers","params":{"in":true,"account_index":1}}' -H 'Content-Type: application/json'
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ curl http://127.0.0.1:12345/json_rpc -d '{"jsonrpc":"2.0","id":"0","method":"get_transfers","params":{"out":true,"account_index":0}}' -H 'Content-Type: application/json'
 {
   "id": "0",
   "jsonrpc": "2.0",
   "result": {
-    "in": [{
-      "address": "hvxy5mxT87WWDCfsAYYEtq9K8KNbPTRaEd2nKgLgPN3qP5PpH1AaJ6TaYYec9L2hKZGpuxQ4uZ4tkFFLxjaLHVAY7QZoBmW3g2",
-      "amount": 200000000000,
-      "confirmations": 1,
+    "out": [{
+      "address": "hvtZwRBNUNMWMaBVaLDcHbUA24YMEgLgj18bAAB9pr5fcFsGb1bXrXBJ5JJGd7Tdpa51t8uur74tBWwXJeKsruHf4znwmvJTnY",
+      "amount": 90876270,
+      "asset_type": "XBTC",
+      "confirmations": 3,
+      "destinations": [{
+        "address": "hvtZvzJa8Ftf5jzckLVgbJG3GBwwgWEHiPtjtbURvfnaDsFL1hPHyzGVS3Y49AwdJwUKCDjHGfZfdDtiwDBJG21X8WPUABqEFi",
+        "amount": 90876270
+      }],
       "double_spend_seen": false,
-      "fee": 21650200000,
-      "height": 153624,
+      "fee": 637800000,
+      "height": 6586,
+      "locked": true,
+      "note": "",
+      "payment_id": "1dc3dbbcd98fcc43",
+      "subaddr_index": {
+        "major": 0,
+        "minor": 0
+      },
+      "subaddr_indices": [{
+        "major": 0,
+        "minor": 0
+      }],
+      "suggested_confirmations_threshold": 10,
+      "timestamp": 1616156920,
+      "txid": "ea824dc65e5478de77f3fbb13d6dffaf096a97393328118242b1ac58359be272",
+      "type": "out",
+      "unlock_time": 10
+    },{
+      "address": "hvtZwRBNUNMWMaBVaLDcHbUA24YMEgLgj18bAAB9pr5fcFsGb1bXrXBJ5JJGd7Tdpa51t8uur74tBWwXJeKsruHf4znwmvJTnY",
+      "amount": 346600000,
+      "asset_type": "XBTC",
+      "confirmations": 6,
+      "destinations": [{
+        "address": "hvtZwRBNUNMWMaBVaLDcHbUA24YMEgLgj18bAAB9pr5fcFsGb1bXrXBJ5JJGd7Tdpa51t8uur74tBWwXJeKsruHf4znwmvJTnY",
+        "amount": 346600000
+      }],
+      "double_spend_seen": false,
+      "fee": 1189800,
+      "height": 6583,
+      "locked": true,
       "note": "",
       "payment_id": "0000000000000000",
       "subaddr_index": {
-        "major": 1,
+        "major": 0,
         "minor": 0
       },
-      "suggested_confirmations_threshold": 1,
-      "timestamp": 1535918400,
-      "txid": "c36258a276018c3a4bc1f195a7fb530f50cd63a4fa765fb7c6f7f49fc051762a",
-      "type": "in",
+      "subaddr_indices": [{
+        "major": 0,
+        "minor": 0
+      }],
+      "suggested_confirmations_threshold": 10,
+      "timestamp": 1616156501,
+      "txid": "e090b3a06c222ebba489c04e8f97a0d0f53751882d6eddbc0d53565dc9feb2cf",
+      "type": "out",
+      "unlock_time": 10
+    },{
+      "address": "hvtZwRBNUNMWMaBVaLDcHbUA24YMEgLgj18bAAB9pr5fcFsGb1bXrXBJ5JJGd7Tdpa51t8uur74tBWwXJeKsruHf4znwmvJTnY",
+      "amount": 20000000000000,
+      "asset_type": "XUSD",
+      "confirmations": 21,
+      "destinations": [{
+        "address": "hvtZwRBNUNMWMaBVaLDcHbUA24YMEgLgj18bAAB9pr5fcFsGb1bXrXBJ5JJGd7Tdpa51t8uur74tBWwXJeKsruHf4znwmvJTnY",
+        "amount": 20000000000000
+      }],
+      "double_spend_seen": false,
+      "fee": 60638400000,
+      "height": 6568,
+      "locked": false,
+      "note": "",
+      "payment_id": "0000000000000000",
+      "subaddr_index": {
+        "major": 0,
+        "minor": 0
+      },
+      "subaddr_indices": [{
+        "major": 0,
+        "minor": 0
+      }],
+      "suggested_confirmations_threshold": 10,
+      "timestamp": 1616155386,
+      "txid": "7d12122366b7469a7c42ea4ee1af730c41f913c9700d5393f5cb76bc99d5034e",
+      "type": "out",
+      "unlock_time": 10
+    }]
+  }
+}
+</code></pre></div></div>
+<h3 id="get_payments"><strong>get_payments</strong></h3>
+
+<p>Get a list of incoming payments using a given payment id.</p>
+
+<p>Alias: <em>None</em>.</p>
+
+<p>Inputs:</p>
+
+<ul>
+  <li><em>payment_id</em> - string; Payment ID used to find the payments (16 characters hex).</li>
+</ul>
+
+<p>Outputs:</p>
+
+<ul>
+  <li><em>payments</em> - list of:
+    <ul>
+      <li><em>payment_id</em> - string; Payment ID matching the input parameter.</li>
+      <li><em>tx_hash</em> - string; Transaction hash used as the transaction ID.</li>
+      <li><em>amount</em> - unsigned int; Amount for this payment.</li>
+      <li><em>amount_asset</em> - string; The asset type for the amount for this payment.</li>
+      <li><em>block_height</em> - unsigned int; Height of the block that first confirmed this payment.</li>
+      <li><em>unlock_time</em> - unsigned int; Time (in block height) until this payment is safe to spend.</li>
+      <li><em>subaddr_index</em> - subaddress index:
+        <ul>
+          <li><em>major</em> - unsigned int; Account index for the subaddress.</li>
+          <li><em>minor</em> - unsigned int; Index of the subaddress in the account.</li>
+        </ul>
+      </li>
+      <li><em>address</em> - string; Address receiving the payment; Base58 representation of the public keys.</li>
+    </ul>
+  </li>
+</ul>
+
+<p>Example:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ curl http://127.0.0.1:12345/json_rpc -d '{"jsonrpc":"2.0","id":"0","method":"getpayments","params":{"payment_id":"a45de6072cfd4877"}}' -H 'Content-Type: application/json'
+{
+  "id": "0",
+  "jsonrpc": "2.0",
+  "result": {
+    "payments": [{
+      "address": "hvtZwRBNUNMWMaBVaLDcHbUA24YMEgLgj18bAAB9pr5fcFsGb1bXrXBJ5JJGd7Tdpa51t8uur74tBWwXJeKsruHf4znwmvJTnY",
+      "amount": 60000000000000,
+      "amount_asset": "XUSD",
+      "block_height": 5900,
+      "locked": false,
+      "payment_id": "a45de6072cfd4877",
+      "subaddr_index": {
+        "major": 0,
+        "minor": 0
+      },
+      "tx_hash": "d1e2d5f99d7ef459a15835c935849fe751796d70ef8046d376f8742710832c70",
       "unlock_time": 0
+    }]
+  }
+}
+</code></pre></div></div>
+<h3 id="get_bulk_payments"><strong>get_bulk_payments</strong></h3>
+
+<p>Get a list of incoming payments using a given payment id, or a list of payments ids, from a given height. This method is the preferred method over <code class="highlighter-rouge">get_payments</code> because it has the same functionality but is more extendable. Either is fine for looking up transactions by a single payment ID.</p>
+
+<p>Alias: <em>None</em>.</p>
+
+<p>Inputs:</p>
+
+<ul>
+  <li><em>payment_ids</em> - array of: string; Payment IDs used to find the payments (16 characters hex).</li>
+  <li><em>min_block_height</em> - unsigned int; The block height at which to start looking for payments.</li>
+</ul>
+
+<p>Outputs:</p>
+
+<ul>
+  <li><em>payments</em> - list of:
+    <ul>
+      <li><em>payment_id</em> - string; Payment ID matching one of the input IDs.</li>
+      <li><em>tx_hash</em> - string; Transaction hash used as the transaction ID.</li>
+      <li><em>amount</em> - unsigned int; Amount for this payment.</li>
+      <li><em>amount_asset</em> - string; The asset type for the amount for this payment.</li>
+      <li><em>block_height</em> - unsigned int; Height of the block that first confirmed this payment.</li>
+      <li><em>unlock_time</em> - unsigned int; Time (in block height) until this payment is safe to spend.</li>
+      <li><em>subaddr_index</em> - subaddress index:
+        <ul>
+          <li><em>major</em> - unsigned int; Account index for the subaddress.</li>
+          <li><em>minor</em> - unsigned int; Index of the subaddress in the account.</li>
+        </ul>
+      </li>
+      <li><em>address</em> - string; Address receiving the payment; Base58 representation of the public keys.</li>
+    </ul>
+  </li>
+</ul>
+
+<p>Example:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ curl http://127.0.0.1:12345/json_rpc -d '{"jsonrpc":"2.0","id":"0","method":"get_bulk_payments","params":{"payment_ids"["57afc77ce7554812"],"min_block_height":"100"}}' -H 'Content-Type: application/json'
+{
+  "id": "0",
+  "jsonrpc": "2.0",
+  "result": {
+    "payments": [{
+      "address": "hvtZwRBNUNMWMaBVaLDcHbUA24YMEgLgj18bAAB9pr5fcFsGb1bXrXBJ5JJGd7Tdpa51t8uur74tBWwXJeKsruHf4znwmvJTnY",
+      "amount": 848500000,
+      "amount_asset": "XBTC",
+      "block_height": 5897,
+      "locked": false,
+      "payment_id": "57afc77ce7554812",
+      "subaddr_index": {
+        "major": 0,
+        "minor": 0
+      },
+      "tx_hash": "99dc60cd1ab4d7ef222ea7c1c2075433310e15a8a701d86264ec44cf81428f51",
+      "unlock_time": 5907
     }]
   }
 }
