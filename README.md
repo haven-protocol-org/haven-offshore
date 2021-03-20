@@ -185,10 +185,10 @@ application.
     cd haven-offshore
     ```
 
-* If you would like a specific [version/tag](https://github.com/haven-protocol-org/haven-offshore/tags), do a git checkout for that version. eg. 'v1.0.0'. If you don't care about the version and just want binaries from master, skip this step:
+* If you would like a specific [version/tag](https://github.com/haven-protocol-org/haven-offshore/tags), do a git checkout for that version. eg. 'v1.2.9m'. If you don't care about the version and just want binaries from master, skip this step:
 	
     ```bash
-    git checkout v1.0.0
+    git checkout v1.2.9m
     ```
 
 * If you are on a 64-bit system, run:
