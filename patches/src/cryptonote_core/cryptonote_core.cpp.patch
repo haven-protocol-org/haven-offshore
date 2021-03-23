@@ -1,8 +1,16 @@
 diff --git a/src/cryptonote_core/cryptonote_core.cpp b/src/cryptonote_core/cryptonote_core.cpp
-index 5aed708d5..fa15d91f6 100644
+index 5aed708d5..fe4c6ebd0 100644
 --- a/src/cryptonote_core/cryptonote_core.cpp
 +++ b/src/cryptonote_core/cryptonote_core.cpp
-@@ -166,8 +166,8 @@ namespace cryptonote
+@@ -54,6 +54,7 @@ using namespace epee;
+ #include "common/notify.h"
+ #include "hardforks/hardforks.h"
+ #include "version.h"
++#include "offshore/asset_types.h"
+ 
+ #undef MONERO_DEFAULT_LOG_CATEGORY
+ #define MONERO_DEFAULT_LOG_CATEGORY "cn"
+@@ -166,8 +167,8 @@ namespace cryptonote
    };
    static const command_line::arg_descriptor<std::string> arg_check_updates = {
      "check-updates"
@@ -13,7 +21,7 @@ index 5aed708d5..fa15d91f6 100644
    };
    static const command_line::arg_descriptor<bool> arg_fluffy_blocks  = {
      "fluffy-blocks"
-@@ -486,8 +486,8 @@ namespace cryptonote
+@@ -486,8 +487,8 @@ namespace cryptonote
        if (boost::filesystem::exists(old_files / "blockchain.bin"))
        {
          MWARNING("Found old-style blockchain.bin in " << old_files.string());
@@ -24,7 +32,7 @@ index 5aed708d5..fa15d91f6 100644
          MWARNING("convert your existing blockchain.bin to the new format. See README.md for instructions.");
          return false;
        }
-@@ -502,7 +502,14 @@ namespace cryptonote
+@@ -502,7 +503,14 @@ namespace cryptonote
        return false;
      }
  
@@ -39,7 +47,7 @@ index 5aed708d5..fa15d91f6 100644
      MGINFO("Loading blockchain from folder " << folder.string() << " ...");
  
      const std::string filename = folder.string();
-@@ -806,7 +813,7 @@ namespace cryptonote
+@@ -806,7 +814,7 @@ namespace cryptonote
      bad_semantics_txes_lock.unlock();
  
      uint8_t version = m_blockchain_storage.get_current_hard_fork_version();
@@ -48,7 +56,7 @@ index 5aed708d5..fa15d91f6 100644
      if (tx.version == 0 || tx.version > max_tx_version)
      {
        // v2 is the latest one we know
-@@ -865,6 +872,79 @@ namespace cryptonote
+@@ -865,6 +873,90 @@ namespace cryptonote
      std::vector<const rct::rctSig*> rvv;
      for (size_t n = 0; n < tx_info.size(); ++n)
      {
@@ -74,6 +82,17 @@ index 5aed708d5..fa15d91f6 100644
 +          // Split the TX extra information into the 2 currencies
 +          strSource = offshore_data.substr(0,pos);
 +          strDest = offshore_data.substr(pos+1);
++
++          // check both strSource and strDest are supported.
++          if (std::find(offshore::ASSET_TYPES.begin(), offshore::ASSET_TYPES.end(), strSource) == offshore::ASSET_TYPES.end()) {
++            MERROR_VER("Source Asset type " << strSource << " is not supported! Rejecting..");
++            return false;
++          }
++          if (std::find(offshore::ASSET_TYPES.begin(), offshore::ASSET_TYPES.end(), strDest) == offshore::ASSET_TYPES.end()) {
++            MERROR_VER("Destination Asset type " << strDest << " is not supported! Rejecting..");
++            return false;
++          }
++
 +          if (strSource == "XHV") {
 +            offshore = true;
 +          } else if (strDest == "XHV") {
@@ -92,15 +111,15 @@ index 5aed708d5..fa15d91f6 100644
 +          // Set the bool flags
 +          if ((offshore_data.at(0) > 'A') && (offshore_data.at(1) > 'A')) {
 +            offshore_transfer = true;
-+	    strSource = strDest = "XUSD";
++	          strSource = strDest = "XUSD";
 +          } else if (offshore_data.at(0) > 'A') {
 +            onshore = true;
-+	    strSource = "XUSD";
-+	    strDest = "XHV";
++            strSource = "XUSD";
++            strDest = "XHV";
 +          } else {
 +            offshore = true;
-+	    strSource = "XHV";
-+	    strDest = "XUSD";
++            strSource = "XHV";
++            strDest = "XUSD";
 +          }
 +        }
 +	
@@ -128,7 +147,7 @@ index 5aed708d5..fa15d91f6 100644
        if (!check_tx_semantic(*tx_info[n].tx, keeped_by_block))
        {
          set_semantics_failed(tx_info[n].tx_hash);
-@@ -885,7 +965,7 @@ namespace cryptonote
+@@ -885,7 +977,7 @@ namespace cryptonote
            tx_info[n].result = false;
            break;
          case rct::RCTTypeSimple:
@@ -137,7 +156,7 @@ index 5aed708d5..fa15d91f6 100644
            {
              MERROR_VER("rct signature semantics check failed");
              set_semantics_failed(tx_info[n].tx_hash);
-@@ -906,6 +986,8 @@ namespace cryptonote
+@@ -906,6 +998,8 @@ namespace cryptonote
            break;
          case rct::RCTTypeBulletproof:
          case rct::RCTTypeBulletproof2:
@@ -146,7 +165,7 @@ index 5aed708d5..fa15d91f6 100644
            if (!is_canonical_bulletproof_layout(rv.p.bulletproofs))
            {
              MERROR_VER("Bulletproof does not have canonical form");
-@@ -924,18 +1006,80 @@ namespace cryptonote
+@@ -924,18 +1018,80 @@ namespace cryptonote
            break;
        }
      }
@@ -174,11 +193,11 @@ index 5aed708d5..fa15d91f6 100644
 +        std::string strDest = "XHV";
 +        offshore::pricing_record pr;
 +        std::string offshore_data(tx_info[n].tx->offshore_data.begin(), tx_info[n].tx->offshore_data.end());
-+	if (offshore_data.size() && offshore_data != "XHV-XHV") {
++	      if (offshore_data.size() && offshore_data != "XHV-XHV") {
 +        
 +          // New xAsset-style of offshore_data
 +          int pos = offshore_data.find("-");
-+	  if (pos != std::string::npos) {
++          if (pos != std::string::npos) {
 +            // Split the TX extra information into the 2 currencies
 +            strSource = offshore_data.substr(0,pos);
 +            strDest = offshore_data.substr(pos+1);
@@ -198,18 +217,18 @@ index 5aed708d5..fa15d91f6 100644
 +          } else {
 +            // Pre-xAsset format of offshore_data
 +            // Set the bool flags
-+	    if ((offshore_data.at(0) > 'A') && (offshore_data.at(1) > 'A')) {
-+	      offshore_transfer = true;
-+	      strSource = strDest = "XUSD";
-+	    } else if (offshore_data.at(0) > 'A') {
-+	      onshore = true;
-+	      strSource = "XUSD";
-+	      strDest = "XHV";
-+	    } else {
-+	      offshore = true;
-+	      strSource = "XHV";
-+	      strDest = "XUSD";
-+	    }
++            if ((offshore_data.at(0) > 'A') && (offshore_data.at(1) > 'A')) {
++              offshore_transfer = true;
++              strSource = strDest = "XUSD";
++            } else if (offshore_data.at(0) > 'A') {
++              onshore = true;
++              strSource = "XUSD";
++              strDest = "XHV";
++            } else {
++              offshore = true;
++              strSource = "XHV";
++              strDest = "XUSD";
++            }
 +          }
 +	
 +          // Get the correct pricing record here, given the height
@@ -232,7 +251,7 @@ index 5aed708d5..fa15d91f6 100644
          {
            set_semantics_failed(tx_info[n].tx_hash);
            tx_info[n].tvc.m_verifivation_failed = true;
-@@ -943,7 +1087,6 @@ namespace cryptonote
+@@ -943,7 +1099,6 @@ namespace cryptonote
          }
        }
      }
@@ -240,7 +259,7 @@ index 5aed708d5..fa15d91f6 100644
      return ret;
    }
    //-----------------------------------------------------------------------------------------------
-@@ -1095,7 +1238,7 @@ namespace cryptonote
+@@ -1095,7 +1250,7 @@ namespace cryptonote
      {
        uint64_t amount_in = 0;
        get_inputs_money_amount(tx, amount_in);
@@ -249,7 +268,7 @@ index 5aed708d5..fa15d91f6 100644
  
        if(amount_in <= amount_out)
        {
-@@ -1176,7 +1319,7 @@ namespace cryptonote
+@@ -1176,7 +1331,7 @@ namespace cryptonote
          [this, &emission_amount, &total_fee_amount](uint64_t, const crypto::hash& hash, const block& b){
        std::vector<transaction> txs;
        std::vector<crypto::hash> missed_txs;
@@ -258,7 +277,7 @@ index 5aed708d5..fa15d91f6 100644
        this->get_transactions(b.tx_hashes, txs, missed_txs);      
        uint64_t tx_fee_amount = 0;
        for(const auto& tx: txs)
-@@ -1196,11 +1339,33 @@ namespace cryptonote
+@@ -1196,11 +1351,33 @@ namespace cryptonote
    bool core::check_tx_inputs_keyimages_diff(const transaction& tx) const
    {
      std::unordered_set<crypto::key_image> ki;
@@ -297,7 +316,7 @@ index 5aed708d5..fa15d91f6 100644
      }
      return true;
    }
-@@ -1208,14 +1373,36 @@ namespace cryptonote
+@@ -1208,14 +1385,36 @@ namespace cryptonote
    bool core::check_tx_inputs_ring_members_diff(const transaction& tx) const
    {
      const uint8_t version = m_blockchain_storage.get_current_hard_fork_version();
@@ -342,7 +361,7 @@ index 5aed708d5..fa15d91f6 100644
        }
      }
      return true;
-@@ -1224,11 +1411,37 @@ namespace cryptonote
+@@ -1224,11 +1423,37 @@ namespace cryptonote
    bool core::check_tx_inputs_keyimages_domain(const transaction& tx) const
    {
      std::unordered_set<crypto::key_image> ki;
@@ -385,7 +404,7 @@ index 5aed708d5..fa15d91f6 100644
      }
      return true;
    }
-@@ -1640,7 +1853,7 @@ namespace cryptonote
+@@ -1640,7 +1865,7 @@ namespace cryptonote
      {
        std::string main_message;
        if (m_offline)
@@ -394,7 +413,7 @@ index 5aed708d5..fa15d91f6 100644
        else
          main_message = "The daemon will start synchronizing with the network. This may take a long time to complete.";
        MGINFO_YELLOW(ENDL << "**********************************************************************" << ENDL
-@@ -1687,7 +1900,7 @@ namespace cryptonote
+@@ -1687,7 +1912,7 @@ namespace cryptonote
    //-----------------------------------------------------------------------------------------------
    bool core::check_updates()
    {
@@ -403,7 +422,7 @@ index 5aed708d5..fa15d91f6 100644
  #ifdef BUILD_TAG
      static const char buildtag[] = BOOST_PP_STRINGIZE(BUILD_TAG);
      static const char subdir[] = "cli"; // because it can never be simple
-@@ -1872,7 +2085,7 @@ namespace cryptonote
+@@ -1872,7 +2097,7 @@ namespace cryptonote
      const time_t now = time(NULL);
      const std::vector<time_t> timestamps = m_blockchain_storage.get_last_block_timestamps(max_blocks_checked);
  
@@ -412,7 +431,7 @@ index 5aed708d5..fa15d91f6 100644
      for (size_t n = 0; n < sizeof(seconds)/sizeof(seconds[0]); ++n)
      {
        unsigned int b = 0;
-@@ -1882,8 +2095,8 @@ namespace cryptonote
+@@ -1882,8 +2107,8 @@ namespace cryptonote
        MDEBUG("blocks in the last " << seconds[n] / 60 << " minutes: " << b << " (probability " << p << ")");
        if (p < threshold)
        {

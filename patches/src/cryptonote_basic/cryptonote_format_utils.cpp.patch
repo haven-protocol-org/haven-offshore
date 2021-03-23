@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_basic/cryptonote_format_utils.cpp b/src/cryptonote_basic/cryptonote_format_utils.cpp
-index cb6d1ec91..36527faa1 100644
+index cb6d1ec91..d0ba1a790 100644
 --- a/src/cryptonote_basic/cryptonote_format_utils.cpp
 +++ b/src/cryptonote_basic/cryptonote_format_utils.cpp
 @@ -169,12 +169,56 @@ namespace cryptonote
@@ -103,7 +103,15 @@ index cb6d1ec91..36527faa1 100644
      extra = tx.vin.size() * (ring_size * (1 + 1) * 32 + 32 /* cc */);
      weight += extra;
  
-@@ -503,8 +561,8 @@ namespace cryptonote
+@@ -496,15 +554,15 @@ namespace cryptonote
+   {
+     if (tx.version > 1)
+     {
+-      fee = tx.rct_signatures.txnFee;
++      fee = tx.rct_signatures.txnFee + tx.rct_signatures.txnOffshoreFee;
+       return true;
+     }
+     uint64_t amount_in = 0;
      uint64_t amount_out = 0;
      for(auto& in: tx.vin)
      {
@@ -141,7 +149,7 @@ index cb6d1ec91..36527faa1 100644
  
      // if not empty, someone added a new type and did not add a case above
      if (!tx_extra_fields.empty())
-@@ -657,6 +716,20 @@ namespace cryptonote
+@@ -657,6 +717,20 @@ namespace cryptonote
      return get_tx_pub_key_from_extra(tx.extra, pk_index);
    }
    //---------------------------------------------------------------
@@ -162,7 +170,7 @@ index cb6d1ec91..36527faa1 100644
    bool add_tx_pub_key_to_extra(transaction& tx, const crypto::public_key& tx_pub_key)
    {
      return add_tx_pub_key_to_extra(tx.extra, tx_pub_key);
-@@ -725,6 +791,30 @@ namespace cryptonote
+@@ -725,6 +799,30 @@ namespace cryptonote
      return true;
    }
    //---------------------------------------------------------------
@@ -193,7 +201,7 @@ index cb6d1ec91..36527faa1 100644
    bool remove_field_from_tx_extra(std::vector<uint8_t>& tx_extra, const std::type_info &type)
    {
      if (tx_extra.empty())
-@@ -814,10 +892,12 @@ namespace cryptonote
+@@ -814,10 +912,12 @@ namespace cryptonote
    {
      for(const auto& in: tx.vin)
      {
@@ -210,7 +218,7 @@ index cb6d1ec91..36527faa1 100644
      }
      return true;
    }
-@@ -826,17 +906,23 @@ namespace cryptonote
+@@ -826,17 +926,23 @@ namespace cryptonote
    {
      for(const tx_out& out: tx.vout)
      {
@@ -239,7 +247,7 @@ index cb6d1ec91..36527faa1 100644
      }
      return true;
    }
-@@ -849,12 +935,41 @@ namespace cryptonote
+@@ -849,12 +955,41 @@ namespace cryptonote
    bool check_inputs_overflow(const transaction& tx)
    {
      uint64_t money = 0;
@@ -287,7 +295,7 @@ index cb6d1ec91..36527faa1 100644
      }
      return true;
    }
-@@ -871,11 +986,21 @@ namespace cryptonote
+@@ -871,11 +1006,21 @@ namespace cryptonote
      return true;
    }
    //---------------------------------------------------------------
@@ -313,7 +321,7 @@ index cb6d1ec91..36527faa1 100644
      return outputs_amount;
    }
    //---------------------------------------------------------------
-@@ -996,15 +1121,15 @@ namespace cryptonote
+@@ -996,15 +1141,15 @@ namespace cryptonote
      switch (decimal_point)
      {
        case 12:
@@ -334,7 +342,7 @@ index cb6d1ec91..36527faa1 100644
        default:
          ASSERT_MES_AND_THROW("Invalid decimal point specification: " << decimal_point);
      }
-@@ -1038,6 +1163,20 @@ namespace cryptonote
+@@ -1038,6 +1183,20 @@ namespace cryptonote
      return s;
    }
    //---------------------------------------------------------------
@@ -355,7 +363,7 @@ index cb6d1ec91..36527faa1 100644
    crypto::hash get_blob_hash(const blobdata& blob)
    {
      crypto::hash h = null_hash;
-@@ -1082,7 +1221,12 @@ namespace cryptonote
+@@ -1082,7 +1241,12 @@ namespace cryptonote
        binary_archive<true> ba(ss);
        const size_t inputs = t.vin.size();
        const size_t outputs = t.vout.size();
@@ -369,7 +377,7 @@ index cb6d1ec91..36527faa1 100644
        bool r = tt.rct_signatures.p.serialize_rctsig_prunable(ba, t.rct_signatures.type, inputs, outputs, mixin);
        CHECK_AND_ASSERT_MES(r, false, "Failed to serialize rct signatures prunable");
        cryptonote::get_blob_hash(ss.str(), res);
-@@ -1421,7 +1565,8 @@ namespace cryptonote
+@@ -1421,7 +1585,8 @@ namespace cryptonote
    crypto::secret_key encrypt_key(crypto::secret_key key, const epee::wipeable_string &passphrase)
    {
      crypto::hash hash;
@@ -379,7 +387,7 @@ index cb6d1ec91..36527faa1 100644
      sc_add((unsigned char*)key.data, (const unsigned char*)key.data, (const unsigned char*)hash.data);
      return key;
    }
-@@ -1429,7 +1574,8 @@ namespace cryptonote
+@@ -1429,7 +1594,8 @@ namespace cryptonote
    crypto::secret_key decrypt_key(crypto::secret_key key, const epee::wipeable_string &passphrase)
    {
      crypto::hash hash;

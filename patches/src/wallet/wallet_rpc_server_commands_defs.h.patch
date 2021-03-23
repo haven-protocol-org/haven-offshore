@@ -1,5 +1,5 @@
 diff --git a/src/wallet/wallet_rpc_server_commands_defs.h b/src/wallet/wallet_rpc_server_commands_defs.h
-index 507ff4f6c..53bb3b1a5 100644
+index 507ff4f6c..ccab5cd4c 100644
 --- a/src/wallet/wallet_rpc_server_commands_defs.h
 +++ b/src/wallet/wallet_rpc_server_commands_defs.h
 @@ -65,11 +65,13 @@ namespace wallet_rpc
@@ -29,7 +29,7 @@ index 507ff4f6c..53bb3b1a5 100644
        END_KV_SERIALIZE_MAP()
      };
      typedef epee::misc_utils::struct_init<request_t> request;
-@@ -467,6 +471,7 @@ namespace wallet_rpc
+@@ -467,10 +471,12 @@ namespace wallet_rpc
        uint64_t ring_size;
        uint64_t unlock_time;
        std::string payment_id;
@@ -37,31 +37,39 @@ index 507ff4f6c..53bb3b1a5 100644
        bool get_tx_key;
        bool do_not_relay;
        bool get_tx_hex;
-@@ -480,6 +485,7 @@ namespace wallet_rpc
+       bool get_tx_metadata;
++      std::string asset_type;
+ 
+       BEGIN_KV_SERIALIZE_MAP()
+         KV_SERIALIZE(destinations)
+@@ -480,6 +486,8 @@ namespace wallet_rpc
          KV_SERIALIZE_OPT(ring_size, (uint64_t)0)
          KV_SERIALIZE(unlock_time)
          KV_SERIALIZE(payment_id)
 +        KV_SERIALIZE(memo)
++        KV_SERIALIZE(asset_type)
          KV_SERIALIZE(get_tx_key)
          KV_SERIALIZE_OPT(do_not_relay, false)
          KV_SERIALIZE_OPT(get_tx_hex, false)
-@@ -493,6 +499,7 @@ namespace wallet_rpc
+@@ -493,6 +501,8 @@ namespace wallet_rpc
        std::string tx_hash;
        std::string tx_key;
        uint64_t amount;
-+      uint64_t amount_usd;
++      std::string amount_asset;
++      std::string fee_asset;
        uint64_t fee;
        uint64_t weight;
        std::string tx_blob;
-@@ -504,6 +511,7 @@ namespace wallet_rpc
+@@ -504,6 +514,8 @@ namespace wallet_rpc
          KV_SERIALIZE(tx_hash)
          KV_SERIALIZE(tx_key)
          KV_SERIALIZE(amount)
-+        KV_SERIALIZE(amount_usd)
++        KV_SERIALIZE(amount_asset)
++        KV_SERIALIZE(fee_asset)
          KV_SERIALIZE(fee)
          KV_SERIALIZE(weight)
          KV_SERIALIZE(tx_blob)
-@@ -526,6 +534,7 @@ namespace wallet_rpc
+@@ -526,10 +538,12 @@ namespace wallet_rpc
        uint64_t ring_size;
        uint64_t unlock_time;
        std::string payment_id;
@@ -69,15 +77,40 @@ index 507ff4f6c..53bb3b1a5 100644
        bool get_tx_keys;
        bool do_not_relay;
        bool get_tx_hex;
-@@ -539,6 +548,7 @@ namespace wallet_rpc
+       bool get_tx_metadata;
++      std::string asset_type;
+ 
+       BEGIN_KV_SERIALIZE_MAP()
+         KV_SERIALIZE(destinations)
+@@ -539,6 +553,8 @@ namespace wallet_rpc
          KV_SERIALIZE_OPT(ring_size, (uint64_t)0)
          KV_SERIALIZE(unlock_time)
          KV_SERIALIZE(payment_id)
 +        KV_SERIALIZE(memo)
++        KV_SERIALIZE(asset_type)
          KV_SERIALIZE(get_tx_keys)
          KV_SERIALIZE_OPT(do_not_relay, false)
          KV_SERIALIZE_OPT(get_tx_hex, false)
-@@ -561,6 +571,7 @@ namespace wallet_rpc
+@@ -561,7 +577,9 @@ namespace wallet_rpc
+       std::list<std::string> tx_hash_list;
+       std::list<std::string> tx_key_list;
+       std::list<uint64_t> amount_list;
++      std::string amount_asset;
+       std::list<uint64_t> fee_list;
++      std::string fee_asset;
+       std::list<uint64_t> weight_list;
+       std::list<std::string> tx_blob_list;
+       std::list<std::string> tx_metadata_list;
+@@ -572,6 +590,8 @@ namespace wallet_rpc
+         KV_SERIALIZE(tx_hash_list)
+         KV_SERIALIZE(tx_key_list)
+         KV_SERIALIZE(amount_list)
++        KV_SERIALIZE(amount_asset)
++        KV_SERIALIZE(fee_asset)
+         KV_SERIALIZE(fee_list)
+         KV_SERIALIZE(weight_list)
+         KV_SERIALIZE(tx_blob_list)
+@@ -736,6 +756,7 @@ namespace wallet_rpc
        std::list<std::string> tx_hash_list;
        std::list<std::string> tx_key_list;
        std::list<uint64_t> amount_list;
@@ -85,7 +118,7 @@ index 507ff4f6c..53bb3b1a5 100644
        std::list<uint64_t> fee_list;
        std::list<uint64_t> weight_list;
        std::list<std::string> tx_blob_list;
-@@ -572,6 +583,7 @@ namespace wallet_rpc
+@@ -747,6 +768,7 @@ namespace wallet_rpc
          KV_SERIALIZE(tx_hash_list)
          KV_SERIALIZE(tx_key_list)
          KV_SERIALIZE(amount_list)
@@ -93,7 +126,7 @@ index 507ff4f6c..53bb3b1a5 100644
          KV_SERIALIZE(fee_list)
          KV_SERIALIZE(weight_list)
          KV_SERIALIZE(tx_blob_list)
-@@ -736,6 +748,7 @@ namespace wallet_rpc
+@@ -810,6 +832,7 @@ namespace wallet_rpc
        std::list<std::string> tx_hash_list;
        std::list<std::string> tx_key_list;
        std::list<uint64_t> amount_list;
@@ -101,7 +134,7 @@ index 507ff4f6c..53bb3b1a5 100644
        std::list<uint64_t> fee_list;
        std::list<uint64_t> weight_list;
        std::list<std::string> tx_blob_list;
-@@ -747,6 +760,7 @@ namespace wallet_rpc
+@@ -821,6 +844,7 @@ namespace wallet_rpc
          KV_SERIALIZE(tx_hash_list)
          KV_SERIALIZE(tx_key_list)
          KV_SERIALIZE(amount_list)
@@ -109,23 +142,7 @@ index 507ff4f6c..53bb3b1a5 100644
          KV_SERIALIZE(fee_list)
          KV_SERIALIZE(weight_list)
          KV_SERIALIZE(tx_blob_list)
-@@ -810,6 +824,7 @@ namespace wallet_rpc
-       std::list<std::string> tx_hash_list;
-       std::list<std::string> tx_key_list;
-       std::list<uint64_t> amount_list;
-+      std::list<uint64_t> amount_usd_list;
-       std::list<uint64_t> fee_list;
-       std::list<uint64_t> weight_list;
-       std::list<std::string> tx_blob_list;
-@@ -821,6 +836,7 @@ namespace wallet_rpc
-         KV_SERIALIZE(tx_hash_list)
-         KV_SERIALIZE(tx_key_list)
-         KV_SERIALIZE(amount_list)
-+        KV_SERIALIZE(amount_usd_list)
-         KV_SERIALIZE(fee_list)
-         KV_SERIALIZE(weight_list)
-         KV_SERIALIZE(tx_blob_list)
-@@ -869,6 +885,7 @@ namespace wallet_rpc
+@@ -869,6 +893,7 @@ namespace wallet_rpc
        std::string tx_hash;
        std::string tx_key;
        uint64_t amount;
@@ -133,7 +150,7 @@ index 507ff4f6c..53bb3b1a5 100644
        uint64_t fee;
        uint64_t weight;
        std::string tx_blob;
-@@ -880,6 +897,7 @@ namespace wallet_rpc
+@@ -880,6 +905,7 @@ namespace wallet_rpc
          KV_SERIALIZE(tx_hash)
          KV_SERIALIZE(tx_key)
          KV_SERIALIZE(amount)
@@ -141,7 +158,64 @@ index 507ff4f6c..53bb3b1a5 100644
          KV_SERIALIZE(fee)
          KV_SERIALIZE(weight)
          KV_SERIALIZE(tx_blob)
-@@ -1301,12 +1319,14 @@ namespace wallet_rpc
+@@ -935,6 +961,7 @@ namespace wallet_rpc
+   {
+     std::string payment_id;
+     std::string tx_hash;
++    std::string type;
+     uint64_t amount;
+     uint64_t block_height;
+     uint64_t unlock_time;
+@@ -946,6 +973,7 @@ namespace wallet_rpc
+       KV_SERIALIZE(payment_id)
+       KV_SERIALIZE(tx_hash)
+       KV_SERIALIZE(amount)
++      KV_SERIALIZE(type)
+       KV_SERIALIZE(block_height)
+       KV_SERIALIZE(unlock_time)
+       KV_SERIALIZE(locked)
+@@ -959,9 +987,11 @@ namespace wallet_rpc
+     struct request_t
+     {
+       std::string payment_id;
++      std::vector<std::string> types;
+ 
+       BEGIN_KV_SERIALIZE_MAP()
+         KV_SERIALIZE(payment_id)
++	KV_SERIALIZE(types)
+       END_KV_SERIALIZE_MAP()
+     };
+     typedef epee::misc_utils::struct_init<request_t> request;
+@@ -983,10 +1013,12 @@ namespace wallet_rpc
+     {
+       std::vector<std::string> payment_ids;
+       uint64_t min_block_height;
++      std::vector<std::string> types;
+ 
+       BEGIN_KV_SERIALIZE_MAP()
+         KV_SERIALIZE(payment_ids)
+         KV_SERIALIZE(min_block_height)
++	KV_SERIALIZE(types)
+       END_KV_SERIALIZE_MAP()
+     };
+     typedef epee::misc_utils::struct_init<request_t> request;
+@@ -1008,6 +1040,7 @@ namespace wallet_rpc
+     bool spent;
+     uint64_t global_index;
+     std::string tx_hash;
++    std::string asset_type;
+     cryptonote::subaddress_index subaddr_index;
+     std::string key_image;
+     uint64_t block_height;
+@@ -1016,6 +1049,7 @@ namespace wallet_rpc
+ 
+     BEGIN_KV_SERIALIZE_MAP()
+       KV_SERIALIZE(amount)
++      KV_SERIALIZE(asset_type)
+       KV_SERIALIZE(spent)
+       KV_SERIALIZE(global_index)
+       KV_SERIALIZE(tx_hash)
+@@ -1301,12 +1335,14 @@ namespace wallet_rpc
  
      struct response_t
      {
@@ -158,7 +232,7 @@ index 507ff4f6c..53bb3b1a5 100644
          KV_SERIALIZE(in_pool)
          KV_SERIALIZE(confirmations)
        END_KV_SERIALIZE_MAP()
-@@ -1362,13 +1382,15 @@ namespace wallet_rpc
+@@ -1362,13 +1398,15 @@ namespace wallet_rpc
      struct response_t
      {
        bool good;
@@ -176,7 +250,26 @@ index 507ff4f6c..53bb3b1a5 100644
          KV_SERIALIZE(in_pool)
          KV_SERIALIZE(confirmations)
        END_KV_SERIALIZE_MAP()
-@@ -2061,6 +2083,47 @@ namespace wallet_rpc
+@@ -1384,6 +1422,7 @@ namespace wallet_rpc
+     uint64_t height;
+     uint64_t timestamp;
+     uint64_t amount;
++    std::string asset_type;
+     amounts_container amounts;
+     uint64_t fee;
+     std::string note;
+@@ -1403,8 +1442,9 @@ namespace wallet_rpc
+       KV_SERIALIZE(payment_id);
+       KV_SERIALIZE(height);
+       KV_SERIALIZE(timestamp);
+-      KV_SERIALIZE(amount);
+       KV_SERIALIZE(amounts);
++      KV_SERIALIZE(amount);
++      KV_SERIALIZE(asset_type);
+       KV_SERIALIZE(fee);
+       KV_SERIALIZE(note);
+       KV_SERIALIZE(destinations);
+@@ -2061,6 +2101,47 @@ namespace wallet_rpc
      typedef epee::misc_utils::struct_init<response_t> response;
    };
  
@@ -224,7 +317,7 @@ index 507ff4f6c..53bb3b1a5 100644
    struct COMMAND_RPC_GET_LANGUAGES
    {
      struct request_t
-@@ -2183,6 +2246,7 @@ namespace wallet_rpc
+@@ -2183,6 +2264,7 @@ namespace wallet_rpc
        std::string spendkey;
        std::string viewkey;
        std::string password;
@@ -232,7 +325,7 @@ index 507ff4f6c..53bb3b1a5 100644
        bool autosave_current;
  
        BEGIN_KV_SERIALIZE_MAP()
-@@ -2192,6 +2256,7 @@ namespace wallet_rpc
+@@ -2192,6 +2274,7 @@ namespace wallet_rpc
        KV_SERIALIZE(spendkey)
        KV_SERIALIZE(viewkey)
        KV_SERIALIZE(password)

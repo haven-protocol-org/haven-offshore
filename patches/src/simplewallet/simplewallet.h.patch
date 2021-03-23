@@ -1,5 +1,5 @@
 diff --git a/src/simplewallet/simplewallet.h b/src/simplewallet/simplewallet.h
-index 8f9d6df92..1b1144579 100644
+index 8f9d6df92..20f1199a7 100644
 --- a/src/simplewallet/simplewallet.h
 +++ b/src/simplewallet/simplewallet.h
 @@ -53,7 +53,7 @@
@@ -11,7 +11,7 @@ index 8f9d6df92..1b1144579 100644
  
  /*!
   * \namespace cryptonote
-@@ -165,16 +165,18 @@ namespace cryptonote
+@@ -165,7 +165,7 @@ namespace cryptonote
      bool show_incoming_transfers(const std::vector<std::string> &args);
      bool show_payments(const std::vector<std::string> &args);
      bool show_blockchain_height(const std::vector<std::string> &args);
@@ -20,10 +20,7 @@ index 8f9d6df92..1b1144579 100644
      bool transfer(const std::vector<std::string> &args);
      bool locked_transfer(const std::vector<std::string> &args);
      bool locked_sweep_all(const std::vector<std::string> &args);
--    bool sweep_main(uint32_t account, uint64_t below, bool locked, const std::vector<std::string> &args);
-+    bool sweep_main(uint32_t account, uint64_t below, bool locked, const std::vector<std::string> &args, bool bOffshoreTx = false);
-     bool sweep_all(const std::vector<std::string> &args);
-     bool sweep_account(const std::vector<std::string> &args);
+@@ -175,6 +175,8 @@ namespace cryptonote
      bool sweep_below(const std::vector<std::string> &args);
      bool sweep_single(const std::vector<std::string> &args);
      bool sweep_unmixable(const std::vector<std::string> &args);
@@ -42,7 +39,7 @@ index 8f9d6df92..1b1144579 100644
 +
 +    bool xasset_to_xusd(const std::vector<std::string> &args);
 +    bool xasset_sweep_all(const std::vector<std::string> &args);
-+    bool xasset_sweep_single(const std::vector<std::string> &args);
++    bool xasset_sweep_below(const std::vector<std::string> &args);
 +    bool xasset_transfer(const std::vector<std::string> &args);
 +    bool xusd_to_xasset(const std::vector<std::string> &args);
 +
@@ -52,7 +49,15 @@ index 8f9d6df92..1b1144579 100644
      bool cold_sign_tx(const std::vector<tools::wallet2::pending_tx>& ptx_vector, tools::wallet2::signed_tx_set &exported_txs, std::vector<cryptonote::address_parse_info> &dsts_info, std::function<bool(const tools::wallet2::signed_tx_set &)> accept_func);
      uint64_t get_daemon_blockchain_height(std::string& err);
      bool try_connect_to_daemon(bool silent = false, uint32_t* version = nullptr);
-@@ -341,9 +356,9 @@ namespace cryptonote
+@@ -294,6 +309,7 @@ namespace cryptonote
+       crypto::hash hash;
+       std::string payment_id;
+       uint64_t fee;
++      std::string asset_type;
+       std::vector<std::pair<std::string, uint64_t>> outputs;
+       std::set<uint32_t> index;
+       std::string note;
+@@ -341,9 +357,9 @@ namespace cryptonote
  
      //----------------- i_wallet2_callback ---------------------
      virtual void on_new_block(uint64_t height, const cryptonote::block& block);

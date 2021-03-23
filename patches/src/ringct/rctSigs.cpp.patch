@@ -1,5 +1,5 @@
 diff --git a/src/ringct/rctSigs.cpp b/src/ringct/rctSigs.cpp
-index 2e3e7007e..a633b34c7 100644
+index 2e3e7007e..1186af04e 100644
 --- a/src/ringct/rctSigs.cpp
 +++ b/src/ringct/rctSigs.cpp
 @@ -36,6 +36,8 @@
@@ -686,7 +686,7 @@ index 2e3e7007e..a633b34c7 100644
 -        rv.ecdhInfo.resize(destinations.size());
 +    // These are different outamounts structures for differen purposes.
 +    // outamounts_rangesig is only used for barmanian prove(pre-bulletproof) and for only for regular XHV Txs.
-+    // outamounts_flat_amounts only contains the output amounts without currency_type
++    // outamounts_flat_amounts only contains the output amounts without asset_type
 +    std::vector<xmr_amount> outamounts_rangesig, outamounts_flat_amounts;
 +    
 +    // Work out the type of the TX from the mix of inputs and outputs
