@@ -32,8 +32,8 @@ jobs:
     - name: package haven CLI
       run: |
         cd monero/build/release/bin/
-        tar -czvf haven-macos.tar.gz *
-        echo ::set-output name=haven-macos::$(sha256sum haven-macos.tar.gz)
+        tar -cjvf haven-macos.tar.gz *
+        echo ::set-output name=haven-macos::$(shasum -a 256 haven-macos.tar.gz)
     - uses: actions/upload-artifact@v2
       with:
         name: haven-macos.tar.gz
