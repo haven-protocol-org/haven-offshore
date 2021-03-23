@@ -264,8 +264,8 @@
   "id": "0",
   "jsonrpc": "2.0",
   "result": {
-    "amount_list": [3000000000000],
-    "amount_asset": "XUSD",
+    "amount_list": [1000000000000],
+    "amount_asset": "XHV",
     "fee_asset": "XHV",
     "fee_list": [473710000],
     "multisig_txset": "",
@@ -317,8 +317,8 @@
   "id": "0",
   "jsonrpc": "2.0",
   "result": {
-    "amount_list": [3000000000000],
-    "amount_asset": "XHV",
+    "amount_list": [11000000000000],
+    "amount_asset": "XUSD",
     "fee_asset": "XUSD",
     "fee_list": [473710000],
     "multisig_txset": "",
@@ -371,8 +371,8 @@
   "id": "0",
   "jsonrpc": "2.0",
   "result": {
-    "amount_asset": "XGBP",
-    "amount_list": [14364720200000],
+    "amount_asset": "XUSD",
+    "amount_list": [20000000000000],
     "fee_asset": "XUSD",
     "fee_list": [60638400000],
     "multisig_txset": "",
@@ -426,8 +426,8 @@
   "id": "0",
   "jsonrpc": "2.0",
   "result": {
-    "amount_asset": "XUSD",
-    "amount_list": [20000000000000],
+    "amount_asset": "XBTC",
+    "amount_list": [000370000000],
     "fee_asset": "XBTC",
     "fee_list": [1189800],
     "multisig_txset": "",
@@ -530,7 +530,7 @@
 <li><em>unsigned_txset</em> - string. Set of unsigned tx for cold-signing purposes.</li>
 </ul>
 <p>Example:</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ curl http://127.0.0.1:17751/json_rpc -d '{"jsonrpc":"2.0","id":"0","method":"offshore","params":{"destinations":[{"amount":1000000000000,"address":"hvxy5mxT87WWDCfsAYYEtq9K8KNbPTRaEd2nKgLgPN3qP5PpH1AaJ6TaYYec9L2hKZGpuxQ4uZ4tkFFLxjaLHVAY7QZoBmW3g2"},{"amount":2000000000000,"address":"hvxy5mxT87WWDCfsAYYEtq9K8KNbPTRaEd2nKgLgPN3qP5PpH1AaJ6TaYYec9L2hKZGpuxQ4uZ4tkFFLxjaLHVAY7QZoBmW3g2"}],"account_index":0,"subaddr_indices":[0],"priority":0,"ring_size":7,"get_tx_keys": true}}' -H 'Content-Type: application/json'
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ curl http://127.0.0.1:17751/json_rpc -d '{"jsonrpc":"2.0","id":"0","method":"offshore","params":{"destinations":[{"amount":3000000000000,"address":"hvxy5mxT87WWDCfsAYYEtq9K8KNbPTRaEd2nKgLgPN3qP5PpH1AaJ6TaYYec9L2hKZGpuxQ4uZ4tkFFLxjaLHVAY7QZoBmW3g2"},{"amount":2000000000000,"address":"hvxy5mxT87WWDCfsAYYEtq9K8KNbPTRaEd2nKgLgPN3qP5PpH1AaJ6TaYYec9L2hKZGpuxQ4uZ4tkFFLxjaLHVAY7QZoBmW3g2"}],"account_index":0,"subaddr_indices":[0],"priority":0,"ring_size":7,"get_tx_keys": true}}' -H 'Content-Type: application/json'
 {
   "id": "0",
   "jsonrpc": "2.0",
@@ -629,7 +629,9 @@
 <li><em>suggested_confirmations_threshold</em> - unsigned int; Estimation of the confirmations needed for the transaction to be included in a block.</li>
 <li><em>timestamp</em> - unsigned int; POSIX timestamp for when this transfer was first confirmed in a block (or timestamp submission if not mined yet).</li>
 <li><em>txid</em> - string; Transaction ID for this transfer.</li>
-<li><em>type</em> - string; Transfer type: (one of "block", "in", "out", "pending", "failed", "pool"</li>
+<li><em>type</em> - string; Transfer type: (one of "block", "in", "out", "pending", "failed" or "pool" for xhv transactions. 
+                    Otherwise type is going to have the asset type sticked in front of it except if the type is "block" or "failed" for backwards compatibility reasons.
+                    (e.g. "XUSD in" or "XBTC pending"))</li>
 <li><em>unlock_time</em> - unsigned int; Number of blocks until transfer is safely spendable.</li>
 </ul>
 </li>
@@ -670,7 +672,7 @@
       "suggested_confirmations_threshold": 10,
       "timestamp": 1616156920,
       "txid": "ea824dc65e5478de77f3fbb13d6dffaf096a97393328118242b1ac58359be272",
-      "type": "out",
+      "type": "XBTC out",
       "unlock_time": 10
     },{
       "address": "hvtZwRBNUNMWMaBVaLDcHbUA24YMEgLgj18bAAB9pr5fcFsGb1bXrXBJ5JJGd7Tdpa51t8uur74tBWwXJeKsruHf4znwmvJTnY",
@@ -698,7 +700,7 @@
       "suggested_confirmations_threshold": 10,
       "timestamp": 1616156501,
       "txid": "e090b3a06c222ebba489c04e8f97a0d0f53751882d6eddbc0d53565dc9feb2cf",
-      "type": "out",
+      "type": "XBTC out",
       "unlock_time": 10
     },{
       "address": "hvtZwRBNUNMWMaBVaLDcHbUA24YMEgLgj18bAAB9pr5fcFsGb1bXrXBJ5JJGd7Tdpa51t8uur74tBWwXJeKsruHf4znwmvJTnY",
@@ -726,7 +728,7 @@
       "suggested_confirmations_threshold": 10,
       "timestamp": 1616155386,
       "txid": "7d12122366b7469a7c42ea4ee1af730c41f913c9700d5393f5cb76bc99d5034e",
-      "type": "out",
+      "type": "XUSD out",
       "unlock_time": 10
     }]
   }
@@ -742,6 +744,7 @@
 
 <ul>
   <li><em>payment_id</em> - string; Payment ID used to find the payments (16 characters hex).</li>
+  <li><em>types</em>  - array of: string; list of asset types to find the payments. "all" is a special case where all the asset types are included.</li>
 </ul>
 
 <p>Outputs:</p>
@@ -752,7 +755,7 @@
       <li><em>payment_id</em> - string; Payment ID matching the input parameter.</li>
       <li><em>tx_hash</em> - string; Transaction hash used as the transaction ID.</li>
       <li><em>amount</em> - unsigned int; Amount for this payment.</li>
-      <li><em>amount_asset</em> - string; The asset type for the amount for this payment.</li>
+      <li><em>type</em> - string; The asset type for the amount for this payment.</li>
       <li><em>block_height</em> - unsigned int; Height of the block that first confirmed this payment.</li>
       <li><em>unlock_time</em> - unsigned int; Time (in block height) until this payment is safe to spend.</li>
       <li><em>subaddr_index</em> - subaddress index:
@@ -768,7 +771,7 @@
 
 <p>Example:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ curl http://127.0.0.1:12345/json_rpc -d '{"jsonrpc":"2.0","id":"0","method":"getpayments","params":{"payment_id":"a45de6072cfd4877"}}' -H 'Content-Type: application/json'
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ curl http://127.0.0.1:12345/json_rpc -d '{"jsonrpc":"2.0","id":"0","method":"getpayments","params":{"payment_id":"a45de6072cfd4877", "types":["xusd"]}}' -H 'Content-Type: application/json'
 {
   "id": "0",
   "jsonrpc": "2.0",
@@ -776,7 +779,7 @@
     "payments": [{
       "address": "hvtZwRBNUNMWMaBVaLDcHbUA24YMEgLgj18bAAB9pr5fcFsGb1bXrXBJ5JJGd7Tdpa51t8uur74tBWwXJeKsruHf4znwmvJTnY",
       "amount": 60000000000000,
-      "amount_asset": "XUSD",
+      "type": "XUSD",
       "block_height": 5900,
       "locked": false,
       "payment_id": "a45de6072cfd4877",
@@ -801,6 +804,7 @@
 <ul>
   <li><em>payment_ids</em> - array of: string; Payment IDs used to find the payments (16 characters hex).</li>
   <li><em>min_block_height</em> - unsigned int; The block height at which to start looking for payments.</li>
+  <li><em>types</em>  - array of: string; list of asset types to find the payments. "all" is a special case where all the asset types are included.</li>
 </ul>
 
 <p>Outputs:</p>
@@ -811,7 +815,7 @@
       <li><em>payment_id</em> - string; Payment ID matching one of the input IDs.</li>
       <li><em>tx_hash</em> - string; Transaction hash used as the transaction ID.</li>
       <li><em>amount</em> - unsigned int; Amount for this payment.</li>
-      <li><em>amount_asset</em> - string; The asset type for the amount for this payment.</li>
+      <li><em>type</em> - string; The asset type for the amount for this payment.</li>
       <li><em>block_height</em> - unsigned int; Height of the block that first confirmed this payment.</li>
       <li><em>unlock_time</em> - unsigned int; Time (in block height) until this payment is safe to spend.</li>
       <li><em>subaddr_index</em> - subaddress index:
@@ -827,7 +831,7 @@
 
 <p>Example:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ curl http://127.0.0.1:12345/json_rpc -d '{"jsonrpc":"2.0","id":"0","method":"get_bulk_payments","params":{"payment_ids"["57afc77ce7554812"],"min_block_height":"100"}}' -H 'Content-Type: application/json'
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ curl http://127.0.0.1:12345/json_rpc -d '{"jsonrpc":"2.0","id":"0","method":"get_bulk_payments","params":{"payment_ids"["57afc77ce7554812"],"min_block_height":"100", "types":["xbtc"]}}' -H 'Content-Type: application/json'
 {
   "id": "0",
   "jsonrpc": "2.0",
@@ -835,7 +839,7 @@
     "payments": [{
       "address": "hvtZwRBNUNMWMaBVaLDcHbUA24YMEgLgj18bAAB9pr5fcFsGb1bXrXBJ5JJGd7Tdpa51t8uur74tBWwXJeKsruHf4znwmvJTnY",
       "amount": 848500000,
-      "amount_asset": "XBTC",
+      "type": "XBTC",
       "block_height": 5897,
       "locked": false,
       "payment_id": "57afc77ce7554812",
