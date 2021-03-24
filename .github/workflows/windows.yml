@@ -27,7 +27,7 @@ jobs:
     - name: package haven CLI
       run: |
         cd monero/build/release/bin/
-        tar -czvf haven-windows.tar.gz *
+        tar -czvf haven-windows.tar.gz *.exe
         echo ::set-output name=haven-windows::$(sha256sum haven-windows.tar.gz)
     - uses: actions/upload-artifact@v2
       with:
