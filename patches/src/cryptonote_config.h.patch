@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_config.h b/src/cryptonote_config.h
-index 81dc15dee..c1a9997d0 100644
+index 81dc15dee..8cff4c2c5 100644
 --- a/src/cryptonote_config.h
 +++ b/src/cryptonote_config.h
 @@ -33,18 +33,23 @@
@@ -139,8 +139,8 @@ index 81dc15dee..c1a9997d0 100644
 +#define HF_VERSION_OFFSHORE_FEES_V3             16
 +#define HF_VERSION_XASSET_FULL                  16
 +
-+#define STAGENET_VERSION                        0x0b
-+#define TESTNET_VERSION                         0x0b
++#define STAGENET_VERSION                        0x0c
++#define TESTNET_VERSION                         0x0c
 +
 +#define OFFSHORE_PRICING_BLOCKS_TO_AVERAGE      30
  
@@ -181,12 +181,14 @@ index 81dc15dee..c1a9997d0 100644
    uint32_t const GENESIS_NONCE = 10000;
  
    // Hash domain separators
-@@ -220,33 +245,47 @@ namespace config
+@@ -220,33 +245,49 @@ namespace config
    const unsigned char HASH_KEY_MEMORY = 'k';
    const unsigned char HASH_KEY_MULTISIG[] = {'M', 'u', 'l', 't' , 'i', 's', 'i', 'g', 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
  
-+  std::string const GOVERNANCE_WALLET_ADDRESS = "hvxy7YfeE8SdTrCmSqLB59WoQn3ZQun1aLX36X3eb1R7Fb26VuNpc235q4fguGUxfGKerywFPnweu15S8RB8DzTJ8Q4hGJCgvv";
-+  std::string const GOVERNANCE_WALLET_ADDRESS_MULTI = "hvxy3f2PhAhimkeLf617BsbVn6UTbofVcMzofXGsSNLoMFr2SrSxRJ9f52Am1QLVddKetXPKHoTLbBaLNT1kMU6Q3kYRc3t6pF";
++  //std::string const GOVERNANCE_WALLET_ADDRESS = "hvxy7YfeE8SdTrCmSqLB59WoQn3ZQun1aLX36X3eb1R7Fb26VuNpc235q4fguGUxfGKerywFPnweu15S8RB8DzTJ8Q4hGJCgvv";
++  //std::string const GOVERNANCE_WALLET_ADDRESS_MULTI = "hvxy3f2PhAhimkeLf617BsbVn6UTbofVcMzofXGsSNLoMFr2SrSxRJ9f52Am1QLVddKetXPKHoTLbBaLNT1kMU6Q3kYRc3t6pF";
++  std::string const GOVERNANCE_WALLET_ADDRESS = "hvxyAvVZaz19FzURQfXHHpVqoJF7baXVm4A6FvqFm7wq95vveSitDGWWaxdxR5MFW6BPJDBgkYjp9aUuYurQWZHx2pL5jPTXgH";
++  std::string const GOVERNANCE_WALLET_ADDRESS_MULTI = "hvxyAvVZaz19FzURQfXHHpVqoJF7baXVm4A6FvqFm7wq95vveSitDGWWaxdxR5MFW6BPJDBgkYjp9aUuYurQWZHx2pL5jPTXgH";
 +
 +  // Hash domain separators
 +  const unsigned char HASH_KEY_CLSAG_ROUND[] = "CLSAG_round";

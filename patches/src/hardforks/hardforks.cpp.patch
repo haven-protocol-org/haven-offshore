@@ -1,8 +1,8 @@
 diff --git a/src/hardforks/hardforks.cpp b/src/hardforks/hardforks.cpp
-index 7ad09dbef..9a8f8152f 100644
+index 7ad09dbef..aa0b66eaa 100644
 --- a/src/hardforks/hardforks.cpp
 +++ b/src/hardforks/hardforks.cpp
-@@ -33,82 +33,46 @@
+@@ -33,82 +33,47 @@
  
  const hardfork_t mainnet_hard_forks[] = {
    // version 1 from the start of the blockchain
@@ -49,7 +49,8 @@ index 7ad09dbef..9a8f8152f 100644
 +  { 11, 640640, 0, 1595253600 },  // 20th July 2020 - 15:00 GMT
 +  { 13, 640650, 0, 1595254800 },   // 20th July 2020 - 15:20 GMT
 +  { 14, 653565, 0, 1596555180 },   // 7th August 2020 - 15:30 GMT
-+  { 15, 741957, 0, 1606217525 }   // Fork time is on or around 8th December 2020 at 14:30 GMT. Fork time finalised on 2020-11-24.
++  { 15, 741957, 0, 1606217525 },   // Fork time is on or around 8th December 2020 at 14:30 GMT. Fork time finalised on 2020-11-24.
++  { 16, 831700, 0, 1616597544 }    // Fork time is on or around 12th April 2021 at 12:50 GMT. Fork time finalised on 2021-03-24.
 + };
  const size_t num_mainnet_hard_forks = sizeof(mainnet_hard_forks) / sizeof(mainnet_hard_forks[0]);
 -const uint64_t mainnet_hard_fork_version_1_till = 1009826;
@@ -82,8 +83,8 @@ index 7ad09dbef..9a8f8152f 100644
 +  { 11, 50, 0, 1593613842 },
 +  { 13, 60, 0, 1593615042 },
 +  { 14, 70, 0, 1593616242 },
-+  { 15, 80, 0, 1593616243 },
-+  { 16, 90, 0, 1593616244 }
++  { 15, 150, 0, 1593616243 },
++  { 16, 230, 0, 1593616244 }
  };
  const size_t num_testnet_hard_forks = sizeof(testnet_hard_forks) / sizeof(testnet_hard_forks[0]);
 -const uint64_t testnet_hard_fork_version_1_till = 624633;
