@@ -17,22 +17,15 @@ jobs:
       with:
         submodules: recursive
     - name: install dependencies
-      run: brew install zmq libpgm miniupnpc ldns expat libunwind-headers protobuf unbound
-    - name: build boost
-      run: |
-        wget https://dl.bintray.com/boostorg/release/1.71.0/source/boost_1_71_0.tar.gz
-        tar -xzf boost_1_71_0.tar.gz
-        cd boost_1_71_0
-        ./bootstrap.sh 
-        ./b2
-        ./b2 install
+      run: brew install zmq libpgm miniupnpc ldns expat libunwind-headers protobuf unbound boost
     - name: build
       run: |
         ./build-haven.sh release-static-mac-x86_64 -j${nproc}
     - name: package haven CLI
       run: |
         cd monero/build/release/bin/
-        tar -cjvf haven-macos.tar.gz *
+        ./havend --version
+        tar -czvf haven-macos.tar.gz *
         echo ::set-output name=haven-macos::$(shasum -a 256 haven-macos.tar.gz)
     - uses: actions/upload-artifact@v2
       with:
