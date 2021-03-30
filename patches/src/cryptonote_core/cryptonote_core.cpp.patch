@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/cryptonote_core.cpp b/src/cryptonote_core/cryptonote_core.cpp
-index 5aed708d5..4fa64b956 100644
+index 5aed708d5..5513d3a24 100644
 --- a/src/cryptonote_core/cryptonote_core.cpp
 +++ b/src/cryptonote_core/cryptonote_core.cpp
 @@ -166,8 +166,8 @@ namespace cryptonote
@@ -48,7 +48,7 @@ index 5aed708d5..4fa64b956 100644
      if (tx.version == 0 || tx.version > max_tx_version)
      {
        // v2 is the latest one we know
-@@ -865,6 +872,31 @@ namespace cryptonote
+@@ -865,6 +872,63 @@ namespace cryptonote
      std::vector<const rct::rctSig*> rvv;
      for (size_t n = 0; n < tx_info.size(); ++n)
      {
@@ -67,20 +67,52 @@ index 5aed708d5..4fa64b956 100644
 +	  offshore = true;
 +	}
 +
-+	// Get the correct pricing record here, given the height
-+	std::vector<std::pair<cryptonote::blobdata,block>> blocks_pr;
-+	bool b = m_blockchain_storage.get_blocks(pricing_record_height, 1, blocks_pr);
-+	if (!b) {
-+	  MERROR_VER("Failed to obtain pricing record for block: " << pricing_record_height);
-+	  return false;
++	// NEAC: recover from the reorg during Oracle switch - 1 TX affected
++	if (pricing_record_height == 821428) {
++	  const std::string pr_821428 = "9b3f6f2f8f0000003d620e1202000000be71be2555120000b8627010000000000000000000000000ea0885b2270d00000000000000000000f797ff9be00b0000ddbdb005270a0000fc90cfe02b01060000000000000000000000000000000000d0a28224000e000000d643be960e0000002e8bb6a40e000000f8a817f80d00002f5d27d45cdbfbac3d0f6577103f68de30895967d7562fbd56c161ae90130f54301b1ea9d5fd062f37dac75c3d47178bc6f149d21da1ff0e8430065cb762b93a";
++	  pr.xAG = 614976143259;
++	  pr.xAU = 8892867133;
++	  pr.xAUD = 20156914758078;
++	  pr.xBTC = 275800760;
++	  pr.xCAD = 0;
++	  pr.xCHF = 14464149948650;
++	  pr.xCNY = 0;
++	  pr.xEUR = 13059317798903;
++	  pr.xGBP = 11162715471325;
++	  pr.xJPY = 1690137827184892;
++	  pr.xNOK = 0;
++	  pr.xNZD = 0;
++	  pr.xUSD = 15393775330000;
++	  pr.unused1 = 16040600000000;
++	  pr.unused2 = 16100600000000;
++	  pr.unused3 = 15359200000000;
++	  std::string sig = "2f5d27d45cdbfbac3d0f6577103f68de30895967d7562fbd56c161ae90130f54301b1ea9d5fd062f37dac75c3d47178bc6f149d21da1ff0e8430065cb762b93a";
++	  int j=0;
++	  for (unsigned int i = 0; i < sig.size(); i += 2) {
++	    std::string byteString = sig.substr(i, 2);
++	    pr.signature[j++] = (char) strtol(byteString.c_str(), NULL, 16);
++	  }
++	  
++	  if (!pr.verifySignature()) {
++	    MERROR_VER("Failed to set correct PR for block: " << pricing_record_height);
++	    return false;
++	  }
++	} else {
++	  // Get the correct pricing record here, given the height
++	  std::vector<std::pair<cryptonote::blobdata,block>> blocks_pr;
++	  bool b = m_blockchain_storage.get_blocks(pricing_record_height, 1, blocks_pr);
++	  if (!b) {
++	    MERROR_VER("Failed to obtain pricing record for block: " << pricing_record_height);
++	    return false;
++	  }
++	  pr = blocks_pr[0].second.pricing_record;
 +	}
-+	pr = blocks_pr[0].second.pricing_record;
 +      }
 +    
        if (!check_tx_semantic(*tx_info[n].tx, keeped_by_block))
        {
          set_semantics_failed(tx_info[n].tx_hash);
-@@ -885,7 +917,7 @@ namespace cryptonote
+@@ -885,7 +949,7 @@ namespace cryptonote
            tx_info[n].result = false;
            break;
          case rct::RCTTypeSimple:
@@ -89,7 +121,7 @@ index 5aed708d5..4fa64b956 100644
            {
              MERROR_VER("rct signature semantics check failed");
              set_semantics_failed(tx_info[n].tx_hash);
-@@ -906,6 +938,7 @@ namespace cryptonote
+@@ -906,6 +970,7 @@ namespace cryptonote
            break;
          case rct::RCTTypeBulletproof:
          case rct::RCTTypeBulletproof2:
@@ -97,7 +129,7 @@ index 5aed708d5..4fa64b956 100644
            if (!is_canonical_bulletproof_layout(rv.p.bulletproofs))
            {
              MERROR_VER("Bulletproof does not have canonical form");
-@@ -924,18 +957,43 @@ namespace cryptonote
+@@ -924,18 +989,75 @@ namespace cryptonote
            break;
        }
      }
@@ -126,14 +158,46 @@ index 5aed708d5..4fa64b956 100644
 +	    offshore = true;
 +	  }
 +
-+	  // Get the correct pricing record here, given the height
-+	  std::vector<std::pair<cryptonote::blobdata,block>> blocks_pr;
-+	  bool b = m_blockchain_storage.get_blocks(pricing_record_height, 1, blocks_pr);
-+	  if (!b) {
-+	    MERROR_VER("Failed to obtain pricing record for block: " << pricing_record_height);
-+	    return false;
++	  // NEAC: recover from the reorg during Oracle switch - 1 TX affected
++	  if (pricing_record_height == 821428) {
++	    const std::string pr_821428 = "9b3f6f2f8f0000003d620e1202000000be71be2555120000b8627010000000000000000000000000ea0885b2270d00000000000000000000f797ff9be00b0000ddbdb005270a0000fc90cfe02b01060000000000000000000000000000000000d0a28224000e000000d643be960e0000002e8bb6a40e000000f8a817f80d00002f5d27d45cdbfbac3d0f6577103f68de30895967d7562fbd56c161ae90130f54301b1ea9d5fd062f37dac75c3d47178bc6f149d21da1ff0e8430065cb762b93a";
++	    pr.xAG = 614976143259;
++	    pr.xAU = 8892867133;
++	    pr.xAUD = 20156914758078;
++	    pr.xBTC = 275800760;
++	    pr.xCAD = 0;
++	    pr.xCHF = 14464149948650;
++	    pr.xCNY = 0;
++	    pr.xEUR = 13059317798903;
++	    pr.xGBP = 11162715471325;
++	    pr.xJPY = 1690137827184892;
++	    pr.xNOK = 0;
++	    pr.xNZD = 0;
++	    pr.xUSD = 15393775330000;
++	    pr.unused1 = 16040600000000;
++	    pr.unused2 = 16100600000000;
++	    pr.unused3 = 15359200000000;
++	    std::string sig = "2f5d27d45cdbfbac3d0f6577103f68de30895967d7562fbd56c161ae90130f54301b1ea9d5fd062f37dac75c3d47178bc6f149d21da1ff0e8430065cb762b93a";
++	    int j=0;
++	    for (unsigned int i = 0; i < sig.size(); i += 2) {
++	      std::string byteString = sig.substr(i, 2);
++	      pr.signature[j++] = (char) strtol(byteString.c_str(), NULL, 16);
++	    }
++	  
++	    if (!pr.verifySignature()) {
++	      MERROR_VER("Failed to set correct PR for block: " << pricing_record_height);
++	      return false;
++	    }
++	  } else {
++	    // Get the correct pricing record here, given the height
++	    std::vector<std::pair<cryptonote::blobdata,block>> blocks_pr;
++	    bool b = m_blockchain_storage.get_blocks(pricing_record_height, 1, blocks_pr);
++	    if (!b) {
++	      MERROR_VER("Failed to obtain pricing record for block: " << pricing_record_height);
++	      return false;
++	    }
++	    pr = blocks_pr[0].second.pricing_record;
 +	  }
-+	  pr = blocks_pr[0].second.pricing_record;
 +	}
 +    
          if (!tx_info[n].result)
@@ -146,7 +210,7 @@ index 5aed708d5..4fa64b956 100644
          {
            set_semantics_failed(tx_info[n].tx_hash);
            tx_info[n].tvc.m_verifivation_failed = true;
-@@ -1196,11 +1254,26 @@ namespace cryptonote
+@@ -1196,11 +1318,26 @@ namespace cryptonote
    bool core::check_tx_inputs_keyimages_diff(const transaction& tx) const
    {
      std::unordered_set<crypto::key_image> ki;
@@ -178,7 +242,7 @@ index 5aed708d5..4fa64b956 100644
      }
      return true;
    }
-@@ -1208,14 +1281,28 @@ namespace cryptonote
+@@ -1208,14 +1345,28 @@ namespace cryptonote
    bool core::check_tx_inputs_ring_members_diff(const transaction& tx) const
    {
      const uint8_t version = m_blockchain_storage.get_current_hard_fork_version();
@@ -215,7 +279,7 @@ index 5aed708d5..4fa64b956 100644
        }
      }
      return true;
-@@ -1224,11 +1311,29 @@ namespace cryptonote
+@@ -1224,11 +1375,29 @@ namespace cryptonote
    bool core::check_tx_inputs_keyimages_domain(const transaction& tx) const
    {
      std::unordered_set<crypto::key_image> ki;
@@ -250,7 +314,7 @@ index 5aed708d5..4fa64b956 100644
      }
      return true;
    }
-@@ -1640,7 +1745,7 @@ namespace cryptonote
+@@ -1640,7 +1809,7 @@ namespace cryptonote
      {
        std::string main_message;
        if (m_offline)
@@ -259,7 +323,7 @@ index 5aed708d5..4fa64b956 100644
        else
          main_message = "The daemon will start synchronizing with the network. This may take a long time to complete.";
        MGINFO_YELLOW(ENDL << "**********************************************************************" << ENDL
-@@ -1687,7 +1792,7 @@ namespace cryptonote
+@@ -1687,7 +1856,7 @@ namespace cryptonote
    //-----------------------------------------------------------------------------------------------
    bool core::check_updates()
    {
@@ -268,7 +332,7 @@ index 5aed708d5..4fa64b956 100644
  #ifdef BUILD_TAG
      static const char buildtag[] = BOOST_PP_STRINGIZE(BUILD_TAG);
      static const char subdir[] = "cli"; // because it can never be simple
-@@ -1872,7 +1977,7 @@ namespace cryptonote
+@@ -1872,7 +2041,7 @@ namespace cryptonote
      const time_t now = time(NULL);
      const std::vector<time_t> timestamps = m_blockchain_storage.get_last_block_timestamps(max_blocks_checked);
  
@@ -277,7 +341,7 @@ index 5aed708d5..4fa64b956 100644
      for (size_t n = 0; n < sizeof(seconds)/sizeof(seconds[0]); ++n)
      {
        unsigned int b = 0;
-@@ -1882,8 +1987,8 @@ namespace cryptonote
+@@ -1882,8 +2051,8 @@ namespace cryptonote
        MDEBUG("blocks in the last " << seconds[n] / 60 << " minutes: " << b << " (probability " << p << ")");
        if (p < threshold)
        {
