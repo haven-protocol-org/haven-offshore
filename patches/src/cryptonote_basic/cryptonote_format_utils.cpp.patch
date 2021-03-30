@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_basic/cryptonote_format_utils.cpp b/src/cryptonote_basic/cryptonote_format_utils.cpp
-index cb6d1ec91..08e4e25eb 100644
+index cb6d1ec91..7f2b61622 100644
 --- a/src/cryptonote_basic/cryptonote_format_utils.cpp
 +++ b/src/cryptonote_basic/cryptonote_format_utils.cpp
 @@ -169,12 +169,56 @@ namespace cryptonote
@@ -170,13 +170,14 @@ index cb6d1ec91..08e4e25eb 100644
    bool add_tx_pub_key_to_extra(transaction& tx, const crypto::public_key& tx_pub_key)
    {
      return add_tx_pub_key_to_extra(tx.extra, tx_pub_key);
-@@ -725,6 +799,45 @@ namespace cryptonote
+@@ -725,6 +799,60 @@ namespace cryptonote
      return true;
    }
    //---------------------------------------------------------------
-+  bool add_offshore_to_tx_extra(std::vector<uint8_t>& tx_extra, cryptonote::tx_extra_offshore& extra_offshore)
++  bool add_offshore_to_tx_extra(std::vector<uint8_t>& tx_extra, const std::string& offshore_data)
 +  {
-+    CHECK_AND_ASSERT_MES(extra_offshore.data.size() <= TX_EXTRA_OFFSHORE_MAX_COUNT, false, "extra offshore data could be 127 bytes max");
++    CHECK_AND_ASSERT_MES(offshore_data.size() <= TX_EXTRA_OFFSHORE_MAX_COUNT, false, "extra offshore data could be 255 bytes max");
++    /*
 +    size_t start_pos = tx_extra.size();
 +    tx_extra.resize(tx_extra.size() + 2 + extra_offshore.data.size());
 +    tx_extra[start_pos] = TX_EXTRA_TAG_OFFSHORE;
@@ -185,11 +186,25 @@ index cb6d1ec91..08e4e25eb 100644
 +    ++start_pos;
 +    memcpy(&tx_extra[start_pos], reinterpret_cast<const char*>(extra_offshore.data.data()), extra_offshore.data.size());
 +    return true;
++    */
++    // serialize
++    tx_extra_field extra_field = tx_extra_offshore{offshore_data};
++    std::ostringstream oss;
++    binary_archive<true> ar(oss);
++    bool r = ::do_serialize(ar, extra_field);
++    CHECK_AND_NO_ASSERT_MES_L1(r, false, "failed to serialize tx extra memo data");
++    // append
++    std::string tx_extra_str = oss.str();
++    size_t pos = tx_extra.size();
++    tx_extra.resize(tx_extra.size() + tx_extra_str.size());
++    memcpy(&tx_extra[pos], tx_extra_str.data(), tx_extra_str.size());
++    return true;
 +  }
 +  //---------------------------------------------------------------
-+  bool add_memo_to_tx_extra(std::vector<uint8_t>& tx_extra, cryptonote::tx_extra_memo& extra_memo)
++  bool add_memo_to_tx_extra(std::vector<uint8_t>& tx_extra, const std::string& memo)
 +  {
-+    CHECK_AND_ASSERT_MES(extra_memo.data.size() <= TX_EXTRA_MEMO_MAX_COUNT, false, "extra memo data could be 127 bytes max");
++    CHECK_AND_ASSERT_MES(memo.size() <= TX_EXTRA_MEMO_MAX_COUNT, false, "extra memo data could be 255 bytes max");
++    /*
 +    size_t start_pos = tx_extra.size();
 +    tx_extra.resize(tx_extra.size() + 2 + extra_memo.data.size());
 +    tx_extra[start_pos] = TX_EXTRA_TAG_MEMO;
@@ -198,11 +213,12 @@ index cb6d1ec91..08e4e25eb 100644
 +    ++start_pos;
 +    memcpy(&tx_extra[start_pos], reinterpret_cast<const char*>(extra_memo.data.data()), extra_memo.data.size());
 +    return true;
-+    /*
++    */
 +    // serialize
++    tx_extra_field extra_field = tx_extra_memo{memo};
 +    std::ostringstream oss;
 +    binary_archive<true> ar(oss);
-+    bool r = ::do_serialize(ar, extra_memo);
++    bool r = ::do_serialize(ar, extra_field);
 +    CHECK_AND_NO_ASSERT_MES_L1(r, false, "failed to serialize tx extra memo data");
 +    // append
 +    std::string tx_extra_str = oss.str();
@@ -210,13 +226,12 @@ index cb6d1ec91..08e4e25eb 100644
 +    tx_extra.resize(tx_extra.size() + tx_extra_str.size());
 +    memcpy(&tx_extra[pos], tx_extra_str.data(), tx_extra_str.size());
 +    return true;
-+    */
 +  }
 +  //---------------------------------------------------------------
    bool remove_field_from_tx_extra(std::vector<uint8_t>& tx_extra, const std::type_info &type)
    {
      if (tx_extra.empty())
-@@ -814,10 +927,12 @@ namespace cryptonote
+@@ -814,10 +942,12 @@ namespace cryptonote
    {
      for(const auto& in: tx.vin)
      {
@@ -233,7 +248,7 @@ index cb6d1ec91..08e4e25eb 100644
      }
      return true;
    }
-@@ -826,17 +941,23 @@ namespace cryptonote
+@@ -826,17 +956,23 @@ namespace cryptonote
    {
      for(const tx_out& out: tx.vout)
      {
@@ -262,7 +277,7 @@ index cb6d1ec91..08e4e25eb 100644
      }
      return true;
    }
-@@ -849,12 +970,41 @@ namespace cryptonote
+@@ -849,12 +985,41 @@ namespace cryptonote
    bool check_inputs_overflow(const transaction& tx)
    {
      uint64_t money = 0;
@@ -310,7 +325,7 @@ index cb6d1ec91..08e4e25eb 100644
      }
      return true;
    }
-@@ -871,11 +1021,21 @@ namespace cryptonote
+@@ -871,11 +1036,21 @@ namespace cryptonote
      return true;
    }
    //---------------------------------------------------------------
@@ -336,7 +351,7 @@ index cb6d1ec91..08e4e25eb 100644
      return outputs_amount;
    }
    //---------------------------------------------------------------
-@@ -996,15 +1156,15 @@ namespace cryptonote
+@@ -996,15 +1171,15 @@ namespace cryptonote
      switch (decimal_point)
      {
        case 12:
@@ -357,7 +372,7 @@ index cb6d1ec91..08e4e25eb 100644
        default:
          ASSERT_MES_AND_THROW("Invalid decimal point specification: " << decimal_point);
      }
-@@ -1038,6 +1198,20 @@ namespace cryptonote
+@@ -1038,6 +1213,20 @@ namespace cryptonote
      return s;
    }
    //---------------------------------------------------------------
@@ -378,7 +393,7 @@ index cb6d1ec91..08e4e25eb 100644
    crypto::hash get_blob_hash(const blobdata& blob)
    {
      crypto::hash h = null_hash;
-@@ -1082,7 +1256,12 @@ namespace cryptonote
+@@ -1082,7 +1271,12 @@ namespace cryptonote
        binary_archive<true> ba(ss);
        const size_t inputs = t.vin.size();
        const size_t outputs = t.vout.size();
@@ -392,7 +407,7 @@ index cb6d1ec91..08e4e25eb 100644
        bool r = tt.rct_signatures.p.serialize_rctsig_prunable(ba, t.rct_signatures.type, inputs, outputs, mixin);
        CHECK_AND_ASSERT_MES(r, false, "Failed to serialize rct signatures prunable");
        cryptonote::get_blob_hash(ss.str(), res);
-@@ -1421,7 +1600,8 @@ namespace cryptonote
+@@ -1421,7 +1615,8 @@ namespace cryptonote
    crypto::secret_key encrypt_key(crypto::secret_key key, const epee::wipeable_string &passphrase)
    {
      crypto::hash hash;
@@ -402,7 +417,7 @@ index cb6d1ec91..08e4e25eb 100644
      sc_add((unsigned char*)key.data, (const unsigned char*)key.data, (const unsigned char*)hash.data);
      return key;
    }
-@@ -1429,7 +1609,8 @@ namespace cryptonote
+@@ -1429,7 +1624,8 @@ namespace cryptonote
    crypto::secret_key decrypt_key(crypto::secret_key key, const epee::wipeable_string &passphrase)
    {
      crypto::hash hash;

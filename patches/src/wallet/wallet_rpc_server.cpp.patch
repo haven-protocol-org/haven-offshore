@@ -1,5 +1,5 @@
 diff --git a/src/wallet/wallet_rpc_server.cpp b/src/wallet/wallet_rpc_server.cpp
-index 30eed07e7..f01f9cc87 100644
+index 30eed07e7..98d1dc23e 100644
 --- a/src/wallet/wallet_rpc_server.cpp
 +++ b/src/wallet/wallet_rpc_server.cpp
 @@ -54,6 +54,7 @@ using namespace epee;
@@ -214,7 +214,7 @@ index 30eed07e7..f01f9cc87 100644
        fill(fee, ptx.fee);
        fill(weight, cryptonote::get_transaction_weight(ptx.tx));
      }
-@@ -925,6 +956,499 @@ namespace tools
+@@ -925,6 +956,535 @@ namespace tools
      return true;
    }
    //------------------------------------------------------------------------------------------------------------------------------
@@ -241,23 +241,29 @@ index 30eed07e7..f01f9cc87 100644
 +    }
 +    
 +    // Populate the txextra to signify that this is an offshore tx
-+    cryptonote::tx_extra_offshore offshore_data;
++    std::string offshore_data;
 +    if (m_wallet->use_fork_rules(HF_VERSION_XASSET_FULL, 0)) {
-+      offshore_data.data = "XHV-XUSD";
++      offshore_data = "XHV-XUSD";
 +    } else {
-+      offshore_data.data = std::string("AN");
++      offshore_data = std::string("AN");
 +    }
-+    cryptonote::add_offshore_to_tx_extra(extra, offshore_data);
++    if (!cryptonote::add_offshore_to_tx_extra(extra, offshore_data)) {
++      er.code = WALLET_RPC_ERROR_CODE_DENIED;
++      er.message = "Offshore data failed to serialise";
++      return false;
++    }
 +
 +    // add the memo data to tx extra if it exist
 +    size_t memo_size = req.memo.size();
 +    if (memo_size > 0 && memo_size <= TX_EXTRA_MEMO_MAX_COUNT) {
-+      cryptonote::tx_extra_memo memo;
-+      memo.data = req.memo;
-+      cryptonote::add_memo_to_tx_extra(extra, memo);
++      if (!cryptonote::add_memo_to_tx_extra(extra, req.memo)) {
++	er.code = WALLET_RPC_ERROR_CODE_DENIED;
++	er.message = "Transaction memo failed to serialise";
++	return false;
++      }
 +    } else if (memo_size > TX_EXTRA_MEMO_MAX_COUNT) {
 +      er.code = WALLET_RPC_ERROR_CODE_DENIED;
-+      er.message = "Transaction memo can't be more than 127 charecters long!";
++      er.message = "Transaction memo can't be more than 255 charecters long!";
 +      return false;
 +    }
 +
@@ -325,23 +331,29 @@ index 30eed07e7..f01f9cc87 100644
 +    }
 +    
 +    // Populate the txextra to signify that this is an offshore tx
-+    cryptonote::tx_extra_offshore offshore_data;
++    std::string offshore_data;
 +    if (m_wallet->use_fork_rules(HF_VERSION_XASSET_FULL, 0)) {
-+      offshore_data.data = "XUSD-XUSD";
++      offshore_data = "XUSD-XUSD";
 +    } else {
-+      offshore_data.data = std::string("NN");
++      offshore_data = std::string("NN");
 +    }
-+    cryptonote::add_offshore_to_tx_extra(extra, offshore_data);
++    if (!cryptonote::add_offshore_to_tx_extra(extra, offshore_data)) {
++      er.code = WALLET_RPC_ERROR_CODE_DENIED;
++      er.message = "Offshore data failed to serialise";
++      return false;
++    }
 +
 +    // add the memo data to tx extra if it exist
 +    size_t memo_size = req.memo.size();
 +    if (memo_size > 0 && memo_size <= TX_EXTRA_MEMO_MAX_COUNT) {
-+      cryptonote::tx_extra_memo memo;
-+      memo.data = req.memo;
-+      cryptonote::add_memo_to_tx_extra(extra, memo);
++      if (!cryptonote::add_memo_to_tx_extra(extra, req.memo)) {
++	er.code = WALLET_RPC_ERROR_CODE_DENIED;
++	er.message = "Transaction memo failed to serialise";
++	return false;
++      }
 +    } else if (memo_size > TX_EXTRA_MEMO_MAX_COUNT) {
 +      er.code = WALLET_RPC_ERROR_CODE_DENIED;
-+      er.message = "Transaction memo can't be more than 127 charecters long!";
++      er.message = "Transaction memo can't be more than 255 charecters long!";
 +      return false;
 +    }
 +
@@ -400,24 +412,30 @@ index 30eed07e7..f01f9cc87 100644
 +      return false;
 +    }
 +    
-+   // Populate the txextra to signify that this is an offshore tx
-+    cryptonote::tx_extra_offshore offshore_data;
++    // Populate the txextra to signify that this is an offshore tx
++    std::string offshore_data;
 +    if (m_wallet->use_fork_rules(HF_VERSION_XASSET_FULL, 0)) {
-+      offshore_data.data = "XUSD-XHV";
++      offshore_data = "XUSD-XHV";
 +    } else {
-+      offshore_data.data = std::string("NA");
++      offshore_data = std::string("NA");
 +    }
-+    cryptonote::add_offshore_to_tx_extra(extra, offshore_data);
++    if (!cryptonote::add_offshore_to_tx_extra(extra, offshore_data)) {
++      er.code = WALLET_RPC_ERROR_CODE_DENIED;
++      er.message = "Offshore data failed to serialise";
++      return false;
++    }
 +
 +    // add the memo data to tx extra if it exist
 +    size_t memo_size = req.memo.size();
 +    if (memo_size > 0 && memo_size <= TX_EXTRA_MEMO_MAX_COUNT) {
-+      cryptonote::tx_extra_memo memo;
-+      memo.data = req.memo;
-+      cryptonote::add_memo_to_tx_extra(extra, memo);
++      if (!cryptonote::add_memo_to_tx_extra(extra, req.memo)) {
++	er.code = WALLET_RPC_ERROR_CODE_DENIED;
++	er.message = "Transaction memo failed to serialise";
++	return false;
++      }
 +    } else if (memo_size > TX_EXTRA_MEMO_MAX_COUNT) {
 +      er.code = WALLET_RPC_ERROR_CODE_DENIED;
-+      er.message = "Transaction memo can't be more than 127 charecters long!";
++      er.message = "Transaction memo can't be more than 255 charecters long!";
 +      return false;
 +    }
 +
@@ -483,10 +501,10 @@ index 30eed07e7..f01f9cc87 100644
 +      return false;
 +    }
 +
-+    // Populate the tx extra to signify that this is an xaaset tx
-+    cryptonote::tx_extra_offshore offshore_data;
++    // Populate the tx extra to signify that this is an xasset tx
++    std::string offshore_data;
 +    if (req.asset_type.size() > 0) {
-+      offshore_data.data = "XUSD-" + req.asset_type;
++      offshore_data = "XUSD-" + req.asset_type;
 +    } else {
 +      er.code = WALLET_RPC_ERROR_CODE_TX_NOT_POSSIBLE;
 +      er.message = "Field 'asset_type' Unspecified. Tx contruction is not possible.";
@@ -494,20 +512,26 @@ index 30eed07e7..f01f9cc87 100644
 +    }
 +    if (req.asset_type == "XUSD" || req.asset_type == "XHV") {
 +      er.code = WALLET_RPC_ERROR_CODE_DENIED;
-+      er.message = "This enpoint is for xUSD to xAsset conversions. Check out other enpoints for xUSD and/or XHV conversions.";
++      er.message = "This endpoint is for xUSD to xAsset conversions. Check out other endpoints for xUSD and/or XHV conversions.";
 +      return false;
 +    }
-+    cryptonote::add_offshore_to_tx_extra(extra, offshore_data);
++    if (!cryptonote::add_offshore_to_tx_extra(extra, offshore_data)) {
++      er.code = WALLET_RPC_ERROR_CODE_DENIED;
++      er.message = "Offshore data failed to serialise";
++      return false;
++    }
 +
 +    // add the memo data to tx extra if it exist
 +    size_t memo_size = req.memo.size();
 +    if (memo_size > 0 && memo_size <= TX_EXTRA_MEMO_MAX_COUNT) {
-+      cryptonote::tx_extra_memo memo;
-+      memo.data = req.memo;
-+      cryptonote::add_memo_to_tx_extra(extra, memo);
++      if (!cryptonote::add_memo_to_tx_extra(extra, req.memo)) {
++	er.code = WALLET_RPC_ERROR_CODE_DENIED;
++	er.message = "Transaction memo failed to serialise";
++	return false;
++      }
 +    } else if (memo_size > TX_EXTRA_MEMO_MAX_COUNT) {
 +      er.code = WALLET_RPC_ERROR_CODE_DENIED;
-+      er.message = "Transaction memo can't be more than 127 charecters long!";
++      er.message = "Transaction memo can't be more than 255 charecters long!";
 +      return false;
 +    }
 +
@@ -566,31 +590,37 @@ index 30eed07e7..f01f9cc87 100644
 +      return false;
 +    }
 +
-+    // Populate the tx extra to signify that this is an xaaset tx
-+    cryptonote::tx_extra_offshore offshore_data;
++    // Populate the tx extra to signify that this is an xasset tx
++    std::string offshore_data;
 +    if (req.asset_type.size() > 0) {
-+      offshore_data.data = req.asset_type + "-XUSD";
++      offshore_data = req.asset_type + "-XUSD";
 +    } else {
-+      er.code = WALLET_RPC_ERROR_CODE_DENIED;
++      er.code = WALLET_RPC_ERROR_CODE_TX_NOT_POSSIBLE;
 +      er.message = "Field 'asset_type' Unspecified. Tx contruction is not possible.";
 +      return false;
 +    }
 +    if (req.asset_type == "XUSD" || req.asset_type == "XHV") {
 +      er.code = WALLET_RPC_ERROR_CODE_DENIED;
-+      er.message = "This enpoint is for xAsset to xUSD conversions. Check out other enpoints for xUSD and/or XHV conversions.";
++      er.message = "This endpoint is for xUSD to xAsset conversions. Check out other endpoints for xUSD and/or XHV conversions.";
 +      return false;
 +    }
-+    cryptonote::add_offshore_to_tx_extra(extra, offshore_data);
++    if (!cryptonote::add_offshore_to_tx_extra(extra, offshore_data)) {
++      er.code = WALLET_RPC_ERROR_CODE_DENIED;
++      er.message = "Offshore data failed to serialise";
++      return false;
++    }
 +
 +    // add the memo data to tx extra if it exist
 +    size_t memo_size = req.memo.size();
 +    if (memo_size > 0 && memo_size <= TX_EXTRA_MEMO_MAX_COUNT) {
-+      cryptonote::tx_extra_memo memo;
-+      memo.data = req.memo;
-+      cryptonote::add_memo_to_tx_extra(extra, memo);
++      if (!cryptonote::add_memo_to_tx_extra(extra, req.memo)) {
++	er.code = WALLET_RPC_ERROR_CODE_DENIED;
++	er.message = "Transaction memo failed to serialise";
++	return false;
++      }
 +    } else if (memo_size > TX_EXTRA_MEMO_MAX_COUNT) {
 +      er.code = WALLET_RPC_ERROR_CODE_DENIED;
-+      er.message = "Transaction memo can't be more than 127 charecters long!";
++      er.message = "Transaction memo can't be more than 255 charecters long!";
 +      return false;
 +    }
 +
@@ -649,10 +679,10 @@ index 30eed07e7..f01f9cc87 100644
 +      return false;
 +    }
 +
-+    // Populate the tx extra to signify that this is an xaaset tx
-+    cryptonote::tx_extra_offshore offshore_data;
++    // Populate the tx extra to signify that this is an xasset tx
++    std::string offshore_data;
 +    if (req.asset_type.size() > 0) {
-+      offshore_data.data = req.asset_type + "-" + req.asset_type;
++      offshore_data = req.asset_type + "-" + req.asset_type;
 +    } else {
 +      er.code = WALLET_RPC_ERROR_CODE_TX_NOT_POSSIBLE;
 +      er.message = "Field 'asset_type' Unspecified. Tx contruction is not possible.";
@@ -660,20 +690,26 @@ index 30eed07e7..f01f9cc87 100644
 +    }
 +    if (req.asset_type == "XUSD" || req.asset_type == "XHV") {
 +      er.code = WALLET_RPC_ERROR_CODE_DENIED;
-+      er.message = "This enpoint is for xAsset transfers. Check out other enpoints for xUSD and/or XHV tranfers.";
++      er.message = "This endpoint is for xUSD to xAsset transfers. Check out other endpoints for xUSD and/or XHV transfers.";
 +      return false;
 +    }
-+    cryptonote::add_offshore_to_tx_extra(extra, offshore_data);
++    if (!cryptonote::add_offshore_to_tx_extra(extra, offshore_data)) {
++      er.code = WALLET_RPC_ERROR_CODE_DENIED;
++      er.message = "Offshore data failed to serialise";
++      return false;
++    }
 +
 +    // add the memo data to tx extra if it exist
 +    size_t memo_size = req.memo.size();
 +    if (memo_size > 0 && memo_size <= TX_EXTRA_MEMO_MAX_COUNT) {
-+      cryptonote::tx_extra_memo memo;
-+      memo.data = req.memo;
-+      cryptonote::add_memo_to_tx_extra(extra, memo);
++      if (!cryptonote::add_memo_to_tx_extra(extra, req.memo)) {
++	er.code = WALLET_RPC_ERROR_CODE_DENIED;
++	er.message = "Transaction memo failed to serialise";
++	return false;
++      }
 +    } else if (memo_size > TX_EXTRA_MEMO_MAX_COUNT) {
 +      er.code = WALLET_RPC_ERROR_CODE_DENIED;
-+      er.message = "Transaction memo can't be more than 127 charecters long!";
++      er.message = "Transaction memo can't be more than 255 charecters long!";
 +      return false;
 +    }
 +
@@ -714,26 +750,28 @@ index 30eed07e7..f01f9cc87 100644
    bool wallet_rpc_server::on_transfer(const wallet_rpc::COMMAND_RPC_TRANSFER::request& req, wallet_rpc::COMMAND_RPC_TRANSFER::response& res, epee::json_rpc::error& er, const connection_context *ctx)
    {
  
-@@ -940,6 +1464,18 @@ namespace tools
+@@ -940,6 +1500,20 @@ namespace tools
        return false;
      }
  
 +    // add the memo data to tx extra if it exist
 +    size_t memo_size = req.memo.size();
 +    if (memo_size > 0 && memo_size <= TX_EXTRA_MEMO_MAX_COUNT) {
-+      cryptonote::tx_extra_memo memo;
-+      memo.data = req.memo;
-+      cryptonote::add_memo_to_tx_extra(extra, memo);
++      if (!cryptonote::add_memo_to_tx_extra(extra, req.memo)) {
++	er.code = WALLET_RPC_ERROR_CODE_DENIED;
++	er.message = "Transaction memo failed to serialise";
++	return false;
++      }
 +    } else if (memo_size > TX_EXTRA_MEMO_MAX_COUNT) {
 +      er.code = WALLET_RPC_ERROR_CODE_DENIED;
-+      er.message = "Transaction memo can't be more than 127 charecters long!";
++      er.message = "Transaction memo can't be more than 255 charecters long!";
 +      return false;
 +    }
 +
      // validate the transfer requested and populate dsts & extra
      if (!validate_transfer(req.destinations, req.payment_id, dsts, extra, true, er))
      {
-@@ -966,8 +1502,11 @@ namespace tools
+@@ -966,8 +1540,11 @@ namespace tools
          er.message = "Transaction would be too large.  try /transfer_split.";
          return false;
        }
@@ -747,26 +785,28 @@ index 30eed07e7..f01f9cc87 100644
            res.tx_hash, req.get_tx_hex, res.tx_blob, req.get_tx_metadata, res.tx_metadata, er);
      }
      catch (const std::exception& e)
-@@ -992,6 +1531,18 @@ namespace tools
+@@ -992,6 +1569,20 @@ namespace tools
        return false;
      }
  
 +    // add the memo data to tx extra if it exist
 +    size_t memo_size = req.memo.size();
 +    if (memo_size > 0 && memo_size <= TX_EXTRA_MEMO_MAX_COUNT) {
-+      cryptonote::tx_extra_memo memo;
-+      memo.data = req.memo;
-+      cryptonote::add_memo_to_tx_extra(extra, memo);
++      if (!cryptonote::add_memo_to_tx_extra(extra, req.memo)) {
++	er.code = WALLET_RPC_ERROR_CODE_DENIED;
++	er.message = "Transaction memo failed to serialise";
++	return false;
++      }
 +    } else if (memo_size > TX_EXTRA_MEMO_MAX_COUNT) {
 +      er.code = WALLET_RPC_ERROR_CODE_DENIED;
-+      er.message = "Transaction memo can't be more than 127 charecters long!";
++      er.message = "Transaction memo can't be more than 255 charecters long!";
 +      return false;
 +    }
 +
      // validate the transfer requested and populate dsts & extra; RPC_TRANSFER::request and RPC_TRANSFER_SPLIT::request are identical types.
      if (!validate_transfer(req.destinations, req.payment_id, dsts, extra, true, er))
      {
-@@ -1013,8 +1564,11 @@ namespace tools
+@@ -1013,8 +1604,11 @@ namespace tools
          return false;
        }
  
@@ -780,7 +820,7 @@ index 30eed07e7..f01f9cc87 100644
      }
      catch (const std::exception& e)
      {
-@@ -1376,8 +1930,8 @@ namespace tools
+@@ -1376,8 +1970,8 @@ namespace tools
      {
        std::vector<wallet2::pending_tx> ptx_vector = m_wallet->create_unmixable_sweep_transactions();
  
@@ -791,7 +831,7 @@ index 30eed07e7..f01f9cc87 100644
      }
      catch (const std::exception& e)
      {
-@@ -1432,10 +1986,10 @@ namespace tools
+@@ -1432,10 +2026,10 @@ namespace tools
      {
        uint64_t mixin = m_wallet->adjust_mixin(req.ring_size ? req.ring_size - 1 : 0);
        uint32_t priority = m_wallet->adjust_priority(req.priority);
@@ -805,7 +845,7 @@ index 30eed07e7..f01f9cc87 100644
      }
      catch (const std::exception& e)
      {
-@@ -1509,7 +2063,7 @@ namespace tools
+@@ -1509,7 +2103,7 @@ namespace tools
          return false;
        }
  
@@ -814,7 +854,7 @@ index 30eed07e7..f01f9cc87 100644
            res.tx_hash, req.get_tx_hex, res.tx_blob, req.get_tx_metadata, res.tx_metadata, er);
      }
      catch (const std::exception& e)
-@@ -1698,37 +2252,53 @@ namespace tools
+@@ -1698,37 +2292,53 @@ namespace tools
        return false;
      }
  
@@ -891,7 +931,7 @@ index 30eed07e7..f01f9cc87 100644
        res.payments.push_back(rpc_payment);
      }
  
-@@ -1748,15 +2318,31 @@ namespace tools
+@@ -1748,15 +2358,31 @@ namespace tools
  
        for (auto & payment : payment_list)
        {
@@ -930,7 +970,7 @@ index 30eed07e7..f01f9cc87 100644
          res.payments.push_back(std::move(rpc_payment));
        }
  
-@@ -1804,14 +2390,15 @@ namespace tools
+@@ -1804,14 +2430,15 @@ namespace tools
        for (auto & payment : payment_list)
        {
          wallet_rpc::payment_details rpc_payment;
@@ -953,7 +993,7 @@ index 30eed07e7..f01f9cc87 100644
          res.payments.push_back(std::move(rpc_payment));
        }
      }
-@@ -1843,8 +2430,13 @@ namespace tools
+@@ -1843,8 +2470,13 @@ namespace tools
      }
  
      wallet2::transfer_container transfers;
@@ -967,11 +1007,28 @@ index 30eed07e7..f01f9cc87 100644
      for (const auto& td : transfers)
      {
        if (!filter || available != td.m_spent)
-@@ -1853,6 +2445,29 @@ namespace tools
+@@ -1853,6 +2485,7 @@ namespace tools
            continue;
          wallet_rpc::transfer_details rpc_transfers;
          rpc_transfers.amount       = td.amount();
 +        rpc_transfers.asset_type   = "XHV";
+         rpc_transfers.spent        = td.m_spent;
+         rpc_transfers.global_index = td.m_global_output_index;
+         rpc_transfers.tx_hash      = epee::string_tools::pod_to_hex(td.m_txid);
+@@ -1865,6 +2498,52 @@ namespace tools
+       }
+     }
+ 
++    // add xUSD transfers
++    for (const auto& td : offshore_transfers)
++    {
++      if (!filter || available != td.m_spent)
++      {
++        if (req.account_index != td.m_subaddr_index.major || (!req.subaddr_indices.empty() && req.subaddr_indices.count(td.m_subaddr_index.minor) == 0))
++          continue;
++        wallet_rpc::transfer_details rpc_transfers;
++        rpc_transfers.amount       = td.amount();
++        rpc_transfers.asset_type   = "XUSD";
 +        rpc_transfers.spent        = td.m_spent;
 +        rpc_transfers.global_index = td.m_global_output_index;
 +        rpc_transfers.tx_hash      = epee::string_tools::pod_to_hex(td.m_txid);
@@ -984,23 +1041,6 @@ index 30eed07e7..f01f9cc87 100644
 +      }
 +    }
 +
-+    // add xUSD transfers
-+    for (const auto& td : offshore_transfers)
-+    {
-+      if (!filter || available != td.m_spent)
-+      {
-+        if (req.account_index != td.m_subaddr_index.major || (!req.subaddr_indices.empty() && req.subaddr_indices.count(td.m_subaddr_index.minor) == 0))
-+          continue;
-+        wallet_rpc::transfer_details rpc_transfers;
-+        rpc_transfers.amount       = td.amount();
-+        rpc_transfers.asset_type   = "XUSD";
-         rpc_transfers.spent        = td.m_spent;
-         rpc_transfers.global_index = td.m_global_output_index;
-         rpc_transfers.tx_hash      = epee::string_tools::pod_to_hex(td.m_txid);
-@@ -1865,6 +2480,30 @@ namespace tools
-       }
-     }
- 
 +    // add xAsset transfers
 +    for (const auto& xasset : xasset_transfers)
 +    {
@@ -1028,7 +1068,7 @@ index 30eed07e7..f01f9cc87 100644
      return true;
    }
    //------------------------------------------------------------------------------------------------------------------------------
-@@ -2224,7 +2863,12 @@ namespace tools
+@@ -2224,7 +2903,12 @@ namespace tools
  
      try
      {
@@ -1042,7 +1082,7 @@ index 30eed07e7..f01f9cc87 100644
      }
      catch (const std::exception &e)
      {
-@@ -2290,7 +2934,12 @@ namespace tools
+@@ -2290,7 +2974,12 @@ namespace tools
  
      try
      {
@@ -1056,7 +1096,7 @@ index 30eed07e7..f01f9cc87 100644
      }
      catch (const std::exception &e)
      {
-@@ -3462,6 +4111,9 @@ namespace tools
+@@ -3462,6 +4151,9 @@ namespace tools
        }
      }
  
@@ -1066,7 +1106,7 @@ index 30eed07e7..f01f9cc87 100644
      try
      {
        if (!req.spendkey.empty())
-@@ -3526,6 +4178,12 @@ namespace tools
+@@ -3526,6 +4218,12 @@ namespace tools
      }
  
      // early check for mandatory fields

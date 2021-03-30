@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_basic/cryptonote_format_utils.h b/src/cryptonote_basic/cryptonote_format_utils.h
-index d1b24d950..9547746be 100644
+index d1b24d950..e95314a67 100644
 --- a/src/cryptonote_basic/cryptonote_format_utils.h
 +++ b/src/cryptonote_basic/cryptonote_format_utils.h
 @@ -81,8 +81,12 @@ namespace cryptonote
@@ -10,12 +10,12 @@ index d1b24d950..9547746be 100644
 +  bool get_memo_from_tx_extra(const std::vector<uint8_t>& tx_extra, cryptonote::tx_extra_memo& memo);
    bool add_additional_tx_pub_keys_to_extra(std::vector<uint8_t>& tx_extra, const std::vector<crypto::public_key>& additional_pub_keys);
    bool add_extra_nonce_to_tx_extra(std::vector<uint8_t>& tx_extra, const blobdata& extra_nonce);
-+  bool add_offshore_to_tx_extra(std::vector<uint8_t>& tx_extra, cryptonote::tx_extra_offshore& extra_offshore);
-+  bool add_memo_to_tx_extra(std::vector<uint8_t>& tx_extra, cryptonote::tx_extra_memo& extra_memo);
++  bool add_offshore_to_tx_extra(std::vector<uint8_t>& tx_extra, const std::string& offshore_data);
++  bool add_memo_to_tx_extra(std::vector<uint8_t>& tx_extra, const std::string& memo);
    bool remove_field_from_tx_extra(std::vector<uint8_t>& tx_extra, const std::type_info &type);
    void set_payment_id_to_tx_extra_nonce(blobdata& extra_nonce, const crypto::hash& payment_id);
    void set_encrypted_payment_id_to_tx_extra_nonce(blobdata& extra_nonce, const crypto::hash8& payment_id);
-@@ -124,7 +126,7 @@ namespace cryptonote
+@@ -124,7 +128,7 @@ namespace cryptonote
    bool parse_and_validate_block_from_blob(const blobdata& b_blob, block& b);
    bool parse_and_validate_block_from_blob(const blobdata& b_blob, block& b, crypto::hash &block_hash);
    bool get_inputs_money_amount(const transaction& tx, uint64_t& money);
@@ -24,7 +24,7 @@ index d1b24d950..9547746be 100644
    bool check_inputs_types_supported(const transaction& tx);
    bool check_outs_valid(const transaction& tx);
    bool parse_amount(uint64_t& amount, const std::string& str_amount);
-@@ -142,6 +144,7 @@ namespace cryptonote
+@@ -142,6 +146,7 @@ namespace cryptonote
    unsigned int get_default_decimal_point();
    std::string get_unit(unsigned int decimal_point = -1);
    std::string print_money(uint64_t amount, unsigned int decimal_point = -1);
