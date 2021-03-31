@@ -1,5 +1,5 @@
 diff --git a/src/ringct/rctTypes.h b/src/ringct/rctTypes.h
-index 9b7f26a02..fb3ee7dd6 100644
+index 9b7f26a02..402aad2aa 100644
 --- a/src/ringct/rctTypes.h
 +++ b/src/ringct/rctTypes.h
 @@ -113,9 +113,14 @@ namespace rct {
@@ -71,12 +71,12 @@ index 9b7f26a02..fb3ee7dd6 100644
 +      ctkeyV outPk;
 +      ctkeyV outPk_usd;
 +      ctkeyV outPk_xasset;
-+      xmr_amount txnFee; // contains b
-+      xmr_amount txnFee_usd;
-+      xmr_amount txnFee_xasset;
-+      xmr_amount txnOffshoreFee;
-+      xmr_amount txnOffshoreFee_usd;
-+      xmr_amount txnOffshoreFee_xasset;
++      xmr_amount txnFee = 0; // contains b
++      xmr_amount txnFee_usd = 0;
++      xmr_amount txnFee_xasset = 0;
++      xmr_amount txnOffshoreFee = 0;
++      xmr_amount txnOffshoreFee_usd = 0;
++      xmr_amount txnOffshoreFee_xasset = 0;
  
          template<bool W, template <bool> class Archive>
          bool serialize_rctsig_base(Archive<W> &ar, size_t inputs, size_t outputs)
