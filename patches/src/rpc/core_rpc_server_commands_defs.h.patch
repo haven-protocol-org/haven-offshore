@@ -1,5 +1,5 @@
 diff --git a/src/rpc/core_rpc_server_commands_defs.h b/src/rpc/core_rpc_server_commands_defs.h
-index a3c187c24..8d7c2c855 100644
+index a3c187c24..0c91f5d87 100644
 --- a/src/rpc/core_rpc_server_commands_defs.h
 +++ b/src/rpc/core_rpc_server_commands_defs.h
 @@ -833,6 +833,50 @@ namespace cryptonote
@@ -61,7 +61,26 @@ index a3c187c24..8d7c2c855 100644
        bool orphan_status;
        uint64_t height;
        uint64_t depth;
-@@ -1009,6 +1054,7 @@ namespace cryptonote
+@@ -1002,13 +1047,25 @@ namespace cryptonote
+       std::string pow_hash;
+       uint64_t long_term_weight;
+       std::string miner_tx_hash;
+-      
++
++      struct asset_reward {
++	std::string asset_type;
++	uint64_t amount;
++
++        BEGIN_KV_SERIALIZE_MAP()
++	  KV_SERIALIZE(asset_type)
++	  KV_SERIALIZE(amount)
++	END_KV_SERIALIZE_MAP()
++      };
++    std::vector<asset_reward> rewards;
++    
+       BEGIN_KV_SERIALIZE_MAP()
+         KV_SERIALIZE(major_version)
+         KV_SERIALIZE(minor_version)
          KV_SERIALIZE(timestamp)
          KV_SERIALIZE(prev_hash)
          KV_SERIALIZE(nonce)
@@ -69,7 +88,15 @@ index a3c187c24..8d7c2c855 100644
          KV_SERIALIZE(orphan_status)
          KV_SERIALIZE(height)
          KV_SERIALIZE(depth)
-@@ -1927,6 +1973,42 @@ namespace cryptonote
+@@ -1026,6 +1083,7 @@ namespace cryptonote
+         KV_SERIALIZE(pow_hash)
+         KV_SERIALIZE_OPT(long_term_weight, (uint64_t)0)
+         KV_SERIALIZE(miner_tx_hash)
++        KV_SERIALIZE(rewards)
+       END_KV_SERIALIZE_MAP()
+   };
+ 
+@@ -1927,6 +1985,42 @@ namespace cryptonote
      typedef epee::misc_utils::struct_init<response_t> response;
    };
  

@@ -1,5 +1,5 @@
 diff --git a/src/wallet/wallet2.cpp b/src/wallet/wallet2.cpp
-index c3ba34260..4c90c78ae 100644
+index c3ba34260..74419b6aa 100644
 --- a/src/wallet/wallet2.cpp
 +++ b/src/wallet/wallet2.cpp
 @@ -29,6 +29,7 @@
@@ -2000,7 +2000,7 @@ index c3ba34260..4c90c78ae 100644
 +    } else if (in.type() == typeid(cryptonote::txin_onshore)) {
 +      const auto &txin = boost::get<cryptonote::txin_onshore>(in);
 +      utd.m_rings.push_back(std::make_pair(txin.k_image, txin.key_offsets));
-+      input_asset = "XHV";
++      input_asset = "XUSD";
 +    } else if (in.type() == typeid(cryptonote::txin_xasset)) {
 +      const auto &txin = boost::get<cryptonote::txin_xasset>(in);
 +      utd.m_rings.push_back(std::make_pair(txin.k_image, txin.key_offsets));
@@ -2034,7 +2034,7 @@ index c3ba34260..4c90c78ae 100644
 +  if (ptx.tx.vin[0].type() == typeid(txin_xasset)) {
 +    const cryptonote::txin_xasset &in_xasset = boost::get<cryptonote::txin_xasset>(ptx.tx.vin[0]);
 +    strSourceCurrency = in_xasset.asset_type;
-+  } else if (ptx.tx.vin[0].type() == typeid(txin_offshore)) {
++  } else if (ptx.tx.vin[0].type() == typeid(txin_offshore) || ptx.tx.vin[0].type() == typeid(txin_onshore)) {
 +    strSourceCurrency = "XUSD";
 +  }
 +  transfer_container& specific_transfers =
