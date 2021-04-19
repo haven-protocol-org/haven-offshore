@@ -1,8 +1,16 @@
 diff --git a/src/cryptonote_core/tx_pool.cpp b/src/cryptonote_core/tx_pool.cpp
-index 696bc88d4..72c2cd901 100644
+index 696bc88d4..4581115e3 100644
 --- a/src/cryptonote_core/tx_pool.cpp
 +++ b/src/cryptonote_core/tx_pool.cpp
-@@ -107,8 +107,8 @@ namespace cryptonote
+@@ -47,6 +47,7 @@
+ #include "common/perf_timer.h"
+ #include "crypto/hash.h"
+ #include "crypto/duration.h"
++#include "offshore/asset_types.h"
+ 
+ #undef MONERO_DEFAULT_LOG_CATEGORY
+ #define MONERO_DEFAULT_LOG_CATEGORY "txpool"
+@@ -107,8 +108,8 @@ namespace cryptonote
  
      uint64_t get_transaction_weight_limit(uint8_t version)
      {
@@ -13,7 +21,7 @@ index 696bc88d4..72c2cd901 100644
          return get_min_block_weight(version) / 2 - CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE;
        else
          return get_min_block_weight(version) - CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE;
-@@ -155,7 +155,7 @@ namespace cryptonote
+@@ -155,7 +156,7 @@ namespace cryptonote
      }
  
      // fee per kilobyte, size rounded up.
@@ -22,7 +30,7 @@ index 696bc88d4..72c2cd901 100644
  
      if (tx.version == 1)
      {
-@@ -166,7 +166,7 @@ namespace cryptonote
+@@ -166,7 +167,7 @@ namespace cryptonote
          return false;
        }
  
@@ -31,7 +39,7 @@ index 696bc88d4..72c2cd901 100644
        if(outputs_amount > inputs_amount)
        {
          LOG_PRINT_L1("transaction use more money than it has: use " << print_money(outputs_amount) << ", have " << print_money(inputs_amount));
-@@ -187,15 +187,171 @@ namespace cryptonote
+@@ -187,15 +188,237 @@ namespace cryptonote
      else
      {
        fee = tx.rct_signatures.txnFee;
@@ -43,156 +51,225 @@ index 696bc88d4..72c2cd901 100644
      }
  
 -    if (!kept_by_block && !m_blockchain.check_fee(tx_weight, fee))
-+    if (!kept_by_block &&
-+	((tx.version < OFFSHORE_TRANSACTION_VERSION) || (tx.pricing_record_height == 0)) &&
-+	(!fee || !m_blockchain.check_fee(tx_weight, fee)) &&
-+	(!fee_usd || !m_blockchain.check_fee(tx_weight, fee_usd)) &&
-+	(!fee_xasset || !m_blockchain.check_fee(tx_weight, fee_xasset)))
-     {
-       tvc.m_verifivation_failed = true;
-       tvc.m_fee_too_low = true;
-       return false;
-     }
- 
+-    {
++    // check the fee
++    if (!kept_by_block) {
++      if ((!fee || !m_blockchain.check_fee(tx_weight, fee)) && (!fee_usd || !m_blockchain.check_fee(tx_weight, fee_usd)) && (!fee_xasset || !m_blockchain.check_fee(tx_weight, fee_xasset)))
++      {
++        tvc.m_verifivation_failed = true;
++        tvc.m_fee_too_low = true;
++        return false;
++      }
++    }
++
++    //validate the offshore data
++    bool bOffshoreTx = false;
++    tx_extra_offshore offshore_data;
++    if (tx.extra.size()) {
++      bOffshoreTx = get_offshore_from_tx_extra(tx.extra, offshore_data);
++    }
++    if (bOffshoreTx) {
++      if (version >= HF_VERSION_XASSET_FULL) {
++        int pos = offshore_data.data.find("-");
++        if (pos != std::string::npos) {
++          std::string source = offshore_data.data.substr(0,pos);
++          std::string dest = offshore_data.data.substr(pos+1);
++          // check both strSource and strDest are supported.
++          if (std::find(offshore::ASSET_TYPES.begin(), offshore::ASSET_TYPES.end(), source) == offshore::ASSET_TYPES.end()) {
++            tvc.m_verifivation_failed = true;
++            LOG_PRINT_L1("Source Asset type " << source << " is not supported! Rejecting..");
++            return false;
++          }
++          if (std::find(offshore::ASSET_TYPES.begin(), offshore::ASSET_TYPES.end(), dest) == offshore::ASSET_TYPES.end()) {
++            tvc.m_verifivation_failed = true;
++            LOG_PRINT_L1("Destination Asset type " << dest << " is not supported! Rejecting..");
++            return false;
++          }
++        } else {
++          LOG_PRINT_L1("Invalid offshore data format was supplied to tx." << id);
++          tvc.m_verifivation_failed = true;
++          return false;
++        }
++      } else if (version >= HF_VERSION_OFFSHORE_FULL) {
++        if (offshore_data.data.size() != 2 ||
++          (offshore_data.data.at(0) != 'A' && offshore_data.data.at(0) != 'N') || 
++          (offshore_data.data.at(1) != 'A' && offshore_data.data.at(1) != 'N')
++        ){
++          // old offshore data format suplied to tx extra
++          LOG_PRINT_L1("Invalid offshore data format was supplied to tx." << id);
++          tvc.m_verifivation_failed = true;
++          return false;
++        }
++      }
++
++      std::string tx_offshore_data(tx.offshore_data.begin(), tx.offshore_data.end());
++      if(tx_offshore_data.empty()) {
++        if (version >= HF_VERSION_XASSET_FULL) {
++          // old offshore data format suplied to tx extra
++          LOG_PRINT_L1("Empty tx_offshore_data." << id);
++          tvc.m_verifivation_failed = true;
++          return false;
++        } else if (version >= HF_VERSION_OFFSHORE_FULL) {
++          // offshore_data must be "NN"
++          if (offshore_data.data != "NN") {
++            // old offshore data format suplied to tx extra
++            LOG_PRINT_L1("Invalid offshore data format was supplied to tx." << id);
++            tvc.m_verifivation_failed = true;
++            return false;
++          }
++        }
++      } else {
++        if (tx_offshore_data != offshore_data.data) {
++          // old offshore data format suplied to tx extra
++          LOG_PRINT_L1("Tx offshore data doesn't match with the one from tx extra." << id);
++          tvc.m_verifivation_failed = true;
++          return false;
++        }
++      }
++    }
++
 +    // Check to make sure that only 1 destination is provided if memo data is specified.
 +    // This is necessary because we shuffle outputs and there is no way to identify which memo data would relate to which destination if multiples were permitted.
 +    tx_extra_memo memo;
 +    if (get_memo_from_tx_extra(tx.extra, memo)) {
 +      if (tx.vout.size() > 2) {
-+	LOG_PRINT_L1("transaction has memo data and multiple destinations specified - this is not permitted, rejecting.");
-+	tvc.m_verifivation_failed = true;
-+	return false;
++        LOG_PRINT_L1("transaction has memo data and multiple destinations specified - this is not permitted, rejecting.");
++        tvc.m_verifivation_failed = true;
++        return false;
 +      }
 +    }
-+  
-+    bool bOffshoreTx = false;
-+    tx_extra_offshore offshore_data;
-+    if (tx.extra.size()) {
-+      // Check to see if this is an offshore tx
-+      bOffshoreTx = get_offshore_from_tx_extra(tx.extra, offshore_data);
-+    }
 +
-+    crypto::public_key txkey_pub;
++
++    // Set the offshore TX type flags
 +    bool offshore = false;
 +    bool onshore = false;
 +    bool offshore_transfer = false;
 +    bool xasset_transfer = false;
 +    bool xasset_to_xusd = false;
 +    bool xusd_to_xasset = false;
++    std::string source;
++    std::string dest;
++    offshore::pricing_record pr;
++    
++    if (!get_tx_asset_types(tx, source, dest)) {
++      LOG_PRINT_L1("At least 1 input or 1 output of the tx was invalid." << id);
+       tvc.m_verifivation_failed = true;
+-      tvc.m_fee_too_low = true;
+-      return false;
++      if (source.empty()) {
++        tvc.m_invalid_input = true;
++      }
++      if (dest.empty()) {
++        tvc.m_invalid_output = true;
++      }
+     }
+ 
 +    std::string xasset_type;
 +    std::string fee_asset_type = "XHV";
-+    if (bOffshoreTx) {
-+      if (version >= HF_VERSION_XASSET_FULL) {
-+        int pos = offshore_data.data.find("-");
-+        if (pos != std::string::npos) {
-+          std::string strSource = offshore_data.data.substr(0,pos);
-+          std::string strDest = offshore_data.data.substr(pos+1);
-+          if (strSource == "XHV") {
-+            offshore = true;
-+          } else if (strDest == "XHV") {
-+            onshore = true;
-+          } else if (strSource == "XUSD" && strDest == "XUSD") {
-+            offshore_transfer = true;
-+          } else if (strSource != "XUSD" && strDest != "XUSD") {
-+            xasset_transfer = true;
-+            xasset_type = strSource;
-+          } else if (strSource == "XUSD") {
-+            xusd_to_xasset = true;
-+            xasset_type = strDest;
-+          } else {
-+            xasset_to_xusd = true;
-+            xasset_type = strSource;
-+          }
-+          fee_asset_type = strSource;
-+        }
++    if (source != "XHV" || dest != "XHV") {
++      if (source == "XHV") {
++        offshore = true;
++      } else if (dest == "XHV") {
++        onshore = true;
++      } else if (source == "XUSD" && dest == "XUSD") {
++        offshore_transfer = true;
++      } else if (source != "XUSD" && dest != "XUSD") {
++        xasset_transfer = true;
++        xasset_type = source;
++      } else if (source == "XUSD") {
++        xusd_to_xasset = true;
++        xasset_type = dest;
 +      } else {
-+        // Set the bool flags
-+        if ((offshore_data.data.at(0) > 'A') && (offshore_data.data.at(1) > 'A')) {
-+          offshore_transfer = true;
-+          fee_asset_type = "XUSD";
-+        } else if (offshore_data.data.at(0) > 'A') {
-+          onshore = true;
-+          fee_asset_type = "XUSD";
-+        } else {
-+          offshore = true;
-+          fee_asset_type = "XHV";
++        xasset_to_xusd = true;
++        xasset_type = source;
++      }
++      fee_asset_type = source;
++    
++
++      if (source != dest) { // it is conversion tx
++        // Validate that pricing record is not too old
++        uint64_t current_height = m_blockchain.get_current_blockchain_height();
++        if ((current_height - PRICING_RECORD_VALID_BLOCKS) > tx.pricing_record_height) {
++          LOG_PRINT_L2("error : offshore/xAsset transaction references a pricing record that is too old (height " << tx.pricing_record_height << ")");
++          tvc.m_verifivation_failed = true;
++          return false;
 +        }
 +      }
 +      
++      // this check is here because of a soft fork that needed to happen due to invalid pr
 +      if (tx.pricing_record_height > 658500) {
++        // NEAC: recover from the reorg during Oracle switch - 1 TX affected
++        offshore::pricing_record pr;
++        if (tx.pricing_record_height == 821428) {
++          const std::string pr_821428 = "9b3f6f2f8f0000003d620e1202000000be71be2555120000b8627010000000000000000000000000ea0885b2270d00000000000000000000f797ff9be00b0000ddbdb005270a0000fc90cfe02b01060000000000000000000000000000000000d0a28224000e000000d643be960e0000002e8bb6a40e000000f8a817f80d00002f5d27d45cdbfbac3d0f6577103f68de30895967d7562fbd56c161ae90130f54301b1ea9d5fd062f37dac75c3d47178bc6f149d21da1ff0e8430065cb762b93a";
++          pr.xAG = 614976143259;
++          pr.xAU = 8892867133;
++          pr.xAUD = 20156914758078;
++          pr.xBTC = 275800760;
++          pr.xCAD = 0;
++          pr.xCHF = 14464149948650;
++          pr.xCNY = 0;
++          pr.xEUR = 13059317798903;
++          pr.xGBP = 11162715471325;
++          pr.xJPY = 1690137827184892;
++          pr.xNOK = 0;
++          pr.xNZD = 0;
++          pr.xUSD = 15393775330000;
++          pr.unused1 = 16040600000000;
++          pr.unused2 = 16100600000000;
++          pr.unused3 = 15359200000000;
++          std::string sig = "2f5d27d45cdbfbac3d0f6577103f68de30895967d7562fbd56c161ae90130f54301b1ea9d5fd062f37dac75c3d47178bc6f149d21da1ff0e8430065cb762b93a";
++          int j=0;
++          for (unsigned int i = 0; i < sig.size(); i += 2) {
++            std::string byteString = sig.substr(i, 2);
++            pr.signature[j++] = (char) strtol(byteString.c_str(), NULL, 16);
++          }
++          
++          if (!pr.verifySignature()) {
++            LOG_ERROR("Failed to set correct PR for block: " << tx.pricing_record_height);
++            return false;
++          }
++        } else {
++          // Get the pricing record that was used for conversion
++          block bl;
++          bool r = m_blockchain.get_block_by_hash(m_blockchain.get_block_id_by_height(tx.pricing_record_height), bl);
++          if (!r) {
++            LOG_ERROR("error: failed to get block containing pricing record");
++            tvc.m_verifivation_failed = true;
++            return false;
++          }
 +
-+	// NEAC: recover from the reorg during Oracle switch - 1 TX affected
-+	offshore::pricing_record pr;
-+	if (tx.pricing_record_height == 821428) {
-+	  const std::string pr_821428 = "9b3f6f2f8f0000003d620e1202000000be71be2555120000b8627010000000000000000000000000ea0885b2270d00000000000000000000f797ff9be00b0000ddbdb005270a0000fc90cfe02b01060000000000000000000000000000000000d0a28224000e000000d643be960e0000002e8bb6a40e000000f8a817f80d00002f5d27d45cdbfbac3d0f6577103f68de30895967d7562fbd56c161ae90130f54301b1ea9d5fd062f37dac75c3d47178bc6f149d21da1ff0e8430065cb762b93a";
-+	  pr.xAG = 614976143259;
-+	  pr.xAU = 8892867133;
-+	  pr.xAUD = 20156914758078;
-+	  pr.xBTC = 275800760;
-+	  pr.xCAD = 0;
-+	  pr.xCHF = 14464149948650;
-+	  pr.xCNY = 0;
-+	  pr.xEUR = 13059317798903;
-+	  pr.xGBP = 11162715471325;
-+	  pr.xJPY = 1690137827184892;
-+	  pr.xNOK = 0;
-+	  pr.xNZD = 0;
-+	  pr.xUSD = 15393775330000;
-+	  pr.unused1 = 16040600000000;
-+	  pr.unused2 = 16100600000000;
-+	  pr.unused3 = 15359200000000;
-+	  std::string sig = "2f5d27d45cdbfbac3d0f6577103f68de30895967d7562fbd56c161ae90130f54301b1ea9d5fd062f37dac75c3d47178bc6f149d21da1ff0e8430065cb762b93a";
-+	  int j=0;
-+	  for (unsigned int i = 0; i < sig.size(); i += 2) {
-+	    std::string byteString = sig.substr(i, 2);
-+	    pr.signature[j++] = (char) strtol(byteString.c_str(), NULL, 16);
-+	  }
-+	  
-+	  if (!pr.verifySignature()) {
-+	    LOG_ERROR("Failed to set correct PR for block: " << tx.pricing_record_height);
-+	    return false;
-+	  }
-+	} else {
++          pr = bl.pricing_record;
++        }
 +	
-+	  // Get the pricing record that was used for conversion
-+	  block bl;
-+	  bool r = m_blockchain.get_block_by_hash(m_blockchain.get_block_id_by_height(tx.pricing_record_height), bl);
-+	  if (!r) {
-+	    LOG_ERROR("error: failed to get block containing pricing record");
-+	    tvc.m_verifivation_failed = true;
-+	    return false;
-+	  }
-+
-+	  pr = bl.pricing_record;
-+	}
-+	
-+	// Check the amount burnt and minted
-+	if (!rct::checkBurntAndMinted(tx.rct_signatures, tx.amount_burnt, tx.amount_minted, pr, offshore, onshore, xusd_to_xasset, xasset_to_xusd, xasset_type)) {
-+	  LOG_PRINT_L1("amount burnt / minted is incorrect: burnt = " << tx.amount_burnt << ", minted = " << tx.amount_minted);
-+	  tvc.m_verifivation_failed = true;
-+	  return false;
-+	}
++        // Check the amount burnt and minted
++        if (!rct::checkBurntAndMinted(tx.rct_signatures, tx.amount_burnt, tx.amount_minted, pr, offshore, onshore, xusd_to_xasset, xasset_to_xusd, xasset_type)) {
++          LOG_PRINT_L1("amount burnt / minted is incorrect: burnt = " << tx.amount_burnt << ", minted = " << tx.amount_minted);
++          tvc.m_verifivation_failed = true;
++          return false;
++        }
 +
 +        // Verify the offshore conversion fee is present and correct here
 +        uint64_t unlock_time = tx.unlock_time - tx.pricing_record_height;
 +        if (offshore || onshore) {
-+	  if (unlock_time < 180) {
-+	    LOG_PRINT_L1("unlock_time is too short: " << unlock_time << " blocks - rejecting (minimum permitted is 180 blocks)");
-+	    tvc.m_verifivation_failed = true;
-+	    return false;
-+	  }
-+	}
++          if (unlock_time < 180) {
++            LOG_PRINT_L1("unlock_time is too short: " << unlock_time << " blocks - rejecting (minimum permitted is 180 blocks)");
++            tvc.m_verifivation_failed = true;
++            return false;
++          }
++        }
 +        uint64_t priority = (unlock_time >= 5040) ? 1 : (unlock_time >= 1440) ? 2 : (unlock_time >= 720) ? 3 : 4;
 +        uint64_t conversion_fee_check = 0;
-+	if (offshore || onshore) {
++        if (offshore || onshore) {
 +          conversion_fee_check = (priority == 1) ? tx.amount_burnt / 500 : (priority == 2) ? tx.amount_burnt / 20 : (priority == 3) ? tx.amount_burnt / 10 : tx.amount_burnt / 5;
-+	} else if (xusd_to_xasset || xasset_to_xusd) {
-+	  // Flat 0.3% conversion fee for xAsset TXs
-+	  conversion_fee_check = (tx.amount_burnt * 3) / 1000;
-+	}
++        } else if (xusd_to_xasset || xasset_to_xusd) {
++          // Flat 0.3% conversion fee for xAsset TXs
++          conversion_fee_check = (tx.amount_burnt * 3) / 1000;
++        }
 +        if ((offshore && (conversion_fee_check != tx.rct_signatures.txnOffshoreFee)) ||
 +            ((onshore || xusd_to_xasset) && (conversion_fee_check != tx.rct_signatures.txnOffshoreFee_usd)) ||
-+	    (xasset_to_xusd && (conversion_fee_check != tx.rct_signatures.txnOffshoreFee_xasset))) {
++	          (xasset_to_xusd && (conversion_fee_check != tx.rct_signatures.txnOffshoreFee_xasset))) 
++        {
 +          LOG_PRINT_L1("conversion fee is incorrect - rejecting");
 +          tvc.m_verifivation_failed = true;
 +          tvc.m_fee_too_low = true;
@@ -204,7 +281,7 @@ index 696bc88d4..72c2cd901 100644
      size_t tx_weight_limit = get_transaction_weight_limit(version);
      if ((!kept_by_block || version >= HF_VERSION_PER_BYTE_FEE) && tx_weight > tx_weight_limit)
      {
-@@ -236,6 +392,7 @@ namespace cryptonote
+@@ -236,6 +459,7 @@ namespace cryptonote
      crypto::hash max_used_block_id = null_hash;
      uint64_t max_used_block_height = 0;
      cryptonote::txpool_tx_meta_t meta{};
@@ -212,7 +289,7 @@ index 696bc88d4..72c2cd901 100644
      bool ch_inp_res = check_tx_inputs([&tx]()->cryptonote::transaction&{ return tx; }, id, max_used_block_height, max_used_block_id, tvc, kept_by_block);
      if(!ch_inp_res)
      {
-@@ -244,7 +401,16 @@ namespace cryptonote
+@@ -244,7 +468,16 @@ namespace cryptonote
        if(kept_by_block)
        {
          meta.weight = tx_weight;
@@ -230,7 +307,7 @@ index 696bc88d4..72c2cd901 100644
          meta.max_used_block_id = null_hash;
          meta.max_used_block_height = 0;
          meta.last_failed_height = 0;
-@@ -256,6 +422,7 @@ namespace cryptonote
+@@ -256,6 +489,7 @@ namespace cryptonote
          meta.double_spend_seen = have_tx_keyimges_as_spent(tx, id);
          meta.pruned = tx.pruned;
          meta.bf_padding = 0;
@@ -238,7 +315,7 @@ index 696bc88d4..72c2cd901 100644
          memset(meta.padding, 0, sizeof(meta.padding));
          try
          {
-@@ -313,7 +480,16 @@ namespace cryptonote
+@@ -313,7 +547,16 @@ namespace cryptonote
            meta.last_relayed_time = std::numeric_limits<decltype(meta.last_relayed_time)>::max();
            meta.receive_time = receive_time;
            meta.weight = tx_weight;
@@ -256,29 +333,26 @@ index 696bc88d4..72c2cd901 100644
            meta.max_used_block_id = max_used_block_id;
            meta.max_used_block_height = max_used_block_height;
            meta.last_failed_height = 0;
-@@ -322,6 +498,7 @@ namespace cryptonote
+@@ -322,6 +565,7 @@ namespace cryptonote
            meta.double_spend_seen = false;
            meta.pruned = tx.pruned;
            meta.bf_padding = 0;
-+	  memset(meta.padding1, 0, sizeof(meta.padding1));
++	        memset(meta.padding1, 0, sizeof(meta.padding1));
            memset(meta.padding, 0, sizeof(meta.padding));
  
            if (!insert_key_images(tx, id, tx_relay))
-@@ -341,8 +518,12 @@ namespace cryptonote
+@@ -341,8 +585,9 @@ namespace cryptonote
        tvc.m_added_to_pool = true;
  
        static_assert(unsigned(relay_method::none) == 0, "expected relay_method::none value to be zero");
 -      if(meta.fee > 0)
 +      if(meta.fee > 0){
-+        tvc.m_relay = tx_relay;
-+      } else if (tx_relay != relay_method::none && ((tx.version >= OFFSHORE_TRANSACTION_VERSION) && (tx.pricing_record_height != 0))) {
-+	      LOG_PRINT_L1("tx meta.fee is 0, but this is an offshore TX, so relaying enabled");
          tvc.m_relay = tx_relay;
 +      }
      }
  
      tvc.m_verifivation_failed = false;
-@@ -350,7 +531,7 @@ namespace cryptonote
+@@ -350,7 +595,7 @@ namespace cryptonote
  
      ++m_cookie;
  
@@ -287,7 +361,7 @@ index 696bc88d4..72c2cd901 100644
  
      prune(m_txpool_max_weight);
  
-@@ -441,28 +622,88 @@ namespace cryptonote
+@@ -441,28 +686,88 @@ namespace cryptonote
    //---------------------------------------------------------------------------------
    bool tx_memory_pool::insert_key_images(const transaction_prefix &tx, const crypto::hash &id, relay_method tx_relay)
    {
@@ -388,7 +462,7 @@ index 696bc88d4..72c2cd901 100644
      ++m_cookie;
      return true;
    }
-@@ -475,32 +716,99 @@ namespace cryptonote
+@@ -475,32 +780,99 @@ namespace cryptonote
      CRITICAL_REGION_LOCAL(m_transactions_lock);
      CRITICAL_REGION_LOCAL1(m_blockchain);
      // ND: Speedup
@@ -507,7 +581,7 @@ index 696bc88d4..72c2cd901 100644
    {
      CRITICAL_REGION_LOCAL(m_transactions_lock);
      CRITICAL_REGION_LOCAL1(m_blockchain);
-@@ -533,6 +841,8 @@ namespace cryptonote
+@@ -533,6 +905,8 @@ namespace cryptonote
        }
        tx_weight = meta.weight;
        fee = meta.fee;
@@ -516,7 +590,7 @@ index 696bc88d4..72c2cd901 100644
        relayed = meta.relayed;
        do_not_relay = meta.do_not_relay;
        double_spend_seen = meta.double_spend_seen;
-@@ -728,7 +1038,7 @@ namespace cryptonote
+@@ -728,7 +1102,7 @@ namespace cryptonote
      txs.reserve(m_blockchain.get_txpool_tx_count());
      m_blockchain.for_all_txpool_txes([this, now, &txs](const crypto::hash &txid, const txpool_tx_meta_t &meta, const cryptonote::blobdata *){
        // 0 fee transactions are never relayed
@@ -525,7 +599,7 @@ index 696bc88d4..72c2cd901 100644
        {
          if (!meta.dandelionpp_stem && now - meta.last_relayed_time <= get_relay_delay(now, meta.receive_time))
            return true;
-@@ -1102,11 +1412,37 @@ namespace cryptonote
+@@ -1102,11 +1476,37 @@ namespace cryptonote
    {
      CRITICAL_REGION_LOCAL(m_transactions_lock);
      CRITICAL_REGION_LOCAL1(m_blockchain);
@@ -568,7 +642,7 @@ index 696bc88d4..72c2cd901 100644
      }
      return false;
    }
-@@ -1224,22 +1560,74 @@ namespace cryptonote
+@@ -1224,22 +1624,74 @@ namespace cryptonote
    //---------------------------------------------------------------------------------
    bool tx_memory_pool::have_key_images(const std::unordered_set<crypto::key_image>& k_images, const transaction_prefix& tx)
    {
@@ -653,7 +727,7 @@ index 696bc88d4..72c2cd901 100644
      }
      return true;
    }
-@@ -1252,8 +1640,21 @@ namespace cryptonote
+@@ -1252,8 +1704,21 @@ namespace cryptonote
      LockedTXN lock(m_blockchain.get_db());
      for(size_t i = 0; i!= tx.vin.size(); i++)
      {
@@ -677,7 +751,7 @@ index 696bc88d4..72c2cd901 100644
        if (it != m_spent_key_images.end())
        {
          for (const crypto::hash &txid: it->second)
-@@ -1267,7 +1668,7 @@ namespace cryptonote
+@@ -1267,7 +1732,7 @@ namespace cryptonote
            }
            if (!meta.double_spend_seen)
            {
@@ -686,7 +760,7 @@ index 696bc88d4..72c2cd901 100644
              meta.double_spend_seen = true;
              changed = true;
              try
-@@ -1321,14 +1722,13 @@ namespace cryptonote
+@@ -1321,14 +1786,13 @@ namespace cryptonote
    }
    //---------------------------------------------------------------------------------
    //TODO: investigate whether boolean return is appropriate
@@ -702,7 +776,7 @@ index 696bc88d4..72c2cd901 100644
      
      //baseline empty block
      if (!get_block_reward(median_weight, total_weight, already_generated_coins, best_coinbase, version))
-@@ -1337,7 +1737,6 @@ namespace cryptonote
+@@ -1337,7 +1801,6 @@ namespace cryptonote
        return false;
      }
  
@@ -710,7 +784,7 @@ index 696bc88d4..72c2cd901 100644
      size_t max_total_weight_pre_v5 = (130 * median_weight) / 100 - CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE;
      size_t max_total_weight_v5 = 2 * median_weight - CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE;
      size_t max_total_weight = version >= 5 ? max_total_weight_v5 : max_total_weight_pre_v5;
-@@ -1361,7 +1760,9 @@ namespace cryptonote
+@@ -1361,7 +1824,9 @@ namespace cryptonote
        if (!meta.matches(relay_category::legacy) && !(m_mine_stem_txes && meta.get_relay_method() == relay_method::stem))
        {
          LOG_PRINT_L2("  tx relay method is " << (unsigned)meta.get_relay_method());
@@ -721,7 +795,7 @@ index 696bc88d4..72c2cd901 100644
        }
        if (meta.pruned)
        {
-@@ -1387,8 +1788,15 @@ namespace cryptonote
+@@ -1387,8 +1852,15 @@ namespace cryptonote
            LOG_PRINT_L2("  would exceed maximum block weight");
            continue;
          }
@@ -738,19 +812,8 @@ index 696bc88d4..72c2cd901 100644
          {
            LOG_PRINT_L2("  would decrease coinbase to " << print_money(coinbase));
            continue;
-@@ -1446,10 +1854,18 @@ namespace cryptonote
-         LOG_PRINT_L2("  key images already seen");
-         continue;
-       }
--
-+      if ((tx.version >= OFFSHORE_TRANSACTION_VERSION) && (tx.pricing_record_height != 0)) {
-+	// Validate that pricing record is not too old
-+	uint64_t current_height = m_blockchain.get_current_blockchain_height();
-+	if ((current_height - PRICING_RECORD_VALID_BLOCKS) > tx.pricing_record_height) {
-+	  LOG_PRINT_L2("  rejected - offshore transaction references a pricing record that is too old");
-+	  continue;
-+	}
-+      }
+@@ -1449,7 +1921,8 @@ namespace cryptonote
+ 
        bl.tx_hashes.push_back(sorted_it->second);
        total_weight += meta.weight;
 -      fee += meta.fee;
@@ -759,7 +822,7 @@ index 696bc88d4..72c2cd901 100644
        best_coinbase = coinbase;
        append_key_images(k_images, tx);
        LOG_PRINT_L2("  added, new block weight " << total_weight << "/" << max_total_weight << ", coinbase " << print_money(best_coinbase));
-@@ -1457,9 +1873,12 @@ namespace cryptonote
+@@ -1457,9 +1930,12 @@ namespace cryptonote
      lock.commit();
  
      expected_reward = best_coinbase;

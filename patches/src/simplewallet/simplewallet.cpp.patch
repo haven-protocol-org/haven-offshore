@@ -1,5 +1,5 @@
 diff --git a/src/simplewallet/simplewallet.cpp b/src/simplewallet/simplewallet.cpp
-index ffe38eedf..8e9a7a490 100644
+index ffe38eedf..95fe916f1 100644
 --- a/src/simplewallet/simplewallet.cpp
 +++ b/src/simplewallet/simplewallet.cpp
 @@ -69,6 +69,7 @@
@@ -931,10 +931,10 @@ index ffe38eedf..8e9a7a490 100644
 +      }
 +    } else if (strSource != "XUSD") {
 +      xasset_to_xusd = true;
-+      locked_blocks = 180;
++      locked_blocks = 10;
 +    } else {
 +      xusd_to_xasset = true;
-+      locked_blocks = 180;
++      locked_blocks = 10;
 +    }
 +
 +    // Modify the transfer_type to support the unlock time

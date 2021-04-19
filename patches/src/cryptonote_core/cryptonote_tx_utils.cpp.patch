@@ -1,8 +1,16 @@
 diff --git a/src/cryptonote_core/cryptonote_tx_utils.cpp b/src/cryptonote_core/cryptonote_tx_utils.cpp
-index 3dd29dd1b..6bbd44006 100644
+index 3dd29dd1b..3efba4e44 100644
 --- a/src/cryptonote_core/cryptonote_tx_utils.cpp
 +++ b/src/cryptonote_core/cryptonote_tx_utils.cpp
-@@ -75,8 +75,75 @@ namespace cryptonote
+@@ -44,6 +44,7 @@ using namespace epee;
+ #include "crypto/hash.h"
+ #include "ringct/rctSigs.h"
+ #include "multisig/multisig.h"
++#include "offshore/asset_types.h"
+ 
+ using namespace crypto;
+ 
+@@ -75,8 +76,75 @@ namespace cryptonote
      }
      LOG_PRINT_L2("destinations include " << num_stdaddresses << " standard addresses and " << num_subaddresses << " subaddresses");
    }
@@ -79,7 +87,7 @@ index 3dd29dd1b..6bbd44006 100644
      tx.vin.clear();
      tx.vout.clear();
      tx.extra.clear();
-@@ -89,6 +156,8 @@ namespace cryptonote
+@@ -89,6 +157,8 @@ namespace cryptonote
      if (!sort_tx_extra(tx.extra, tx.extra))
        return false;
  
@@ -88,7 +96,7 @@ index 3dd29dd1b..6bbd44006 100644
      txin_gen in;
      in.height = height;
  
-@@ -100,71 +169,187 @@ namespace cryptonote
+@@ -100,71 +170,187 @@ namespace cryptonote
      }
  
  #if defined(DEBUG_CREATE_BLOCK_TEMPLATE)
@@ -101,7 +109,7 @@ index 3dd29dd1b..6bbd44006 100644
 +    // LAND AHOY!!!
  #endif
 -    block_reward += fee;
- 
+-
 -    // from hard fork 2, we cut out the low significant digits. This makes the tx smaller, and
 -    // keeps the paid amount almost the same. The unpaid remainder gets pushed back to the
 -    // emission schedule
@@ -116,7 +124,7 @@ index 3dd29dd1b..6bbd44006 100644
 -    decompose_amount_into_digits(block_reward, hard_fork_version >= 2 ? 0 : ::config::DEFAULT_DUST_THRESHOLD,
 -      [&out_amounts](uint64_t a_chunk) { out_amounts.push_back(a_chunk); },
 -      [&out_amounts](uint64_t a_dust) { out_amounts.push_back(a_dust); });
--
+ 
 -    CHECK_AND_ASSERT_MES(1 <= max_outs, false, "max_out must be non-zero");
 -    if (height == 0 || hard_fork_version >= 4)
 -    {
@@ -170,14 +178,12 @@ index 3dd29dd1b..6bbd44006 100644
 -    }
 +    txout_to_key tk;
 +    tk.key = out_eph_public_key;
- 
--    CHECK_AND_ASSERT_MES(summary_amounts == block_reward, false, "Failed to construct miner tx, summary_amounts = " << summary_amounts << " not equal block_reward = " << block_reward);
++
 +    tx_out out;
 +    summary_amounts += out.amount = block_reward;
 +    out.target = tk;
 +    tx.vout.push_back(out);
- 
--    if (hard_fork_version >= 4)
++
 +    cryptonote::address_parse_info governance_wallet_address;
 +
 +    if (hard_fork_version >= 3) {
@@ -219,10 +225,12 @@ index 3dd29dd1b..6bbd44006 100644
 +          MERROR("Failed to generate deterministic output key for governance wallet output creation");
 +          return false;
 +        }
-+
+ 
+-    CHECK_AND_ASSERT_MES(summary_amounts == block_reward, false, "Failed to construct miner tx, summary_amounts = " << summary_amounts << " not equal block_reward = " << block_reward);
 +        txout_to_key tk;
 +        tk.key = out_eph_public_key;
-+
+ 
+-    if (hard_fork_version >= 4)
 +        tx_out out;
 +        summary_amounts += out.amount = governance_reward;
 +
@@ -328,7 +336,7 @@ index 3dd29dd1b..6bbd44006 100644
  
      //lock
      tx.unlock_time = height + CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW;
-@@ -199,8 +384,510 @@ namespace cryptonote
+@@ -199,8 +385,563 @@ namespace cryptonote
      return addr.m_view_public_key;
    }
    //---------------------------------------------------------------
@@ -817,6 +825,59 @@ index 3dd29dd1b..6bbd44006 100644
 +    // Return success
 +    return true;
 +  }
++
++  /*
++    Returns the input and output asset types for a givn tx.
++  */
++  bool get_tx_asset_types(const transaction& tx, std::string& source, std::string& destination) {
++    
++    if (tx.vin[0].type() == typeid(txin_to_key)) {
++      source = "XHV";
++    } else if (tx.vin[0].type() == typeid(txin_offshore)) {
++      source = "XUSD";
++    } else if (tx.vin[0].type() == typeid(txin_onshore)) {
++      source = "XUSD";
++    } else if (tx.vin[0].type() == typeid(txin_xasset)) {
++      source = boost::get<txin_xasset>(tx.vin[0]).asset_type;
++    } else {
++      LOG_ERROR("Invalid Input Type for tx.");
++      source = "";
++      return false;
++    }
++
++    destination = "";
++    for (const auto &out: tx.vout) {
++      if (out.target.type() == typeid(txout_to_key)) {
++        destination = "XHV";
++      } else if (out.target.type() == typeid(txout_offshore)) {
++        destination = "XUSD";
++      } else if (out.target.type() == typeid(txout_xasset)) {
++        destination = boost::get<txout_xasset>(out.target).asset_type;
++      } else {
++        LOG_ERROR("Invalid Output Type for tx.");
++        destination = "";
++        return false;
++      }
++      // if we get the a destination different from source, that means we get what we want.
++      // if source and destination is the same we won't break early.
++      if (source != destination) {
++        break;
++      }
++    }
++
++    // check both strSource and strDest are supported.
++    if (std::find(offshore::ASSET_TYPES.begin(), offshore::ASSET_TYPES.end(), source) == offshore::ASSET_TYPES.end()) {
++      LOG_ERROR("Source Asset type " << source << " is not supported! Rejecting..");
++      return false;
++    }
++    if (std::find(offshore::ASSET_TYPES.begin(), offshore::ASSET_TYPES.end(), destination) == offshore::ASSET_TYPES.end()) {
++      LOG_ERROR("Destination Asset type " << destination << " is not supported! Rejecting..");
++      return false;
++    }
++
++    return true;
++  }
++
 +  //---------------------------------------------------------------
 +  bool construct_tx_with_tx_key(
 +    const account_keys& sender_account_keys, 
@@ -841,7 +902,7 @@ index 3dd29dd1b..6bbd44006 100644
      hw::device &hwdev = sender_account_keys.get_device();
  
      if (sources.empty())
-@@ -217,12 +904,79 @@ namespace cryptonote
+@@ -217,12 +958,90 @@ namespace cryptonote
        msout->c.clear();
      }
  
@@ -889,40 +950,51 @@ index 3dd29dd1b..6bbd44006 100644
 +      } else {
 +        // Pre-xAsset format of offshore_data
 +        // Set the bool flags
-+        if ((offshore_data.data.at(0) > 'A') && (offshore_data.data.at(1) > 'A')) {
++        if ((offshore_data.data.at(0) == 'N') && (offshore_data.data.at(1) == 'N')) {
 +          offshore_transfer = true;
-+          strSource = strDest = "XUSD";
-+        } else if (offshore_data.data.at(0) > 'A') {
++          strSource = "XUSD";
++          strDest = "XUSD";
++        } else if (offshore_data.data.at(0) == 'N' && offshore_data.data.at(1) == 'A') {
 +          onshore = true;
 +          strSource = "XUSD";
 +          strDest = "XHV";
-+        } else {
++        } else if (offshore_data.data.at(0) == 'A' && offshore_data.data.at(1) == 'N') {
 +          offshore = true;
 +          strSource = "XHV";
 +          strDest = "XUSD";
++        } else {
++	  LOG_ERROR("Invalid offshore data");
++	  return false;
 +        }
 +      }
++    }
++
++    // check both strSource and strDest are supported.
++    if (std::find(offshore::ASSET_TYPES.begin(), offshore::ASSET_TYPES.end(), strSource) == offshore::ASSET_TYPES.end()) {
++      LOG_ERROR("Unsupported source asset type " << strSource);
++      return false;
++    }
++    if (std::find(offshore::ASSET_TYPES.begin(), offshore::ASSET_TYPES.end(), strDest) == offshore::ASSET_TYPES.end()) {
++      LOG_ERROR("Unsupported destination asset type " << strDest);
++      return false;
 +    }
 +
 +    const bool use_offshore_outputs = onshore || offshore_transfer || xusd_to_xasset;
 +    const bool use_xasset_outputs = xasset_transfer || xasset_to_xusd;
 +
 +    if (bOffshoreTx) {
-+
 +      if (offshore || onshore || xasset_to_xusd || xusd_to_xasset) {
 +        tx.pricing_record_height = current_height;
-+        tx.offshore_data.assign(offshore_data.data.begin(), offshore_data.data.end());
 +      } else {
 +        tx.pricing_record_height = 0;
-+        tx.offshore_data.assign(offshore_data.data.begin(), offshore_data.data.end());
 +      }
-+      
++      tx.offshore_data.assign(offshore_data.data.begin(), offshore_data.data.end());
 +    }
 +
      // if we have a stealth payment id, find it and encrypt it with the tx key now
      std::vector<tx_extra_field> tx_extra_fields;
      if (parse_tx_extra(tx.extra, tx_extra_fields))
-@@ -298,14 +1052,14 @@ namespace cryptonote
+@@ -298,14 +1117,14 @@ namespace cryptonote
        MWARNING("Failed to parse tx extra");
        tx_extra_fields.clear();
      }
@@ -939,7 +1011,7 @@ index 3dd29dd1b..6bbd44006 100644
      //fill inputs
      int idx = -1;
      for(const tx_source_entry& src_entr:  sources)
-@@ -316,8 +1070,15 @@ namespace cryptonote
+@@ -316,8 +1135,15 @@ namespace cryptonote
          LOG_ERROR("real_output index (" << src_entr.real_output << ")bigger than output_keys.size()=" << src_entr.outputs.size());
          return false;
        }
@@ -956,7 +1028,7 @@ index 3dd29dd1b..6bbd44006 100644
        //key_derivation recv_derivation;
        in_contexts.push_back(input_generation_context_data());
        keypair& in_ephemeral = in_contexts.back().in_ephemeral;
-@@ -341,16 +1102,83 @@ namespace cryptonote
+@@ -341,16 +1167,83 @@ namespace cryptonote
        }
  
        //put key image into tx input
@@ -1049,7 +1121,7 @@ index 3dd29dd1b..6bbd44006 100644
      }
  
      if (shuffle_outs)
-@@ -363,9 +1191,23 @@ namespace cryptonote
+@@ -363,9 +1256,23 @@ namespace cryptonote
      for (size_t n = 0; n < sources.size(); ++n)
        ins_order[n] = n;
      std::sort(ins_order.begin(), ins_order.end(), [&](const size_t i0, const size_t i1) {
@@ -1076,7 +1148,7 @@ index 3dd29dd1b..6bbd44006 100644
      });
      tools::apply_permutation(ins_order, [&] (size_t i0, size_t i1) {
        std::swap(tx.vin[i0], tx.vin[i1]);
-@@ -400,7 +1242,13 @@ namespace cryptonote
+@@ -400,7 +1307,13 @@ namespace cryptonote
      if (need_additional_txkeys)
        CHECK_AND_ASSERT_MES(destinations.size() == additional_tx_keys.size(), false, "Wrong amount of additional tx keys");
  
@@ -1091,7 +1163,7 @@ index 3dd29dd1b..6bbd44006 100644
      //fill outputs
      size_t output_index = 0;
      for(const tx_destination_entry& dst_entr: destinations)
-@@ -408,19 +1256,54 @@ namespace cryptonote
+@@ -408,19 +1321,54 @@ namespace cryptonote
        CHECK_AND_ASSERT_MES(dst_entr.amount > 0 || tx.version > 1, false, "Destination with wrong amount: " << dst_entr.amount);
        crypto::public_key out_eph_public_key;
  
@@ -1155,7 +1227,7 @@ index 3dd29dd1b..6bbd44006 100644
      }
      CHECK_AND_ASSERT_MES(additional_tx_public_keys.size() == additional_tx_keys.size(), false, "Internal error creating additional public keys");
  
-@@ -435,16 +1318,19 @@ namespace cryptonote
+@@ -435,16 +1383,19 @@ namespace cryptonote
        add_additional_tx_pub_keys_to_extra(tx.extra, additional_tx_public_keys);
      }
  
@@ -1182,7 +1254,7 @@ index 3dd29dd1b..6bbd44006 100644
      // check for watch only wallet
      bool zero_secret_key = true;
      for (size_t i = 0; i < sizeof(sender_account_keys.m_spend_secret_key); ++i)
-@@ -518,24 +1404,25 @@ namespace cryptonote
+@@ -518,24 +1469,25 @@ namespace cryptonote
          }
        }
  
@@ -1213,7 +1285,7 @@ index 3dd29dd1b..6bbd44006 100644
          inSk.push_back(ctkey);
          memwipe(&ctkey, sizeof(rct::ctkey));
          // inPk: (public key, commitment)
-@@ -545,13 +1432,7 @@ namespace cryptonote
+@@ -545,13 +1497,7 @@ namespace cryptonote
            kLRki.push_back(sources[i].multisig_kLRki);
          }
        }
@@ -1228,7 +1300,7 @@ index 3dd29dd1b..6bbd44006 100644
        if (use_simple_rct)
        {
          // mixRing indexing is done the other way round for simple
-@@ -576,27 +1457,97 @@ namespace cryptonote
+@@ -576,27 +1522,97 @@ namespace cryptonote
          }
        }
  
@@ -1335,7 +1407,7 @@ index 3dd29dd1b..6bbd44006 100644
  
        CHECK_AND_ASSERT_MES(tx.vout.size() == outSk.size(), false, "outSk size does not match vout");
  
-@@ -608,7 +1559,7 @@ namespace cryptonote
+@@ -608,7 +1624,7 @@ namespace cryptonote
      return true;
    }
    //---------------------------------------------------------------
@@ -1344,7 +1416,7 @@ index 3dd29dd1b..6bbd44006 100644
    {
      hw::device &hwdev = sender_account_keys.get_device();
      hwdev.open_tx(tx_key);
-@@ -626,7 +1577,7 @@ namespace cryptonote
+@@ -626,7 +1642,7 @@ namespace cryptonote
            additional_tx_keys.push_back(keypair::generate(sender_account_keys.get_device()).sec);
        }
  
@@ -1353,7 +1425,7 @@ index 3dd29dd1b..6bbd44006 100644
        hwdev.close_tx();
        return r;
      } catch(...) {
-@@ -640,22 +1591,32 @@ namespace cryptonote
+@@ -640,22 +1656,32 @@ namespace cryptonote
       std::unordered_map<crypto::public_key, cryptonote::subaddress_index> subaddresses;
       subaddresses[sender_account_keys.m_account_address.m_spend_public_key] = {0,0};
       crypto::secret_key tx_key;
@@ -1388,7 +1460,7 @@ index 3dd29dd1b..6bbd44006 100644
      CHECK_AND_ASSERT_MES(r, false, "failed to parse coinbase tx from hard coded blob");
      r = parse_and_validate_tx_from_blob(tx_bl, bl.miner_tx);
      CHECK_AND_ASSERT_MES(r, false, "failed to parse coinbase tx from hard coded blob");
-@@ -678,33 +1639,22 @@ namespace cryptonote
+@@ -678,33 +1704,22 @@ namespace cryptonote
  
    bool get_block_longhash(const Blockchain *pbc, const block& b, crypto::hash& res, const uint64_t height, const int miners)
    {
