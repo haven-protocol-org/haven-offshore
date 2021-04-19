@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/cryptonote_core.cpp b/src/cryptonote_core/cryptonote_core.cpp
-index 5aed708d5..0ef9b1922 100644
+index 5aed708d5..d806ea161 100644
 --- a/src/cryptonote_core/cryptonote_core.cpp
 +++ b/src/cryptonote_core/cryptonote_core.cpp
 @@ -54,6 +54,7 @@ using namespace epee;
@@ -56,24 +56,21 @@ index 5aed708d5..0ef9b1922 100644
      if (tx.version == 0 || tx.version > max_tx_version)
      {
        // v2 is the latest one we know
-@@ -862,9 +870,94 @@ namespace cryptonote
-       return true;
-     }
- 
-+    // Set the offshore TX type flags
-+    bool offshore = false;
-+    bool onshore = false;
-+    bool offshore_transfer = false;
-+    bool xasset_transfer = false;
-+    bool xasset_to_xusd = false;
-+    bool xusd_to_xasset = false;
-+    std::string source;
-+    std::string dest;
-+    offshore::pricing_record pr;
-+      
+@@ -865,6 +873,91 @@ namespace cryptonote
      std::vector<const rct::rctSig*> rvv;
      for (size_t n = 0; n < tx_info.size(); ++n)
      {
++      // Set the offshore TX type flags
++      bool offshore = false;
++      bool onshore = false;
++      bool offshore_transfer = false;
++      bool xasset_transfer = false;
++      bool xasset_to_xusd = false;
++      bool xusd_to_xasset = false;
++      std::string source;
++      std::string dest;
++      offshore::pricing_record pr;
++      
 +      // Get the pricing_record_height for any offshore TX
 +      uint64_t pricing_record_height = tx_info[n].tx->pricing_record_height;
 +    
@@ -169,7 +166,7 @@ index 5aed708d5..0ef9b1922 100644
            if (!is_canonical_bulletproof_layout(rv.p.bulletproofs))
            {
              MERROR_VER("Bulletproof does not have canonical form");
-@@ -924,18 +1019,91 @@ namespace cryptonote
+@@ -924,18 +1019,102 @@ namespace cryptonote
            break;
        }
      }
@@ -183,6 +180,17 @@ index 5aed708d5..0ef9b1922 100644
 -      const bool assumed_bad = rvv.size() == 1; // if there's only one tx, it must be the bad one
        for (size_t n = 0; n < tx_info.size(); ++n)
        {
++	// Set the offshore TX type flags
++	bool offshore = false;
++	bool onshore = false;
++	bool offshore_transfer = false;
++	bool xasset_transfer = false;
++	bool xasset_to_xusd = false;
++	bool xusd_to_xasset = false;
++	std::string source;
++	std::string dest;
++	offshore::pricing_record pr;
++      
 +        // Get the pricing_record_height for any offshore TX
 +        uint64_t pricing_record_height = tx_info[n].tx->pricing_record_height;
 +
@@ -266,7 +274,7 @@ index 5aed708d5..0ef9b1922 100644
          {
            set_semantics_failed(tx_info[n].tx_hash);
            tx_info[n].tvc.m_verifivation_failed = true;
-@@ -943,7 +1111,6 @@ namespace cryptonote
+@@ -943,7 +1122,6 @@ namespace cryptonote
          }
        }
      }
@@ -274,7 +282,7 @@ index 5aed708d5..0ef9b1922 100644
      return ret;
    }
    //-----------------------------------------------------------------------------------------------
-@@ -1095,7 +1262,7 @@ namespace cryptonote
+@@ -1095,7 +1273,7 @@ namespace cryptonote
      {
        uint64_t amount_in = 0;
        get_inputs_money_amount(tx, amount_in);
@@ -283,7 +291,7 @@ index 5aed708d5..0ef9b1922 100644
  
        if(amount_in <= amount_out)
        {
-@@ -1176,7 +1343,7 @@ namespace cryptonote
+@@ -1176,7 +1354,7 @@ namespace cryptonote
          [this, &emission_amount, &total_fee_amount](uint64_t, const crypto::hash& hash, const block& b){
        std::vector<transaction> txs;
        std::vector<crypto::hash> missed_txs;
@@ -292,7 +300,7 @@ index 5aed708d5..0ef9b1922 100644
        this->get_transactions(b.tx_hashes, txs, missed_txs);      
        uint64_t tx_fee_amount = 0;
        for(const auto& tx: txs)
-@@ -1196,11 +1363,33 @@ namespace cryptonote
+@@ -1196,11 +1374,33 @@ namespace cryptonote
    bool core::check_tx_inputs_keyimages_diff(const transaction& tx) const
    {
      std::unordered_set<crypto::key_image> ki;
@@ -331,7 +339,7 @@ index 5aed708d5..0ef9b1922 100644
      }
      return true;
    }
-@@ -1208,14 +1397,36 @@ namespace cryptonote
+@@ -1208,14 +1408,36 @@ namespace cryptonote
    bool core::check_tx_inputs_ring_members_diff(const transaction& tx) const
    {
      const uint8_t version = m_blockchain_storage.get_current_hard_fork_version();
@@ -376,7 +384,7 @@ index 5aed708d5..0ef9b1922 100644
        }
      }
      return true;
-@@ -1224,11 +1435,37 @@ namespace cryptonote
+@@ -1224,11 +1446,37 @@ namespace cryptonote
    bool core::check_tx_inputs_keyimages_domain(const transaction& tx) const
    {
      std::unordered_set<crypto::key_image> ki;
@@ -419,7 +427,7 @@ index 5aed708d5..0ef9b1922 100644
      }
      return true;
    }
-@@ -1640,7 +1877,7 @@ namespace cryptonote
+@@ -1640,7 +1888,7 @@ namespace cryptonote
      {
        std::string main_message;
        if (m_offline)
@@ -428,7 +436,7 @@ index 5aed708d5..0ef9b1922 100644
        else
          main_message = "The daemon will start synchronizing with the network. This may take a long time to complete.";
        MGINFO_YELLOW(ENDL << "**********************************************************************" << ENDL
-@@ -1687,7 +1924,7 @@ namespace cryptonote
+@@ -1687,7 +1935,7 @@ namespace cryptonote
    //-----------------------------------------------------------------------------------------------
    bool core::check_updates()
    {
@@ -437,7 +445,7 @@ index 5aed708d5..0ef9b1922 100644
  #ifdef BUILD_TAG
      static const char buildtag[] = BOOST_PP_STRINGIZE(BUILD_TAG);
      static const char subdir[] = "cli"; // because it can never be simple
-@@ -1872,7 +2109,7 @@ namespace cryptonote
+@@ -1872,7 +2120,7 @@ namespace cryptonote
      const time_t now = time(NULL);
      const std::vector<time_t> timestamps = m_blockchain_storage.get_last_block_timestamps(max_blocks_checked);
  
@@ -446,7 +454,7 @@ index 5aed708d5..0ef9b1922 100644
      for (size_t n = 0; n < sizeof(seconds)/sizeof(seconds[0]); ++n)
      {
        unsigned int b = 0;
-@@ -1882,8 +2119,8 @@ namespace cryptonote
+@@ -1882,8 +2130,8 @@ namespace cryptonote
        MDEBUG("blocks in the last " << seconds[n] / 60 << " minutes: " << b << " (probability " << p << ")");
        if (p < threshold)
        {
