@@ -1,5 +1,5 @@
 diff --git a/src/wallet/wallet2.h b/src/wallet/wallet2.h
-index 3a14215b3..65cbc886b 100644
+index 3a14215b3..bc52ef7f4 100644
 --- a/src/wallet/wallet2.h
 +++ b/src/wallet/wallet2.h
 @@ -131,9 +131,9 @@ private:
@@ -193,7 +193,7 @@ index 3a14215b3..65cbc886b 100644
  
      void commit_tx(pending_tx& ptx_vector);
      void commit_tx(std::vector<pending_tx>& ptx_vector);
-@@ -871,7 +925,7 @@ private:
+@@ -871,7 +926,7 @@ private:
      bool load_tx(const std::string &signed_filename, std::vector<tools::wallet2::pending_tx> &ptx, std::function<bool(const signed_tx_set&)> accept_func = NULL);
      bool parse_tx_from_str(const std::string &signed_tx_st, std::vector<tools::wallet2::pending_tx> &ptx, std::function<bool(const signed_tx_set &)> accept_func);
      std::vector<wallet2::pending_tx> create_transactions_2(std::vector<cryptonote::tx_destination_entry> dsts, const size_t fake_outs_count, const uint64_t unlock_time, uint32_t priority, const std::vector<uint8_t>& extra, uint32_t subaddr_account, std::set<uint32_t> subaddr_indices);     // pass subaddr_indices by value on purpose
@@ -284,7 +284,7 @@ index 3a14215b3..65cbc886b 100644
      // Light wallet specific functions
      // fetch unspent outs from lw node and store in m_transfers
      void light_wallet_get_unspent_outs();
-@@ -1367,8 +1437,8 @@ private:
+@@ -1367,13 +1437,15 @@ private:
      bool unblackball_output(const std::pair<uint64_t, uint64_t> &output);
      bool is_output_blackballed(const std::pair<uint64_t, uint64_t> &output) const;
  
@@ -295,16 +295,14 @@ index 3a14215b3..65cbc886b 100644
      bool frozen(size_t idx) const;
      void freeze(const crypto::key_image &ki);
      void thaw(const crypto::key_image &ki);
-@@ -1431,7 +1501,7 @@ private:
-     void process_new_transaction(const crypto::hash &txid, const cryptonote::transaction& tx, const std::vector<uint64_t> &o_indices, uint64_t height, uint8_t block_version, uint64_t ts, bool miner_tx, bool pool, bool double_spend_seen, const tx_cache_data &tx_cache_data, std::map<std::pair<uint64_t, uint64_t>, size_t> *output_tracker_cache = NULL);
-     bool should_skip_block(const cryptonote::block &b, uint64_t height) const;
-     void process_new_blockchain_entry(const cryptonote::block& b, const cryptonote::block_complete_entry& bche, const parsed_block &parsed_block, const crypto::hash& bl_id, uint64_t height, const std::vector<tx_cache_data> &tx_cache_data, size_t tx_cache_data_offset, std::map<std::pair<uint64_t, uint64_t>, size_t> *output_tracker_cache = NULL);
--    void detach_blockchain(uint64_t height, std::map<std::pair<uint64_t, uint64_t>, size_t> *output_tracker_cache = NULL);
-+    void detach_blockchain(uint64_t height, bool use_offshore_outputs = false, std::map<std::pair<uint64_t, uint64_t>, size_t> *output_tracker_cache = NULL);
-     void get_short_chain_history(std::list<crypto::hash>& ids, uint64_t granularity = 1) const;
-     bool clear();
-     void clear_soft(bool keep_key_images=false);
-@@ -1443,7 +1513,7 @@ private:
+     bool frozen(const crypto::key_image &ki) const;
+     bool frozen(const transfer_details &td) const;
++    void freeze(transfer_details& td);
++    void thaw(transfer_details& td);
+ 
+     bool save_to_file(const std::string& path_to_file, const std::string& binary, bool is_printable = false) const;
+     static bool load_from_file(const std::string& path_to_file, std::string& target_str, size_t max_size = 1000000000);
+@@ -1443,7 +1515,7 @@ private:
      uint64_t select_transfers(uint64_t needed_money, std::vector<size_t> unused_transfers_indices, std::vector<size_t>& selected_transfers) const;
      bool prepare_file_names(const std::string& file_path);
      void process_unconfirmed(const crypto::hash &txid, const cryptonote::transaction& tx, uint64_t height);
@@ -313,7 +311,7 @@ index 3a14215b3..65cbc886b 100644
      void add_unconfirmed_tx(const cryptonote::transaction& tx, uint64_t amount_in, const std::vector<cryptonote::tx_destination_entry> &dests, const crypto::hash &payment_id, uint64_t change_amount, uint32_t subaddr_account, const std::set<uint32_t>& subaddr_indices);
      void generate_genesis(cryptonote::block& b) const;
      void check_genesis(const crypto::hash& genesis_hash) const; //throws
-@@ -1458,23 +1528,34 @@ private:
+@@ -1458,23 +1530,34 @@ private:
      std::vector<uint64_t> get_unspent_amounts_vector(bool strict);
      uint64_t get_dynamic_base_fee_estimate();
      float get_output_relatedness(const transfer_details &td0, const transfer_details &td1) const;
@@ -343,7 +341,7 @@ index 3a14215b3..65cbc886b 100644
 +    rct::multisig_kLRki get_multisig_composite_kLRki(transfer_container &specific_transfers, size_t n,  const std::unordered_set<crypto::public_key> &ignore_set, std::unordered_set<rct::key> &used_L, std::unordered_set<rct::key> &new_used_L);
 +    rct::multisig_kLRki get_multisig_kLRki(transfer_container &specific_transfers, size_t n, const rct::key &k);
 +    rct::key get_multisig_k(transfer_container &specific_transfers, size_t idx, const std::unordered_set<rct::key> &used_L);
-+    void update_multisig_rescan_info(transfer_container &specific_transfers, const std::vector<std::vector<rct::key>> &multisig_k, const std::vector<std::vector<tools::wallet2::multisig_info>> &info, size_t n);
++    void update_multisig_rescan_info(const std::string& asset_type, const std::vector<std::vector<rct::key>> &multisig_k, const std::vector<std::map<std::string, std::vector<tools::wallet2::multisig_info>>> &info, size_t n);
 +    /*
      crypto::key_image get_multisig_composite_key_image(size_t n) const;
      rct::multisig_kLRki get_multisig_composite_kLRki(size_t n,  const std::unordered_set<crypto::public_key> &ignore_set, std::unordered_set<rct::key> &used_L, std::unordered_set<rct::key> &new_used_L) const;
@@ -355,7 +353,7 @@ index 3a14215b3..65cbc886b 100644
      bool add_rings(const crypto::chacha_key &key, const cryptonote::transaction_prefix &tx);
      bool add_rings(const cryptonote::transaction_prefix &tx);
      bool remove_rings(const cryptonote::transaction_prefix &tx);
-@@ -1535,6 +1616,8 @@ private:
+@@ -1535,6 +1618,8 @@ private:
      std::unordered_map<crypto::hash, std::vector<crypto::secret_key>> m_additional_tx_keys;
  
      transfer_container m_transfers;
@@ -364,15 +362,15 @@ index 3a14215b3..65cbc886b 100644
      payment_container m_payments;
      std::unordered_map<crypto::key_image, size_t> m_key_images;
      std::unordered_map<crypto::public_key, size_t> m_pub_keys;
-@@ -1548,6 +1631,8 @@ private:
+@@ -1546,7 +1631,7 @@ private:
+     std::vector<tools::wallet2::address_book_row> m_address_book;
+     std::pair<std::map<std::string, std::string>, std::vector<std::string>> m_account_tags;
      uint64_t m_upper_transaction_weight_limit; //TODO: auto-calc this value or request from daemon, now use some fixed value
-     const std::vector<std::vector<tools::wallet2::multisig_info>> *m_multisig_rescan_info;
+-    const std::vector<std::vector<tools::wallet2::multisig_info>> *m_multisig_rescan_info;
++    const std::vector<std::map<std::string, std::vector<tools::wallet2::multisig_info>>> *m_multisig_rescan_info;
      const std::vector<std::vector<rct::key>> *m_multisig_rescan_k;
-+    const std::vector<std::vector<tools::wallet2::multisig_info>> *m_multisig_rescan_offshore_info;
-+    const std::vector<std::vector<rct::key>> *m_multisig_rescan_offshore_k;
      std::unordered_map<crypto::public_key, crypto::key_image> m_cold_key_images;
  
-     std::atomic<bool> m_run;
 @@ -1661,20 +1746,20 @@ private:
      static std::string default_daemon_address;
    };
