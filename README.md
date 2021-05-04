@@ -1,4 +1,4 @@
-# Haven Artemis v1.2.9
+# Haven Artemis v1.3.0
 
 Copyright (c) 2018-2021 Haven.   
 Portions Copyright (c) 2014-2019 The Monero Project.   
@@ -98,7 +98,7 @@ invokes cmake commands as needed.
 
     ```bash
     cd haven-offshore
-    git checkout v1.2.9m
+    git checkout v1.3.0d
     ./build-haven.sh release
     ```
 
@@ -185,10 +185,10 @@ application.
     cd haven-offshore
     ```
 
-* If you would like a specific [version/tag](https://github.com/haven-protocol-org/haven-offshore/tags), do a git checkout for that version. eg. 'v1.2.9m'. If you don't care about the version and just want binaries from master, skip this step:
+* If you would like a specific [version/tag](https://github.com/haven-protocol-org/haven-offshore/tags), do a git checkout for that version. eg. 'v1.3.0d'. If you don't care about the version and just want binaries from master, skip this step:
 	
     ```bash
-    git checkout v1.2.9m
+    git checkout v1.3.0d
     ```
 
 * If you are on a 64-bit system, run:
