@@ -29,17 +29,6 @@
 
 #include "pricing_record.h"
 
-#include <cstring>
-
-#include <openssl/bio.h>
-#include <openssl/crypto.h>
-#include <openssl/ecdsa.h>
-#include <openssl/err.h>
-#include <openssl/evp.h>
-#include <openssl/pem.h>
-#include <openssl/rsa.h>
-#include <openssl/ssl.h>
-
 #include "serialization/keyvalue_serialization.h"
 #include "storages/portable_storage.h"
 
@@ -199,6 +188,41 @@ namespace offshore
     return *this;
   }
 
+  uint64_t pricing_record::operator[](const std::string asset_type) const noexcept
+  {
+    if (asset_type == "XHV") {
+      return 1000000000000;
+    } else if (asset_type == "XUSD") {
+      return unused1;
+    } else if (asset_type == "XAG") {
+      return xAG;
+    } else if (asset_type == "XAU") {
+      return xAU;
+    } else if (asset_type == "XAUD") {
+      return xAUD;
+    } else if (asset_type == "XBTC") {
+      return xBTC;
+    } else if (asset_type == "XCAD") {
+      return xCAD;
+    } else if (asset_type == "XCHF") {
+      return xCHF;
+    } else if (asset_type == "XCNY") {
+      return xCNY;
+    } else if (asset_type == "XEUR") {
+      return xEUR;
+    } else if (asset_type == "XGBP") {
+      return xGBP;
+    } else if (asset_type == "XJPY") {
+      return xJPY;
+    } else if (asset_type == "XNOK") {
+      return xNOK;
+    } else if (asset_type == "XNZD") {
+      return xNZD;
+    } else {
+      return 1000000000000;
+    }
+  }
+  
   bool pricing_record::equal(const pricing_record& other) const noexcept
   {
     return ((xAG == other.xAG) &&
@@ -221,7 +245,7 @@ namespace offshore
   }
 
 
-  bool pricing_record::verifySignature() const noexcept
+  bool pricing_record::verifySignature(EVP_PKEY* public_key) const noexcept
   {
     // Sanity check - accept empty pricing records
     unsigned char test_sig[64];
@@ -295,19 +319,28 @@ namespace offshore
       compact += (byte);
     }
 
-    // HERE BE DRAGONS!!!
-    // NEAC: the public key should be in a file
-    static const char public_key[] = "-----BEGIN PUBLIC KEY-----\n"
-      "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE5YBxWx1AZCA9jTUk8Pr2uZ9jpfRt\n"
-      "KWv3Vo1/Gny+1vfaxsXhBQiG1KlHkafNGarzoL0WHW4ocqaaqF5iv8i35A==\n"
-      "-----END PUBLIC KEY-----\n";
-    // LAND AHOY!!!
+    // Check to see if we have been passed a public key to use
+    EVP_PKEY* pubkey = NULL;
+    if (public_key) {
+
+      // Take a copy for local use
+      pubkey = public_key;
+      
+    } else {
+      
+      // No public key provided - failover to embedded key
+      static const char public_key[] = "-----BEGIN PUBLIC KEY-----\n"
+	"MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE5YBxWx1AZCA9jTUk8Pr2uZ9jpfRt\n"
+	"KWv3Vo1/Gny+1vfaxsXhBQiG1KlHkafNGarzoL0WHW4ocqaaqF5iv8i35A==\n"
+	"-----END PUBLIC KEY-----\n";
     
-    // Grab the public key and make it usable
-    BIO* bio = BIO_new_mem_buf(public_key, (int)sizeof(public_key));
-    assert(bio != NULL);
-    EVP_PKEY* pubkey = PEM_read_bio_PUBKEY(bio, NULL, NULL, NULL);
-    BIO_free(bio);
+      BIO* bio = BIO_new_mem_buf(public_key, (int)sizeof(public_key));
+      if (!bio) {
+	return false;
+      }
+      pubkey = PEM_read_bio_PUBKEY(bio, NULL, NULL, NULL);
+      BIO_free(bio);
+    }
     assert(pubkey != NULL);
 
     // Create a verify digest from the message
@@ -325,9 +358,12 @@ namespace offshore
     // Cleanup the context we created
     EVP_MD_CTX_destroy(ctx);
 
-    // Cleanup the openssl stuff
-    EVP_PKEY_free(pubkey);
-  
+    // Was the key provided by the caller?
+    if (pubkey != public_key) {
+      // Cleanup the openssl stuff
+      EVP_PKEY_free(pubkey);
+    }
+    
     if (ret == 1)
       return true;
 

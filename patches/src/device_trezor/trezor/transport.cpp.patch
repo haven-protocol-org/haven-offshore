@@ -1,0 +1,13 @@
+diff --git a/src/device_trezor/trezor/transport.cpp b/src/device_trezor/trezor/transport.cpp
+index 59b281f13..e97d8c184 100644
+--- a/src/device_trezor/trezor/transport.cpp
++++ b/src/device_trezor/trezor/transport.cpp
+@@ -692,7 +692,7 @@ namespace trezor{
+     // Start the asynchronous operation itself. The handle_receive function
+     // used as a callback will update the ec and length variables.
+     m_socket->async_receive_from(boost::asio::buffer(buffer), m_endpoint,
+-                                 boost::bind(&UdpTransport::handle_receive, _1, _2, &ec, &length));
++                                 boost::bind(&UdpTransport::handle_receive, boost::lambda::_1, boost::lambda::_2, &ec, &length));
+ 
+     // Block until the asynchronous operation has completed.
+     do {

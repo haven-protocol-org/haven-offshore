@@ -1,6 +1,6 @@
 --- monero/src/rpc/daemon_messages.h	2020-02-28 09:40:43.002621676 +0000
 +++ monero-offshore/src/rpc/daemon_messages.h	2020-02-06 14:16:44.000000000 +0000
-@@ -165,6 +165,7 @@ BEGIN_RPC_MESSAGE_CLASS(SendRawTx);
+@@ -166,6 +166,7 @@ BEGIN_RPC_MESSAGE_CLASS(SendRawTx);
    BEGIN_RPC_MESSAGE_REQUEST;
      RPC_MESSAGE_MEMBER(cryptonote::transaction, tx);
      RPC_MESSAGE_MEMBER(bool, relay);
@@ -8,7 +8,7 @@
    END_RPC_MESSAGE_REQUEST;
    BEGIN_RPC_MESSAGE_RESPONSE;
      RPC_MESSAGE_MEMBER(bool, relayed);
-@@ -175,6 +176,7 @@ BEGIN_RPC_MESSAGE_CLASS(SendRawTxHex);
+@@ -176,6 +177,7 @@ BEGIN_RPC_MESSAGE_CLASS(SendRawTxHex);
    BEGIN_RPC_MESSAGE_REQUEST;
      RPC_MESSAGE_MEMBER(std::string, tx_as_hex);
      RPC_MESSAGE_MEMBER(bool, relay);
@@ -16,7 +16,7 @@
    END_RPC_MESSAGE_REQUEST;
    using Response = SendRawTx::Response;
  END_RPC_MESSAGE_CLASS;
-@@ -205,6 +207,14 @@ BEGIN_RPC_MESSAGE_CLASS(StopMining);
+@@ -206,6 +207,14 @@ BEGIN_RPC_MESSAGE_CLASS(StopMining);
    END_RPC_MESSAGE_RESPONSE;
  END_RPC_MESSAGE_CLASS;
  

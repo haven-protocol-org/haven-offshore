@@ -1,11 +1,11 @@
---- monero/src/wallet/CMakeLists.txt	2019-12-20 13:52:25.304151580 +0000
-+++ monero-offshore/src/wallet/CMakeLists.txt	2019-11-27 08:35:56.052827304 +0000
-@@ -107,7 +107,7 @@ target_link_libraries(wallet_rpc_server
-     ${EXTRA_LIBRARIES})
- set_property(TARGET wallet_rpc_server
-   PROPERTY
--    OUTPUT_NAME "monero-wallet-rpc")
-+    OUTPUT_NAME "haven-wallet-rpc")
- install(TARGETS wallet_rpc_server DESTINATION bin)
- 
+--- wallet/CMakeLists.txt.orig	2020-08-14 16:26:50.710662300 +0200
++++ wallet/CMakeLists.txt	2020-08-14 20:22:31.497487900 +0200
+@@ -111,7 +111,7 @@
+       ${EXTRA_LIBRARIES})
+   set_property(TARGET wallet_rpc_server
+     PROPERTY
+-      OUTPUT_NAME "monero-wallet-rpc")
++      OUTPUT_NAME "haven-wallet-rpc")
+   install(TARGETS wallet_rpc_server DESTINATION bin)
+ endif()
  

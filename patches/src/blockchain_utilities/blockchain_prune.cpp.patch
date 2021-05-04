@@ -1,6 +1,6 @@
 --- monero/src/blockchain_utilities/blockchain_prune.cpp	2019-12-20 13:52:25.268151102 +0000
 +++ monero-offshore/src/blockchain_utilities/blockchain_prune.cpp	2019-11-27 08:35:55.940826132 +0000
-@@ -490,12 +490,12 @@ int main(int argc, char* argv[])
+@@ -480,12 +480,12 @@ int main(int argc, char* argv[])
  
    if (command_line::get_arg(vm, command_line::arg_help))
    {

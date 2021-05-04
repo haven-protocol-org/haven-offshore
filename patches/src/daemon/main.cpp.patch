@@ -18,7 +18,7 @@
        return 0;
      }
  
-@@ -278,7 +278,7 @@ int main(int argc, char const * argv[])
+@@ -268,7 +268,7 @@ int main(int argc, char const * argv[])
        tools::set_max_concurrency(command_line::get_arg(vm, daemon_args::arg_max_concurrency));
  
      // logging is now set up

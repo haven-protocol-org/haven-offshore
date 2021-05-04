@@ -1,0 +1,15 @@
+--- rpc/rpc_payment.cpp	2020-08-14 21:39:30.492419400 +0200
++++ rpc/rpc_payment.cpp.xhv	2020-08-16 10:34:03.724322900 +0200
+@@ -244,8 +244,10 @@
+     }
+     else
+     {
+-      const int cn_variant = hashing_blob[0] >= 7 ? hashing_blob[0] - 6 : 0;
+-      crypto::cn_slow_hash(hashing_blob.data(), hashing_blob.size(), hash, cn_variant, cryptonote::get_block_height(block));
++      //const int cn_variant = hashing_blob[0] >= 7 ? hashing_blob[0] - 6 : 0;
++      //crypto::cn_slow_hash(hashing_blob.data(), hashing_blob.size(), hash, cn_variant, cryptonote::get_block_height(block));
++      cn_pow_hash_v3 cph;
++      cph.hash(hashing_blob.data(), hashing_blob.size(), hash.data);
+     }
+     if (!check_hash(hash, m_diff))
+     {

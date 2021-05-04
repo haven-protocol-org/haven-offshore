@@ -30,7 +30,17 @@
 #pragma once
 #include "common/pod-class.h"
 
+#include <openssl/bio.h>
+#include <openssl/crypto.h>
+#include <openssl/ecdsa.h>
+#include <openssl/err.h>
+#include <openssl/evp.h>
+#include <openssl/pem.h>
+#include <openssl/rsa.h>
+#include <openssl/ssl.h>
+
 #include <cstdint>
+#include <string>
 
 namespace epee
 {
@@ -101,10 +111,12 @@ namespace offshore
     pricing_record(const pricing_record& orig) noexcept;
     ~pricing_record() = default;
     pricing_record& operator=(const pricing_record& orig) noexcept;
+
+    uint64_t operator[](const std::string asset_type) const noexcept;
     
     bool equal(const pricing_record& other) const noexcept;
 
-    bool verifySignature() const noexcept;
+    bool verifySignature(EVP_PKEY* public_key = NULL) const noexcept;
   };
 
   inline bool operator==(const pricing_record& a, const pricing_record& b) noexcept

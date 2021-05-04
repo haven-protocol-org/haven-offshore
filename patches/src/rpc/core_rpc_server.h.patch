@@ -1,8 +1,8 @@
 diff --git a/src/rpc/core_rpc_server.h b/src/rpc/core_rpc_server.h
-index e4683bbe..3aa51d39 100644
+index 3c404bbd8..2e95d270d 100644
 --- a/src/rpc/core_rpc_server.h
 +++ b/src/rpc/core_rpc_server.h
-@@ -158,6 +158,7 @@ namespace cryptonote
+@@ -169,6 +169,7 @@ namespace cryptonote
          MAP_JON_RPC_WE("get_output_histogram",   on_get_output_histogram,       COMMAND_RPC_GET_OUTPUT_HISTOGRAM)
          MAP_JON_RPC_WE("get_version",            on_get_version,                COMMAND_RPC_GET_VERSION)
          MAP_JON_RPC_WE_IF("get_coinbase_tx_sum", on_get_coinbase_tx_sum,        COMMAND_RPC_GET_COINBASE_TX_SUM, !m_restricted)
@@ -10,7 +10,7 @@ index e4683bbe..3aa51d39 100644
          MAP_JON_RPC_WE("get_fee_estimate",       on_get_base_fee_estimate,      COMMAND_RPC_GET_BASE_FEE_ESTIMATE)
          MAP_JON_RPC_WE_IF("get_alternate_chains",on_get_alternate_chains,       COMMAND_RPC_GET_ALTERNATE_CHAINS, !m_restricted)
          MAP_JON_RPC_WE_IF("relay_tx",            on_relay_tx,                   COMMAND_RPC_RELAY_TX, !m_restricted)
-@@ -224,6 +225,7 @@ namespace cryptonote
+@@ -243,6 +244,7 @@ namespace cryptonote
      bool on_get_output_histogram(const COMMAND_RPC_GET_OUTPUT_HISTOGRAM::request& req, COMMAND_RPC_GET_OUTPUT_HISTOGRAM::response& res, epee::json_rpc::error& error_resp, const connection_context *ctx = NULL);
      bool on_get_version(const COMMAND_RPC_GET_VERSION::request& req, COMMAND_RPC_GET_VERSION::response& res, epee::json_rpc::error& error_resp, const connection_context *ctx = NULL);
      bool on_get_coinbase_tx_sum(const COMMAND_RPC_GET_COINBASE_TX_SUM::request& req, COMMAND_RPC_GET_COINBASE_TX_SUM::response& res, epee::json_rpc::error& error_resp, const connection_context *ctx = NULL);
@@ -18,3 +18,11 @@ index e4683bbe..3aa51d39 100644
      bool on_get_base_fee_estimate(const COMMAND_RPC_GET_BASE_FEE_ESTIMATE::request& req, COMMAND_RPC_GET_BASE_FEE_ESTIMATE::response& res, epee::json_rpc::error& error_resp, const connection_context *ctx = NULL);
      bool on_get_alternate_chains(const COMMAND_RPC_GET_ALTERNATE_CHAINS::request& req, COMMAND_RPC_GET_ALTERNATE_CHAINS::response& res, epee::json_rpc::error& error_resp, const connection_context *ctx = NULL);
      bool on_relay_tx(const COMMAND_RPC_RELAY_TX::request& req, COMMAND_RPC_RELAY_TX::response& res, epee::json_rpc::error& error_resp, const connection_context *ctx = NULL);
+@@ -266,6 +268,7 @@ private:
+     
+     //utils
+     uint64_t get_block_reward(const block& blk);
++    std::vector<block_header_response::asset_reward> get_block_rewards(const block& blk);
+     bool fill_block_header_response(const block& blk, bool orphan_status, uint64_t height, const crypto::hash& hash, block_header_response& response, bool fill_pow_hash);
+     std::map<std::string, bool> get_public_nodes(uint32_t credits_per_hash_threshold = 0);
+     bool set_bootstrap_daemon(const std::string &address, const std::string &username_password);

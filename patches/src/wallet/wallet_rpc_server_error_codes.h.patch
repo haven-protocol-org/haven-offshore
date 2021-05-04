@@ -1,0 +1,9 @@
+diff --git a/src/wallet/wallet_rpc_server_error_codes.h b/src/wallet/wallet_rpc_server_error_codes.h
+index 9434fbc3e..10d1ffa57 100644
+--- a/src/wallet/wallet_rpc_server_error_codes.h
++++ b/src/wallet/wallet_rpc_server_error_codes.h
+@@ -76,3 +76,4 @@
+ #define WALLET_RPC_ERROR_CODE_NON_DETERMINISTIC      -43
+ #define WALLET_RPC_ERROR_CODE_INVALID_LOG_LEVEL      -44
+ #define WALLET_RPC_ERROR_CODE_ATTRIBUTE_NOT_FOUND    -45
++#define WALLET_RPC_ERROR_CODE_UNKNOWN_ASSET_TYPE     -46

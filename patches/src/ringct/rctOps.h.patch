@@ -1,8 +1,6 @@
-diff --git a/src/ringct/rctOps.h b/src/ringct/rctOps.h
-index dd6d8759..f8a8eae1 100644
---- a/src/ringct/rctOps.h
-+++ b/src/ringct/rctOps.h
-@@ -144,6 +144,10 @@ namespace rct {
+--- ringct/rctOps.h.orig	2020-08-14 16:26:34.765452200 +0200
++++ ringct/rctOps.h	2020-08-14 16:26:50.044662500 +0200
+@@ -145,6 +145,10 @@
      //B must be input after applying "precomp"
      void addKeys3(key &aAbB, const key &a, const key &A, const key &b, const ge_dsmp B);
      void addKeys3(key &aAbB, const key &a, const ge_dsmp A, const key &b, const ge_dsmp B);
@@ -13,15 +11,3 @@ index dd6d8759..f8a8eae1 100644
      //AB = A - B where A, B are curve points
      void subKeys(key &AB, const key &A, const  key &B);
      //checks if A, B are equal as curve points
-@@ -172,10 +176,7 @@ namespace rct {
-     key cn_fast_hash(const key64 keys);
-     key hash_to_scalar(const key64 keys);
- 
--    //returns hashToPoint as described in https://github.com/ShenNoether/ge_fromfe_writeup 
--    key hashToPointSimple(const key &in);
--    key hashToPoint(const key &in);
--    void hashToPoint(key &out, const key &in);
-+    void hash_to_p3(ge_p3 &hash8_p3, const key &k);
- 
-     //sums a vector of curve points (for scalars use sc_add)
-     void sumKeys(key & Csum, const key &Cis);
