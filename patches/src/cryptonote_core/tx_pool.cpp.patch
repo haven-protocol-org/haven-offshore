@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/tx_pool.cpp b/src/cryptonote_core/tx_pool.cpp
-index 696bc88d4..8192f2ca8 100644
+index 696bc88d4..7007f06fb 100644
 --- a/src/cryptonote_core/tx_pool.cpp
 +++ b/src/cryptonote_core/tx_pool.cpp
 @@ -47,6 +47,7 @@
@@ -152,24 +152,24 @@ index 696bc88d4..8192f2ca8 100644
 +    
 +    if (!get_tx_asset_types(tx, source, dest)) {
 +      LOG_PRINT_L1("At least 1 input or 1 output of the tx was invalid." << id);
-+      tvc.m_verifivation_failed = true;
+       tvc.m_verifivation_failed = true;
+-      tvc.m_fee_too_low = true;
 +      if (source.empty()) {
 +        tvc.m_invalid_input = true;
 +      }
 +      if (dest.empty()) {
 +        tvc.m_invalid_output = true;
 +      }
-+      return false;
-+    }
-+
-+    // Get the TX type flags
-+    if (!get_tx_type(source, dest, offshore, onshore, offshore_transfer, xusd_to_xasset, xasset_to_xusd, xasset_transfer)) {
-+      LOG_ERROR("At least 1 input or 1 output of the tx was invalid." << tx.hash);
-       tvc.m_verifivation_failed = true;
--      tvc.m_fee_too_low = true;
        return false;
      }
  
++    // Get the TX type flags
++    if (!get_tx_type(source, dest, offshore, onshore, offshore_transfer, xusd_to_xasset, xasset_to_xusd, xasset_transfer)) {
++      LOG_ERROR("At least 1 input or 1 output of the tx was invalid." << tx.hash);
++      tvc.m_verifivation_failed = true;
++      return false;
++    }
++
 +    if (offshore || onshore || xusd_to_xasset || xasset_to_xusd) {
 +
 +      // Validate that pricing record is not too old
@@ -802,20 +802,52 @@ index 696bc88d4..8192f2ca8 100644
            continue;
          }
 -        coinbase = block_reward + fee + meta.fee;
-+	if (strcmp(meta.fee_asset_type, "XHV") == 0) {
-+	  coinbase = block_reward + fee_map["XHV"] + meta.fee;
-+	} else {
-+	  coinbase = block_reward + fee_map["XHV"];
-+	}
-+	/*
-         if (coinbase < template_accept_threshold(best_coinbase))
+-        if (coinbase < template_accept_threshold(best_coinbase))
++        if (strcmp(meta.fee_asset_type, "XHV") == 0) {
++          coinbase = block_reward + fee_map["XHV"] + meta.fee;
++        } else {
++          coinbase = block_reward + fee_map["XHV"];
++        }
++	      /*
++          if (coinbase < template_accept_threshold(best_coinbase))
 +        */
 +        if (coinbase < best_coinbase)
          {
            LOG_PRINT_L2("  would decrease coinbase to " << print_money(coinbase));
            continue;
-@@ -1449,7 +1906,8 @@ namespace cryptonote
+@@ -1427,14 +1884,14 @@ namespace cryptonote
+       if (memcmp(&original_meta, &meta, sizeof(meta)))
+       {
+         try
+-	{
+-	  m_blockchain.update_txpool_tx(sorted_it->second, meta);
+-	}
++        {
++          m_blockchain.update_txpool_tx(sorted_it->second, meta);
++        }
+         catch (const std::exception &e)
+-	{
+-	  MERROR("Failed to update tx meta: " << e.what());
+-	  // continue, not fatal
+-	}
++        {
++          MERROR("Failed to update tx meta: " << e.what());
++          // continue, not fatal
++        }
+       }
+       if (!ready)
+       {
+@@ -1447,9 +1904,17 @@ namespace cryptonote
+         continue;
+       }
  
++      // Validate that pricing record is not too old
++      uint64_t current_height = m_blockchain.get_current_blockchain_height();
++      if ((current_height - PRICING_RECORD_VALID_BLOCKS) > tx.pricing_record_height) {
++        LOG_PRINT_L2("error : offshore/xAsset transaction references a pricing record that is too old (height " << tx.pricing_record_height << ")");
++        continue;
++      }
++
        bl.tx_hashes.push_back(sorted_it->second);
        total_weight += meta.weight;
 -      fee += meta.fee;
@@ -824,7 +856,7 @@ index 696bc88d4..8192f2ca8 100644
        best_coinbase = coinbase;
        append_key_images(k_images, tx);
        LOG_PRINT_L2("  added, new block weight " << total_weight << "/" << max_total_weight << ", coinbase " << print_money(best_coinbase));
-@@ -1457,9 +1915,12 @@ namespace cryptonote
+@@ -1457,9 +1922,12 @@ namespace cryptonote
      lock.commit();
  
      expected_reward = best_coinbase;

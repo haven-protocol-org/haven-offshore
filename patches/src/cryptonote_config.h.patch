@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_config.h b/src/cryptonote_config.h
-index 81dc15dee..8cff4c2c5 100644
+index 81dc15dee..a4490c50f 100644
 --- a/src/cryptonote_config.h
 +++ b/src/cryptonote_config.h
 @@ -33,18 +33,23 @@
@@ -58,7 +58,7 @@ index 81dc15dee..8cff4c2c5 100644
  
  #define ORPHANED_BLOCKS_MAX_COUNT                       100
  
-+#define PRICING_RECORD_VALID_BLOCKS                     10
++#define PRICING_RECORD_VALID_BLOCKS                     11 // 10 + 1 (1 block buffer because the tx will be included into next block)
  
  #define DIFFICULTY_TARGET_V2                            120  // seconds
 -#define DIFFICULTY_TARGET_V1                            60  // seconds - before first fork
