@@ -98,7 +98,7 @@ invokes cmake commands as needed.
 
     ```bash
     cd haven-offshore
-    git checkout v1.3.0d
+    git checkout v1.3.0e
     ./build-haven.sh release
     ```
 
@@ -185,10 +185,10 @@ application.
     cd haven-offshore
     ```
 
-* If you would like a specific [version/tag](https://github.com/haven-protocol-org/haven-offshore/tags), do a git checkout for that version. eg. 'v1.3.0d'. If you don't care about the version and just want binaries from master, skip this step:
+* If you would like a specific [version/tag](https://github.com/haven-protocol-org/haven-offshore/tags), do a git checkout for that version. eg. 'v1.3.0e'. If you don't care about the version and just want binaries from master, skip this step:
 	
     ```bash
-    git checkout v1.3.0d
+    git checkout v1.3.0e
     ```
 
 * If you are on a 64-bit system, run:
