@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_core/blockchain.h b/src/cryptonote_core/blockchain.h
-index 82051ecd4..5066a26d0 100644
+index 82051ecd4..999a53b91 100644
 --- a/src/cryptonote_core/blockchain.h
 +++ b/src/cryptonote_core/blockchain.h
 @@ -57,6 +57,7 @@
@@ -32,7 +32,20 @@ index 82051ecd4..5066a26d0 100644
       * This function calculates an estimate for a dynamic fee which will be
       * valid for the next grace_blocks
       *
-@@ -652,6 +653,13 @@ namespace cryptonote
+@@ -612,10 +613,11 @@ namespace cryptonote
+      *
+      * @param tx_weight the transaction weight
+      * @param fee the fee
++     * @param fee_asset the asset type of the fee
+      *
+      * @return true if the fee is enough, false otherwise
+      */
+-    bool check_fee(size_t tx_weight, uint64_t fee) const;
++    bool check_fee(size_t tx_weight, uint64_t fee, const offshore::pricing_record pr, const std::string& source, const std::string& dest) const;
+ 
+     /**
+      * @brief check that a transaction's outputs conform to current standards
+@@ -652,6 +654,13 @@ namespace cryptonote
       */
      uint64_t get_current_cumulative_block_weight_median() const;
  
@@ -46,7 +59,7 @@ index 82051ecd4..5066a26d0 100644
      /**
       * @brief gets the difficulty of the block with a given height
       *
-@@ -1047,7 +1055,6 @@ namespace cryptonote
+@@ -1047,7 +1056,6 @@ namespace cryptonote
      // metadata containers
      std::unordered_map<crypto::hash, std::unordered_map<crypto::key_image, std::vector<output_data_t>>> m_scan_table;
      std::unordered_map<crypto::hash, crypto::hash> m_blocks_longhash_table;
@@ -54,7 +67,7 @@ index 82051ecd4..5066a26d0 100644
      // Keccak hashes for each block and for fast pow checking
      std::vector<std::pair<crypto::hash, crypto::hash>> m_blocks_hash_of_hashes;
      std::vector<std::pair<crypto::hash, uint64_t>> m_blocks_hash_check;
-@@ -1090,6 +1097,9 @@ namespace cryptonote
+@@ -1090,6 +1098,9 @@ namespace cryptonote
  
      HardFork *m_hardfork;
  
@@ -64,7 +77,7 @@ index 82051ecd4..5066a26d0 100644
      network_type m_nettype;
      bool m_offline;
      difficulty_type m_fixed_difficulty;
-@@ -1139,6 +1149,15 @@ namespace cryptonote
+@@ -1139,6 +1150,15 @@ namespace cryptonote
      template<class visitor_t>
      inline bool scan_outputkeys_for_indexes(size_t tx_version, const txin_to_key& tx_in_to_key, visitor_t &vis, const crypto::hash &tx_prefix_hash, uint64_t* pmax_related_block_height = NULL) const;
  
@@ -80,7 +93,7 @@ index 82051ecd4..5066a26d0 100644
      /**
       * @brief collect output public keys of a transaction input set
       *
-@@ -1160,7 +1179,10 @@ namespace cryptonote
+@@ -1160,7 +1180,10 @@ namespace cryptonote
       * @return false if any output is not yet unlocked, or is missing, otherwise true
       */
      bool check_tx_input(size_t tx_version,const txin_to_key& txin, const crypto::hash& tx_prefix_hash, const std::vector<crypto::signature>& sig, const rct::rctSig &rct_signatures, std::vector<rct::ctkey> &output_keys, uint64_t* pmax_related_block_height) const;
@@ -92,7 +105,7 @@ index 82051ecd4..5066a26d0 100644
      /**
       * @brief validate a transaction's inputs and their keys
       *
-@@ -1294,7 +1316,10 @@ namespace cryptonote
+@@ -1294,7 +1317,10 @@ namespace cryptonote
       *
       * @param b the block containing the miner transaction to be validated
       * @param cumulative_block_weight the block's weight
@@ -104,7 +117,7 @@ index 82051ecd4..5066a26d0 100644
       * @param base_reward return-by-reference the new block's generated coins
       * @param already_generated_coins the amount of currency generated prior to this block
       * @param partial_block_reward return-by-reference true if miner accepted only partial reward
-@@ -1302,7 +1327,7 @@ namespace cryptonote
+@@ -1302,7 +1328,7 @@ namespace cryptonote
       *
       * @return false if anything is found wrong with the miner transaction, otherwise true
       */

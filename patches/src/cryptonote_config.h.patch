@@ -1,5 +1,5 @@
 diff --git a/src/cryptonote_config.h b/src/cryptonote_config.h
-index 81dc15dee..a4490c50f 100644
+index 81dc15dee..0d196caae 100644
 --- a/src/cryptonote_config.h
 +++ b/src/cryptonote_config.h
 @@ -33,18 +33,23 @@

@@ -1,5 +1,5 @@
 diff --git a/src/wallet/wallet2.cpp b/src/wallet/wallet2.cpp
-index c3ba34260..a430f36fd 100644
+index c3ba34260..be9d3f874 100644
 --- a/src/wallet/wallet2.cpp
 +++ b/src/wallet/wallet2.cpp
 @@ -29,6 +29,7 @@
@@ -3068,14 +3068,14 @@ index c3ba34260..a430f36fd 100644
 +  // so we don't try to adjust the fee according to usd equivalent.
 +  // the only donwnside is fees are little bit higher for the assets that has high usd value.
 +  if (strSource == "XHV") {
-+  } else if (strSource == "XUSD") {
-+    if (strSource != strDest) {
-+      base_fee = get_xusd_amount(base_fee_orig, "XHV", current_height);
-+    }
 +  } else {
 +    if (strSource != strDest) {
-+      // Convert fee to xAsset
-+      base_fee = get_xasset_amount(get_xusd_amount(base_fee_orig, "XHV", current_height), strSource, current_height);
++      // Convert fee to xUSD
++      base_fee = get_xusd_amount(base_fee_orig, "XHV", current_height);
++      if (strSource != "XUSD") {
++        // Convert fee to xAsset
++        base_fee = get_xasset_amount(base_fee, strSource, current_height);
++      }
 +    }
 +  }
    const uint64_t fee_multiplier = get_fee_multiplier(priority, get_fee_algorithm());
@@ -4314,10 +4314,10 @@ index c3ba34260..a430f36fd 100644
  {
    // time of v2 fork
 -  const time_t fork_time = m_nettype == TESTNET ? 1448285909 : m_nettype == STAGENET ? 1520937818 : 1458748658;
-+  const time_t fork_time = m_nettype == TESTNET ? 1522713600 : m_nettype == STAGENET ? 1522713600 : 1518825586;
++  const time_t fork_time = m_nettype == TESTNET ? 1522713600 : m_nettype == STAGENET ? 1522713600 : 1518826456;
    // v2 fork block
 -  const uint64_t fork_block = m_nettype == TESTNET ? 624634 : m_nettype == STAGENET ? 32000 : 1009827;
-+  const uint64_t fork_block = m_nettype == TESTNET ? 25 : m_nettype == STAGENET ? 25 : 1;
++  const uint64_t fork_block = m_nettype == TESTNET ? 25 : m_nettype == STAGENET ? 25 : 38500;
    // avg seconds per block
    const int seconds_per_block = DIFFICULTY_TARGET_V2;
    // Calculated blockchain height
