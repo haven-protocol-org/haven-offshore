@@ -1,5 +1,5 @@
 diff --git a/src/wallet/wallet2.cpp b/src/wallet/wallet2.cpp
-index c3ba34260..be9d3f874 100644
+index c3ba34260..ada3dcfb8 100644
 --- a/src/wallet/wallet2.cpp
 +++ b/src/wallet/wallet2.cpp
 @@ -29,6 +29,7 @@
@@ -1296,19 +1296,28 @@ index c3ba34260..be9d3f874 100644
          for (size_t l = 0; l < tx_cache_data[txidx].primary.size(); ++l)
          {
            THROW_WALLET_EXCEPTION_IF(tx_cache_data[txidx].primary[l].received.size() != n_vouts,
-@@ -2996,6 +3394,42 @@ void wallet2::update_pool_state(std::vector<std::tuple<cryptonote::transaction,
-                  break;
-               }
-             }
+@@ -2988,11 +3386,47 @@ void wallet2::update_pool_state(std::vector<std::tuple<cryptonote::transaction,
+             txin_to_key &tx_in_to_key = boost::get<txin_to_key>(pit->second.m_tx.vin[vini]);
+             for (size_t i = 0; i < m_transfers.size(); ++i)
+             {
+-              const transfer_details &td = m_transfers[i];
++              transfer_details &td = m_transfers[i];
++              if (td.m_key_image == tx_in_to_key.k_image)
++              {
++                 LOG_PRINT_L1("Resetting spent status for output " << vini << ": " << td.m_key_image);
++                 set_unspent(td);
++                 break;
++              }
++            }
 +          } else if (pit->second.m_tx.vin[vini].type() == typeid(txin_onshore)) {
 +            txin_onshore &tx_in_to_key = boost::get<txin_onshore>(pit->second.m_tx.vin[vini]);
 +            for (size_t i = 0; i < m_transfers.size(); ++i)
 +            {
-+              const transfer_details &td = m_transfers[i];
++              transfer_details &td = m_transfers[i];
 +              if (td.m_key_image == tx_in_to_key.k_image)
 +              {
 +                 LOG_PRINT_L1("Resetting spent status for output " << vini << ": " << td.m_key_image);
-+                 set_unspent(i);
++                 set_unspent(td);
 +                 break;
 +              }
 +            }
@@ -1316,11 +1325,11 @@ index c3ba34260..be9d3f874 100644
 +            txin_offshore &tx_in_to_key = boost::get<txin_offshore>(pit->second.m_tx.vin[vini]);
 +            for (size_t i = 0; i < m_offshore_transfers.size(); ++i)
 +            {
-+              const transfer_details &td = m_offshore_transfers[i];
++              transfer_details &td = m_offshore_transfers[i];
 +              if (td.m_key_image == tx_in_to_key.k_image)
 +              {
 +                 LOG_PRINT_L1("Resetting spent status for output " << vini << ": " << td.m_key_image);
-+                 set_unspent(i);
++                 set_unspent(td);
 +                 break;
 +              }
 +            }
@@ -1328,17 +1337,15 @@ index c3ba34260..be9d3f874 100644
 +            txin_xasset &tx_in_to_key = boost::get<txin_xasset>(pit->second.m_tx.vin[vini]);
 +            for (size_t i = 0; i < m_xasset_transfers[tx_in_to_key.asset_type].size(); ++i)
 +            {
-+              const transfer_details &td = m_xasset_transfers[tx_in_to_key.asset_type][i];
-+              if (td.m_key_image == tx_in_to_key.k_image)
-+              {
-+                 LOG_PRINT_L1("Resetting spent status for output " << vini << ": " << td.m_key_image);
-+                 set_unspent(i);
-+                 break;
-+              }
-+            }
-           }
-         }
-       }
++              transfer_details &td = m_xasset_transfers[tx_in_to_key.asset_type][i];
+               if (td.m_key_image == tx_in_to_key.k_image)
+               {
+                  LOG_PRINT_L1("Resetting spent status for output " << vini << ": " << td.m_key_image);
+-                 set_unspent(i);
++                 set_unspent(td);
+                  break;
+               }
+             }
 @@ -3512,7 +3946,12 @@ void wallet2::refresh(bool trusted_daemon, uint64_t start_height, uint64_t & blo
  
    m_first_refresh_done = true;
@@ -1609,7 +1616,7 @@ index c3ba34260..be9d3f874 100644
    {
      amount += i.second.first;
      if (blocks_to_unlock && i.second.second.first > *blocks_to_unlock)
-@@ -5952,15 +6420,49 @@ uint64_t wallet2::unlocked_balance(uint32_t index_major, bool strict, uint64_t *
+@@ -5952,44 +6420,90 @@ uint64_t wallet2::unlocked_balance(uint32_t index_major, bool strict, uint64_t *
    return amount;
  }
  //----------------------------------------------------------------------------------------------------
@@ -1623,6 +1630,9 @@ index c3ba34260..be9d3f874 100644
 -    {
 -      auto found = amount_per_subaddr.find(td.m_subaddr_index.minor);
 -      if (found == amount_per_subaddr.end())
+-        amount_per_subaddr[td.m_subaddr_index.minor] = td.amount();
+-      else
+-        found->second += td.amount();
 +  THROW_WALLET_EXCEPTION_IF(m_light_wallet, error::wallet_internal_error, "m_light_wallet mode is not supported");
 +
 +  std::map<uint32_t, std::map<std::string, uint64_t>> amounts;
@@ -1664,10 +1674,10 @@ index c3ba34260..be9d3f874 100644
 +    {
 +      auto found = amount_per_subaddr.find(td.m_subaddr_index.minor);
 +      if (found == amount_per_subaddr.end())
-         amount_per_subaddr[td.m_subaddr_index.minor] = td.amount();
-       else
-         found->second += td.amount();
-@@ -5968,28 +6470,40 @@ std::map<uint32_t, uint64_t> wallet2::balance_per_subaddress(uint32_t index_majo
++        amount_per_subaddr[td.m_subaddr_index.minor] = td.amount();
++      else
++        found->second += td.amount();
+     }
    }
    if (!strict)
    {
@@ -1875,7 +1885,7 @@ index c3ba34260..be9d3f874 100644
 +        if (td.m_spent)
 +        {
 +          LOG_PRINT_L0("Marking output " << i << "(" << td.m_key_image << ") as unspent, it was marked as spent");
-+          set_unspent(i);
++          set_unspent(td);
 +          td.m_spent_height = 0;
 +        }
 +        else
