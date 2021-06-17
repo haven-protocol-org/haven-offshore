@@ -1,0 +1,67 @@
+diff --git a/src/wallet/api/wallet2_api.h b/src/wallet/api/wallet2_api.h
+index 9c3df8988..ec751dfc2 100644
+--- a/src/wallet/api/wallet2_api.h
++++ b/src/wallet/api/wallet2_api.h
+@@ -38,6 +38,7 @@
+ #include <ctime>
+ #include <iostream>
+ #include <stdexcept>
++#include <map>
+ 
+ //  Public interface for libwallet library
+ namespace Monero {
+@@ -594,18 +595,18 @@ struct Wallet
+     virtual ConnectionStatus connected() const = 0;
+     virtual void setTrustedDaemon(bool arg) = 0;
+     virtual bool trustedDaemon() const = 0;
+-    virtual uint64_t balance(uint32_t accountIndex = 0) const = 0;
++    virtual std::map<uint32_t, std::map<std::string, uint64_t>> balance(uint32_t accountIndex = 0) const = 0;
+     uint64_t balanceAll() const {
+         uint64_t result = 0;
+-        for (uint32_t i = 0; i < numSubaddressAccounts(); ++i)
+-            result += balance(i);
++       /*  for (uint32_t i = 0; i < numSubaddressAccounts(); ++i)
++            result += balance(i); */
+         return result;
+     }
+-    virtual uint64_t unlockedBalance(uint32_t accountIndex = 0) const = 0;
++    virtual std::map<uint32_t, std::map<std::string, uint64_t>> unlockedBalance(uint32_t accountIndex = 0) const = 0;
+     uint64_t unlockedBalanceAll() const {
+         uint64_t result = 0;
+-        for (uint32_t i = 0; i < numSubaddressAccounts(); ++i)
+-            result += unlockedBalance(i);
++       /*  for (uint32_t i = 0; i < numSubaddressAccounts(); ++i)
++            result += unlockedBalance(i); */
+         return result;
+     }
+ 
+@@ -830,7 +831,7 @@ struct Wallet
+                                                    optional<std::vector<uint64_t>> amount, uint32_t mixin_count,
+                                                    PendingTransaction::Priority = PendingTransaction::Priority_Low,
+                                                    uint32_t subaddr_account = 0,
+-                                                   std::set<uint32_t> subaddr_indices = {}) = 0;
++                                                   std::set<uint32_t> subaddr_indices = {}, const std::string &asset_type = "XHV") = 0;
+ 
+     /*!
+      * \brief createTransaction creates transaction. if dst_addr is an integrated address, payment_id is ignored
+@@ -849,7 +850,7 @@ struct Wallet
+                                                    optional<uint64_t> amount, uint32_t mixin_count,
+                                                    PendingTransaction::Priority = PendingTransaction::Priority_Low,
+                                                    uint32_t subaddr_account = 0,
+-                                                   std::set<uint32_t> subaddr_indices = {}) = 0;
++                                                   std::set<uint32_t> subaddr_indices = {}, const std::string &asset_type = "XHV") = 0;
+ 
+     /*!
+      * \brief createSweepUnmixableTransaction creates transaction with unmixable outputs.
+@@ -945,9 +946,9 @@ struct Wallet
+      */
+     virtual std::string getUserNote(const std::string &txid) const = 0;
+     virtual std::string getTxKey(const std::string &txid) const = 0;
+-    virtual bool checkTxKey(const std::string &txid, std::string tx_key, const std::string &address, uint64_t &received, bool &in_pool, uint64_t &confirmations) = 0;
++    virtual bool checkTxKey(const std::string &txid, std::string tx_key, const std::string &address, std::map<std::string, uint64_t> &received, bool &in_pool, uint64_t &confirmations) = 0;
+     virtual std::string getTxProof(const std::string &txid, const std::string &address, const std::string &message) const = 0;
+-    virtual bool checkTxProof(const std::string &txid, const std::string &address, const std::string &message, const std::string &signature, bool &good, uint64_t &received, bool &in_pool, uint64_t &confirmations) = 0;
++    virtual bool checkTxProof(const std::string &txid, const std::string &address, const std::string &message, const std::string &signature, bool &good, std::map<std::string, uint64_t> &received, bool &in_pool, uint64_t &confirmations) = 0;
+     virtual std::string getSpendProof(const std::string &txid, const std::string &message) const = 0;
+     virtual bool checkSpendProof(const std::string &txid, const std::string &message, const std::string &signature, bool &good) const = 0;
+     /*!

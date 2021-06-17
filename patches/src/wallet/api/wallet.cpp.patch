@@ -1,0 +1,89 @@
+diff --git a/src/wallet/api/wallet.cpp b/src/wallet/api/wallet.cpp
+index 0badd922a..dfb246693 100644
+--- a/src/wallet/api/wallet.cpp
++++ b/src/wallet/api/wallet.cpp
+@@ -997,12 +997,12 @@ void WalletImpl::setSubaddressLookahead(uint32_t major, uint32_t minor)
+     m_wallet->set_subaddress_lookahead(major, minor);
+ }
+ 
+-uint64_t WalletImpl::balance(uint32_t accountIndex) const
++std::map<uint32_t, std::map<std::string, uint64_t>> WalletImpl::balance(uint32_t accountIndex) const
+ {
+     return m_wallet->balance(accountIndex, false);
+ }
+ 
+-uint64_t WalletImpl::unlockedBalance(uint32_t accountIndex) const
++std::map<uint32_t, std::map<std::string, uint64_t>> WalletImpl::unlockedBalance(uint32_t accountIndex) const
+ {
+     return m_wallet->unlocked_balance(accountIndex, false);
+ }
+@@ -1417,7 +1417,7 @@ PendingTransaction* WalletImpl::restoreMultisigTransaction(const string& signDat
+ //    - unconfirmed_transfer_details;
+ //    - confirmed_transfer_details)
+ 
+-PendingTransaction *WalletImpl::createTransactionMultDest(const std::vector<string> &dst_addr, const string &payment_id, optional<std::vector<uint64_t>> amount, uint32_t mixin_count, PendingTransaction::Priority priority, uint32_t subaddr_account, std::set<uint32_t> subaddr_indices)
++PendingTransaction *WalletImpl::createTransactionMultDest(const std::vector<string> &dst_addr, const string &payment_id, optional<std::vector<uint64_t>> amount, uint32_t mixin_count, PendingTransaction::Priority priority, uint32_t subaddr_account, std::set<uint32_t> subaddr_indices, const string &asset_type)
+ 
+ {
+     clearStatus();
+@@ -1505,7 +1505,7 @@ PendingTransaction *WalletImpl::createTransactionMultDest(const std::vector<stri
+             } else {
+                 transaction->m_pending_tx = m_wallet->create_transactions_all(0, info.address, info.is_subaddress, 1, fake_outs_count, 0 /* unlock_time */,
+                                                                               adjusted_priority,
+-                                                                              extra, subaddr_account, subaddr_indices);
++                                                                              extra, subaddr_account, subaddr_indices, asset_type);
+             }
+             pendingTxPostProcess(transaction);
+ 
+@@ -1584,10 +1584,10 @@ PendingTransaction *WalletImpl::createTransactionMultDest(const std::vector<stri
+ }
+ 
+ PendingTransaction *WalletImpl::createTransaction(const string &dst_addr, const string &payment_id, optional<uint64_t> amount, uint32_t mixin_count,
+-                                                  PendingTransaction::Priority priority, uint32_t subaddr_account, std::set<uint32_t> subaddr_indices)
++                                                  PendingTransaction::Priority priority, uint32_t subaddr_account, std::set<uint32_t> subaddr_indices, const string &asset_type)
+ 
+ {
+-    return createTransactionMultDest(std::vector<string> {dst_addr}, payment_id, amount ? (std::vector<uint64_t> {*amount}) : (optional<std::vector<uint64_t>>()), mixin_count, priority, subaddr_account, subaddr_indices);
++    return createTransactionMultDest(std::vector<string> {dst_addr}, payment_id, amount ? (std::vector<uint64_t> {*amount}) : (optional<std::vector<uint64_t>>()), mixin_count, priority, subaddr_account, subaddr_indices, asset_type);
+ }
+ 
+ PendingTransaction *WalletImpl::createSweepUnmixableTransaction()
+@@ -1680,9 +1680,12 @@ void WalletImpl::disposeTransaction(PendingTransaction *t)
+ uint64_t WalletImpl::estimateTransactionFee(const std::vector<std::pair<std::string, uint64_t>> &destinations,
+                                             PendingTransaction::Priority priority) const
+ {
++
+     const size_t pubkey_size = 33;
+     const size_t encrypted_paymentid_size = 11;
+     const size_t extra_size = pubkey_size + encrypted_paymentid_size;
++    const bool clsag = m_wallet->use_fork_rules(HF_VERSION_CLSAG, 0);
++
+ 
+     return m_wallet->estimate_fee(
+         m_wallet->use_fork_rules(HF_VERSION_PER_BYTE_FEE, 0),
+@@ -1692,6 +1695,7 @@ uint64_t WalletImpl::estimateTransactionFee(const std::vector<std::pair<std::str
+         destinations.size() + 1,
+         extra_size,
+         m_wallet->use_fork_rules(8, 0),
++        clsag,
+         m_wallet->get_base_fee(),
+         m_wallet->get_fee_multiplier(m_wallet->adjust_priority(static_cast<uint32_t>(priority))),
+         m_wallet->get_fee_quantization_mask());
+@@ -1803,7 +1807,7 @@ std::string WalletImpl::getTxKey(const std::string &txid_str) const
+     }
+ }
+ 
+-bool WalletImpl::checkTxKey(const std::string &txid_str, std::string tx_key_str, const std::string &address_str, uint64_t &received, bool &in_pool, uint64_t &confirmations)
++bool WalletImpl::checkTxKey(const std::string &txid_str, std::string tx_key_str, const std::string &address_str, std::map<std::string, uint64_t> &received, bool &in_pool, uint64_t &confirmations)
+ {
+     crypto::hash txid;
+     if (!epee::string_tools::hex_to_pod(txid_str, txid))
+@@ -1879,7 +1883,7 @@ std::string WalletImpl::getTxProof(const std::string &txid_str, const std::strin
+     }
+ }
+ 
+-bool WalletImpl::checkTxProof(const std::string &txid_str, const std::string &address_str, const std::string &message, const std::string &signature, bool &good, uint64_t &received, bool &in_pool, uint64_t &confirmations)
++bool WalletImpl::checkTxProof(const std::string &txid_str, const std::string &address_str, const std::string &message, const std::string &signature, bool &good, std::map<std::string, uint64_t> &received, bool &in_pool, uint64_t &confirmations)
+ {
+     crypto::hash txid;
+     if (!epee::string_tools::hex_to_pod(txid_str, txid))
