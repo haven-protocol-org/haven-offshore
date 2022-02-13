@@ -241,7 +241,7 @@ index ffe38eedf..b5be9b773 100644
 +    else if (lowercase == "xjpy")
 +      message_writer(i%2 ? console_color_green : console_color_blue, false) << boost::format(tr("\txJPY %d")) % print_money(pr.xJPY * xusd);
 +    else if (lowercase == "xltc")
-+      message_writer(i%2 ? console_color_green : console_color_blue, false) << boost::format(tr("\txNOK %d")) % print_money(pr.xLTC * xusd);
++      message_writer(i%2 ? console_color_green : console_color_blue, false) << boost::format(tr("\txLTC %d")) % print_money(pr.xLTC * xusd);
 +    else if (lowercase == "xnok")
 +      message_writer(i%2 ? console_color_green : console_color_blue, false) << boost::format(tr("\txNOK %d")) % print_money(pr.xNOK * xusd);
 +    else if (lowercase == "xnzd")
