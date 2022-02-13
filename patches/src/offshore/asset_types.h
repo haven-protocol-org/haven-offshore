@@ -31,6 +31,6 @@
 
 namespace offshore {
 
-  const std::vector<std::string> ASSET_TYPES = {"XHV", "XAG", "XAU", "XAUD", "XBTC", "XCAD", "XCHF", "XCNY", "XEUR", "XGBP", "XJPY", "XNOK", "XNZD", "XUSD"};
+  const std::vector<std::string> ASSET_TYPES = {"XHV", "XAG", "XAU", "XAUD", "XBTC", "XCAD", "XCHF", "XCNY", "XEUR", "XGBP", "XJPY", "XLTC", "XNOK", "XNZD", "XUSD"};
 
 }

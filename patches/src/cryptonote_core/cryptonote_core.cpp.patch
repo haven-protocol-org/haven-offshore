@@ -56,7 +56,7 @@ index 5aed708d5..d40616ce1 100644
      if (tx.version == 0 || tx.version > max_tx_version)
      {
        // v2 is the latest one we know
-@@ -865,6 +873,85 @@ namespace cryptonote
+@@ -865,6 +873,86 @@ namespace cryptonote
      std::vector<const rct::rctSig*> rvv;
      for (size_t n = 0; n < tx_info.size(); ++n)
      {
@@ -109,6 +109,7 @@ index 5aed708d5..d40616ce1 100644
 +          pr.xEUR = 13059317798903;
 +          pr.xGBP = 11162715471325;
 +          pr.xJPY = 1690137827184892;
++          pr.xLTC = 0;
 +          pr.xNOK = 0;
 +          pr.xNZD = 0;
 +          pr.xUSD = 15393775330000;
@@ -160,7 +161,7 @@ index 5aed708d5..d40616ce1 100644
            if (!is_canonical_bulletproof_layout(rv.p.bulletproofs))
            {
              MERROR_VER("Bulletproof does not have canonical form");
-@@ -924,18 +1013,96 @@ namespace cryptonote
+@@ -924,18 +1013,97 @@ namespace cryptonote
            break;
        }
      }
@@ -223,6 +224,7 @@ index 5aed708d5..d40616ce1 100644
 +            pr.xEUR = 13059317798903;
 +            pr.xGBP = 11162715471325;
 +            pr.xJPY = 1690137827184892;
++            pr.xLTC = 0;
 +            pr.xNOK = 0;
 +            pr.xNZD = 0;
 +            pr.xUSD = 15393775330000;

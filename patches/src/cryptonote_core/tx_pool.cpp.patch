@@ -39,7 +39,7 @@ index 696bc88d4..5744a648f 100644
        if(outputs_amount > inputs_amount)
        {
          LOG_PRINT_L1("transaction use more money than it has: use " << print_money(outputs_amount) << ", have " << print_money(inputs_amount));
-@@ -187,15 +188,231 @@ namespace cryptonote
+@@ -187,15 +188,232 @@ namespace cryptonote
      else
      {
        fee = tx.rct_signatures.txnFee;
@@ -195,6 +195,7 @@ index 696bc88d4..5744a648f 100644
 +          pr.xEUR = 13059317798903;
 +          pr.xGBP = 11162715471325;
 +          pr.xJPY = 1690137827184892;
++          pr.xLTC = 0;
 +          pr.xNOK = 0;
 +          pr.xNZD = 0;
 +          pr.xUSD = 15393775330000;
