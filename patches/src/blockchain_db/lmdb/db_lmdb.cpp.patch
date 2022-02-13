@@ -359,7 +359,7 @@ index 5cec8879d..38e3960fb 100644
 +  LOG_PRINT_L0("BlockchainLMDB::" << __func__ << " - mined supply for XHV = " << m_coinbase);
 +  check_open();
 +
-+  const std::array<const char* const, 14> allowed_currencies = {{"XHV", "xAG", "xAU", "xAUD", "xBTC", "xCAD", "xCHF", "xCNY", "xEUR", "xGBP", "xJPY", "xNOK", "xNZD", "xUSD"}};
++  const std::array<const char* const, 15> allowed_currencies = {{"XHV", "xAG", "xAU", "xAUD", "xBTC", "xCAD", "xCHF", "xCNY", "xEUR", "xGBP", "xJPY", "xLTC", "xNOK", "xNZD", "xUSD"}};
 +  
 +  TXN_PREFIX_RDONLY();
 +  RCURSOR(circ_supply_tally);

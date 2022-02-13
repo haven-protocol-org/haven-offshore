@@ -200,7 +200,7 @@ index 79ce610a9..6b93016ce 100644
        a & x.p.pseudoOuts;
    }
  
-@@ -375,7 +474,35 @@ namespace boost
+@@ -375,7 +474,36 @@ namespace boost
      }
    }
  
@@ -217,6 +217,7 @@ index 79ce610a9..6b93016ce 100644
 +    a & x.xEUR;
 +    a & x.xGBP;
 +    a & x.xJPY;
++    a & x.xLTC;
 +    a & x.xNOK;
 +    a & x.xNZD;
 +    a & x.xUSD;

@@ -382,7 +382,7 @@ index c3ba34260..ada3dcfb8 100644
    tx_scan_info.amount = tx_scan_info.money_transfered;
    ++num_vouts_received;
  }
-@@ -1881,17 +1994,197 @@ bool wallet2::spends_one_of_ours(const cryptonote::transaction &tx) const
+@@ -1881,17 +1994,199 @@ bool wallet2::spends_one_of_ours(const cryptonote::transaction &tx) const
    return false;
  }
  //----------------------------------------------------------------------------------------------------
@@ -440,6 +440,7 @@ index c3ba34260..ada3dcfb8 100644
 +      asset_type == "XEUR" ? res.block_header.pricing_record.xEUR :
 +      asset_type == "XGBP" ? res.block_header.pricing_record.xGBP :
 +      asset_type == "XJPY" ? res.block_header.pricing_record.xJPY :
++      asset_type == "XLTC" ? res.block_header.pricing_record.xLTC :
 +      asset_type == "XNOK" ? res.block_header.pricing_record.xNOK :
 +      asset_type == "XNZD" ? res.block_header.pricing_record.xNZD :
 +      asset_type == "XUSD" ? res.block_header.pricing_record.xUSD :
@@ -491,6 +492,7 @@ index c3ba34260..ada3dcfb8 100644
 +      asset_type == "XEUR" ? res.block_header.pricing_record.xEUR :
 +      asset_type == "XGBP" ? res.block_header.pricing_record.xGBP :
 +      asset_type == "XJPY" ? res.block_header.pricing_record.xJPY :
++      asset_type == "XLTC" ? res.block_header.pricing_record.xLTC :
 +      asset_type == "XNOK" ? res.block_header.pricing_record.xNOK :
 +      asset_type == "XNZD" ? res.block_header.pricing_record.xNZD :
 +      asset_type == "XHV" ? res.block_header.pricing_record.unused1 :

@@ -111,7 +111,7 @@ index ffe38eedf..b5be9b773 100644
        if (!filenames.empty())
          filenames += ", ";
        filenames += filename;
-@@ -2282,28 +2300,271 @@ bool simple_wallet::public_nodes(const std::vector<std::string> &args)
+@@ -2282,28 +2300,273 @@ bool simple_wallet::public_nodes(const std::vector<std::string> &args)
  
  bool simple_wallet::welcome(const std::vector<std::string> &args)
  {
@@ -189,7 +189,7 @@ index ffe38eedf..b5be9b773 100644
 +  }
 +
 +  std::vector<std::string> local_args = args;
-+  std::vector<std::string> currencies = {"xag", "xau", "xaud", "xbtc", "xcad", "xchf", "xcny", "xeur", "xgbp", "xjpy", "xnok", "xnzd"};
++  std::vector<std::string> currencies = {"xag", "xau", "xaud", "xbtc", "xcad", "xchf", "xcny", "xeur", "xgbp", "xjpy", "xltc", "xnok", "xnzd"};
 +  local_args.insert(local_args.end(), currencies.begin(), currencies.end());
 +  return get_price(local_args);
 +}
@@ -240,6 +240,8 @@ index ffe38eedf..b5be9b773 100644
 +      message_writer(i%2 ? console_color_green : console_color_blue, false) << boost::format(tr("\txGBP %d")) % print_money(pr.xGBP * xusd);
 +    else if (lowercase == "xjpy")
 +      message_writer(i%2 ? console_color_green : console_color_blue, false) << boost::format(tr("\txJPY %d")) % print_money(pr.xJPY * xusd);
++    else if (lowercase == "xltc")
++      message_writer(i%2 ? console_color_green : console_color_blue, false) << boost::format(tr("\txLTC %d")) % print_money(pr.xLTC * xusd);
 +    else if (lowercase == "xnok")
 +      message_writer(i%2 ? console_color_green : console_color_blue, false) << boost::format(tr("\txNOK %d")) % print_money(pr.xNOK * xusd);
 +    else if (lowercase == "xnzd")
@@ -644,7 +646,7 @@ index ffe38eedf..b5be9b773 100644
      tr("idx ") << subaddr_index;
    if (m_auto_refresh_refreshing)
      m_cmd_binder.print_prompt();
-@@ -5732,31 +6039,99 @@ bool simple_wallet::show_balance_unlocked(bool detailed)
+@@ -5732,31 +6039,100 @@ bool simple_wallet::show_balance_unlocked(bool detailed)
    success_msg_writer() << tr("Currently selected account: [") << m_current_subaddress_account << tr("] ") << m_wallet->get_subaddress_label({m_current_subaddress_account, 0});
    const std::string tag = m_wallet->get_account_tags().second[m_current_subaddress_account];
    success_msg_writer() << tr("Tag: ") << (tag.empty() ? std::string{tr("(No tag assigned)")} : tag);
@@ -723,6 +725,7 @@ index ffe38eedf..b5be9b773 100644
 +	asset.first == "XEUR" ? pr.xEUR :
 +	asset.first == "XGBP" ? pr.xGBP :
 +	asset.first == "XJPY" ? pr.xJPY :
++	asset.first == "XLTC" ? pr.xLTC :
 +	asset.first == "XNOK" ? pr.xNOK :
 +	asset.first == "XNZD" ? pr.xNZD :
 +	asset.first == "XUSD" ? pr.xUSD :
